@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>蝶古巴特風格參考小幫手</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+  background: #faf6f0;
+  color: #4a3728;
+  min-height: 100vh;
+}
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+h1 {
+  text-align: center;
+  font-size: 1.6em;
+  padding: 30px 10px 10px;
+  line-height: 1.4;
+  color: #5a3e2b;
+  letter-spacing: 1px;
+}
+.subtitle {
+  text-align: center;
+  color: #9a7b6a;
+  font-size: 0.9em;
+  margin-bottom: 30px;
+  border-bottom: 2px dashed #dccfc4;
+  padding-bottom: 20px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+  margin-bottom: 30px;
+}
+.grid-item {
+  background: #fff;
+  border: 1px solid #e8ddd2;
+  border-radius: 8px;
+  padding: 14px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.95em;
+  user-select: none;
+}
+.grid-item:hover {
+  background: #f5ede4;
+  border-color: #c4a88a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.grid-item.active {
+  background: #dccfc4;
+  border-color: #8b6f58;
+  color: #2d1f14;
+  font-weight: bold;
+}
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.modal.open { display: flex; }
+.modal-content {
+  background: #fff;
+  border-radius: 12px;
+  max-width: 800px;
+  max-height: 90vh;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.modal img {
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  object-fit: contain;
+  display: block;
+}
+.modal-info {
+  padding: 15px 20px;
+  border-top: 1px solid #e8ddd2;
+}
+.modal-info h2 { font-size: 1.1em; color: #4a3728; }
+.modal-info p { font-size: 0.85em; color: #9a7b6a; margin-top: 4px; }
+.close-btn {
+  position: absolute;
+  top: 10px; right: 14px;
+  font-size: 28px;
+  color: #fff;
+  cursor: pointer;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  line-height: 1;
+  background: none;
+  border: none;
+  z-index: 10;
+}
+footer {
+  text-align: center;
+  color: #b8a394;
+  font-size: 0.75em;
+  padding: 30px 0;
+}
+footer a { color: #8b6f58; text-decoration: none; }
+@media (max-width: 600px) {
+  h1 { font-size: 1.2em; padding: 20px 10px 5px; }
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .grid-item { padding: 10px 6px; font-size: 0.85em; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>拼拼貼貼閉著眼睛都能做的<br>蝶古巴特風格參考小幫手</h1>
+  <div class="subtitle">點選風格名稱查看參考圖片</div>
+  <div class="grid" id="styleGrid"></div>
+  <footer>
+    圖片來自 <a href="https://pixabay.com" target="_blank">Pixabay</a> · CC0 免費商用
+  </footer>
+</div>
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <button class="close-btn" id="closeBtn">&times;</button>
+    <img id="modalImg" src="" alt="">
+    <div class="modal-info">
+      <h2 id="modalTitle"></h2>
+      <p id="modalSubtitle"></p>
+    </div>
+  </div>
+</div>
+<script>
+const styles = [
+  { name: "浪漫玫瑰", eng: "Romantic Rose", url: "https://pixabay.com/get/gd81ae2b444b478c6ac2ee082e59a6a0f05abf21afa90560f59ab65a1660fbf0ae079e5269724d86fc12dc4e279edb2d76d4b2f4d3ad9f9231f44e4767dd444e7_1280.jpg" },
+  { name: "鄉村田園", eng: "Country Garden", url: "https://pixabay.com/get/ga896e5ede8afe37554c99bf37588ed5a74f49a4aa08cafd0730268272e6f5eed632ba903db69e817da04a6dedf4db42998ef4f64e666d1f03445cdc1cbc528fc_1280.jpg" },
+  { name: "普羅旺斯", eng: "Provence", url: "https://pixabay.com/get/g0ac5a70c8077bc8cc0dd6fd63f37c22a4ba6b479d38402574ad36b0529d80217e75af39cecb2909009d3966d4a32a8361999f457f3174c56010b3e8107394150_1280.jpg" },
+  { name: "經典維多利亞", eng: "Classic Victorian", url: "https://pixabay.com/get/g329e172ea17ab93e62ed83cbbd76b6965fb41f9071c9839cd961fde5522d6550f84a3e5d9547b587d84ad8145e10fcc095e2d707139a7dad54808ea532349b1b_1280.jpg" },
+  { name: "復古懷舊", eng: "Vintage Nostalgia", url: "https://pixabay.com/get/gf320a6b4f958a638c06a095f5304228cfa7246d429fa945a63580953a7fc821bfc0bd674aa96f019deb0c3f2dd1100fd578741468c06062afc162c152a3942a4_1280.jpg" },
+  { name: "古典巴洛克", eng: "Baroque Classic", url: "https://pixabay.com/get/g88c05b0480825870736adb01cf4577dd9c4d86e16fb4c771d0b83c2f9076eceeba540a2e64f78df0a365adc3f6d9cffe_1280.png" },
+  { name: "華麗洛可可", eng: "Rococo Elegance", url: "https://pixabay.com/get/g934fe71f996da38f26e2d8b44924400c46c75ab4cb99cc04589ba0347b18617ac2234f49f14211483a4f783e22e6639e4249725e254f7d84a36d475d5d31a813_1280.jpg" },
+  { name: "極簡現代", eng: "Minimal Modern", url: "https://pixabay.com/get/gc570c5c9c06d9cc02c1d0e87357189e9735816df09b1b6aa49f1147a04fc2823b574b79f1112a6132603a7afe0ad5818cf396a60ca3b1798663b411ba444e6fe_1280.jpg" },
+  { name: "北歐簡約", eng: "Scandinavian Simplicity", url: "https://pixabay.com/get/gd4921dc1be584e55aef54a051238959178255145f400e3ca121944a3b71cf5334ab7838b029a2da5ec7ea7e4422bffb94b1cbf737f32c6a6d328c8a88e25cb59_1280.png" },
+  { name: "波希米亞", eng: "Bohemian", url: "https://pixabay.com/get/g85f611cd894c0bd9c16d7708fcfde8df24ac98ba44a2c5c35db838e756e857e581f0abeed50284dc271f9ced8641d98b90a136a3f1599269ef81878319b7c387_1280.png" },
+  { name: "民族圖騰", eng: "Ethnic Tribal", url: "https://pixabay.com/get/g2a7dcdfa27b75fc4d1b467ede99a594155166616b3da38c3613ade605d59a3b04f2d7da1d270adbf6f6cf86405934dc3_1280.jpg" },
+  { name: "日式禪風", eng: "Japanese Zen", url: "https://pixabay.com/get/gd4af190ed2ad2b12a9eb98ef70cc66596c8a8f5552715ce121183f276d3780e50115213366e8c5733f2f25cdb74b6cd2_1280.jpg" },
+  { name: "東方水墨", eng: "Oriental Ink", url: "https://pixabay.com/get/g6cb784c60caab6a26c6a53ba50b21c7e99786dbf02042c5373afb58541cb6e733e4c04ac685f5a218ed264bef4becb6bbeba20d7474fd0d8476d4c99bc7a4ef4_1280.jpg" },
+  { name: "童話夢幻", eng: "Fairytale Fantasy", url: "https://pixabay.com/get/g760d657db102ee433078186e563ed0ca732b48c105989b32c73f7ac9751b891f8ca1de090fa1e03b232635a38d60b632706d53e3913898c5a8070dcbb5bd8114_1280.jpg" },
+  { name: "海洋風情", eng: "Ocean Breeze", url: "https://pixabay.com/get/ga1e8d0bbde14672e5368f8a6687056f7b612896d67725c0403cf0f3e17903eab7d41edaf3ecd5a73baa0ab7f2b7caca96bb92ea466580609fdbe105b811d2f72_1280.jpg" },
+  { name: "自然森林", eng: "Forest Nature", url: "https://pixabay.com/get/g32fd92e7c9c438cf7c1dc04fae24800df18dd71c0f1db3869e8632416960ea8aac8695efdbabd9970401248514b90cdb10727ee160c37fbb58b0914667ca8fa6_1280.jpg" },
+  { name: "蝴蝶花卉", eng: "Butterfly Floral", url: "https://pixabay.com/get/g915a1be088bb4d7d0090c7b6ed9732881bdb5fd2627f2394c30f309d12d2d546e508d689704507adb4471a7e7820a87cee2bb41aba735bebb3b2bedbd1587df3_1280.jpg" },
+  { name: "優雅蕾絲", eng: "Elegant Lace", url: "https://pixabay.com/get/g5a07c3116d5d74d3a4c51ea9dbe92edee01ba9924f015cdb9b6c93f43a5c576a860992eda98fd2240cc834634fd7ad69fb33b768ba4ba0d45a829f6cff9b6bde_1280.jpg" },
+  { name: "時尚幾何", eng: "Modern Geometric", url: "https://pixabay.com/get/gb9b1cb8a0c83629f6cd5e0098caf14ce9f533dfd02fe9e04b85ddc309c8c5a297b364aa92e4b148cac064a315637c069932b747579d9b512ad0a08bcb25a2bb0_1280.png" },
+  { name: "黑白經典", eng: "Black & White Classic", url: "https://pixabay.com/get/gf89911fd2dff95f09a899248aa0182a7f43ceaab5da0fbeda969ad2db93b97fde5d43b3ff5b32c19d385977cfda98360_1280.jpg" },
+  { name: "金色華麗", eng: "Golden Luxury", url: "https://pixabay.com/get/g078847aa21c56e10931e797302cbf6d7b6e87cfe6a9933f202926f44300ac12285c64541a72ce0f2619110a7cdf01c4c592efc4af3bb5c8bbf5fc28b040fc88c_1280.png" },
+  { name: "銀色冷豔", eng: "Silver Elegance", url: "https://pixabay.com/get/gdfa2f7be158c031d9ffa8a809d5c5234a7ed44ecf8d22383598141aad71b74c788fae26bb7b844ae412456f8003a8d0e4834ad1ee39efbff336a64a5edf7ad75_1280.jpg" },
+  { name: "櫻花和風", eng: "Sakura Japanese", url: "https://pixabay.com/get/g50b521691c8caab2ad416bb120ec4936f3aa75cb7577aab1e272497027fa0605112753ca3016b9f496a1d1fb1660209970701f066d993d87bef79d0d661f8e8d_1280.jpg" },
+  { name: "法式優雅", eng: "French Elegance", url: "https://pixabay.com/get/g5ad4ed8c13950d0cf8ceaed69ad7e41b49eafe9d16539c829abb2628891de4210dfa6aa385af7440df3ac86d7652698db5d47ed5f776a4cfd28b2d3337230cba_1280.jpg" },
+  { name: "英式花園", eng: "English Garden", url: "https://pixabay.com/get/g1d0563d81cd6008f39abe8e508c265484188cfe190fae72767911057de10a7e7f2ebe84bf8154df3c4b72a293d7ea9155d3a17e92e5518d4f68b3fd258664ec7_1280.jpg" },
+  { name: "地中海藍", eng: "Mediterranean Blue", url: "https://pixabay.com/get/g82ed1b98ec01724abc47d55ab7e378ef481c07e1db1c4349af362981d69e9c040ed2fcd2f6938a5ebd022cad7dc0e487d5b73c68b41de430e393a442abe704a2_1280.jpg" },
+  { name: "美式鄉村", eng: "American Country", url: "https://pixabay.com/get/gb557c19f0b14e65ebab3e2840c4bad2c0f6d7a14580d2214b89428d110e33c9cbe4623854bc58fcfc20ffddf8dc1b1f0_1280.jpg" },
+  { name: "工業復古", eng: "Industrial Vintage", url: "https://pixabay.com/get/g1b8caea0cf82fd60b5c7d13f1501ead89dc3db1c7082d0cca85b26970d6a1be71ac1b819db7ac3cf0d66a88d490e0e293dfd3eb58e9960de59fd1d98071832ff_1280.jpg" },
+  { name: "可愛甜美", eng: "Sweet & Cute", url: "https://pixabay.com/get/gec2ffc68c010b6a62b870f94169f3f009659d4931f1ed11ef7b825b5a9a199e5cdac6244792c4db2a3ba6b405e828e44ecc05e4c4a071a2cdde65367ac6826e7_1280.jpg" },
+  { name: "聖誕節慶", eng: "Christmas Festive", url: "https://pixabay.com/get/g7e57cf0ce18454616b4362c736c688b5ac9c0c25583d6845a8be50b34d766ebddea353804944535c3222bb4bdf3bbe5a9f4c9829f0435c5bb1af04ed39563089_1280.jpg" }
+];
+
+const grid = document.getElementById('styleGrid');
+const modal = document.getElementById('modal');
+const modalImg = document.getElementById('modalImg');
+const modalTitle = document.getElementById('modalTitle');
+const modalSubtitle = document.getElementById('modalSubtitle');
+const closeBtn = document.getElementById('closeBtn');
+
+let activeIndex = -1;
+
+styles.forEach((s, i) => {
+  const div = document.createElement('div');
+  div.className = 'grid-item';
+  div.textContent = s.name;
+  div.addEventListener('click', () => {
+    document.querySelectorAll('.grid-item').forEach(el => el.classList.remove('active'));
+    div.classList.add('active');
+    activeIndex = i;
+    modalImg.src = s.url;
+    modalTitle.textContent = s.name;
+    modalSubtitle.textContent = s.eng;
+    modal.classList.add('open');
+  });
+  grid.appendChild(div);
+});
+
+function closeModal() {
+  modal.classList.remove('open');
+  if (activeIndex >= 0) {
+    document.querySelectorAll('.grid-item')[activeIndex]?.classList.remove('active');
+    activeIndex = -1;
+  }
+}
+closeBtn.addEventListener('click', closeModal);
+modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+</script>
+</body>
+</html>
