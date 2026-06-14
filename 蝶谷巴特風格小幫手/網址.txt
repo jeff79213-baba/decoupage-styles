@@ -1,8 +1,5 @@
-GitHub Pages（建議使用此網址）:
-https://jeff79213-baba.github.io/decoupage-styles/
-
-直接連結:
-https://jeff79213-baba.github.io/decoupage-styles/疊古巴特風格小幫手/decoupage-styles.html
+GitHub Pages:
+https://jeff79213-baba.github.io/decoupage-styles/蝶谷巴特風格小幫手/decoupage-styles.html
 
 Firebase 後台:
-https://console.firebase.google.com/project/opencode-sk/firestore/data/~2Fprojects~2F疊古巴特風格小幫手
+https://console.firebase.google.com/project/opencode-sk/firestore/data/~2Fprojects~2F蝶谷巴特風格小幫手
