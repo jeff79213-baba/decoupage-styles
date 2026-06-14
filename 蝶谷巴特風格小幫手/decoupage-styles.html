@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>蝶古巴特風格參考小幫手</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+  background: #faf6f0;
+  color: #4a3728;
+  min-height: 100vh;
+}
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+h1 {
+  text-align: center;
+  font-size: 1.6em;
+  padding: 30px 10px 10px;
+  line-height: 1.4;
+  color: #5a3e2b;
+  letter-spacing: 1px;
+}
+.subtitle {
+  text-align: center;
+  color: #9a7b6a;
+  font-size: 0.9em;
+  margin-bottom: 30px;
+  border-bottom: 2px dashed #dccfc4;
+  padding-bottom: 20px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px;
+  margin-bottom: 30px;
+}
+.grid-item {
+  background: #fff;
+  border: 1px solid #e8ddd2;
+  border-radius: 8px;
+  padding: 14px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.95em;
+  user-select: none;
+}
+.grid-item:hover {
+  background: #f5ede4;
+  border-color: #c4a88a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.grid-item.active {
+  background: #dccfc4;
+  border-color: #8b6f58;
+  color: #2d1f14;
+  font-weight: bold;
+}
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.modal.open { display: flex; }
+.modal-content {
+  background: #fff;
+  border-radius: 12px;
+  max-width: 800px;
+  max-height: 90vh;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.modal-img-wrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-height: 70vh;
+  overflow: hidden;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.modal-info {
+  padding: 15px 20px;
+  border-top: 1px solid #e8ddd2;
+}
+.modal-info h2 { font-size: 1.1em; color: #4a3728; }
+.modal-info p { font-size: 0.85em; color: #9a7b6a; margin-top: 4px; }
+.close-btn {
+  position: absolute;
+  top: 10px; right: 14px;
+  font-size: 28px;
+  color: #fff;
+  cursor: pointer;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  line-height: 1;
+  background: none;
+  border: none;
+  z-index: 10;
+}
+footer {
+  text-align: center;
+  color: #b8a394;
+  font-size: 0.75em;
+  padding: 30px 0;
+}
+footer a { color: #8b6f58; text-decoration: none; }
+@media (max-width: 600px) {
+  h1 { font-size: 1.2em; padding: 20px 10px 5px; }
+  .grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .grid-item { padding: 10px 6px; font-size: 0.85em; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>拼拼貼貼閉著眼睛都能做的<br>蝶古巴特風格參考小幫手</h1>
+  <div class="subtitle">點選風格名稱查看參考圖片</div>
+  <div class="grid" id="styleGrid"></div>
+  <footer>
+    圖片來自 <a href="https://pixabay.com" target="_blank">Pixabay</a> · CC0 免費商用
+  </footer>
+</div>
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <button class="close-btn" id="closeBtn">&times;</button>
+    <div class="modal-img-wrap" id="modalImg"></div>
+    <div class="modal-info">
+      <h2 id="modalTitle"></h2>
+      <p id="modalSubtitle"></p>
+    </div>
+  </div>
+</div>
+<script>
+const styles = [
+  { name: "01 復古玫瑰", eng: "Vintage Rose", img: "styles_hd/01_復古玫瑰.png" },
+  { name: "02 英式花園", eng: "English Garden", img: "styles_hd/02_英式花園.png" },
+  { name: "03 向日葵田園", eng: "Sunflower Field", img: "styles_hd/03_向日葵田園.png" },
+  { name: "04 薰衣草花田", eng: "Lavender Field", img: "styles_hd/04_薰衣草花田.png" },
+  { name: "05 櫻花風情", eng: "Cherry Blossom", img: "styles_hd/05_櫻花風情.png" },
+  { name: "06 牡丹富貴", eng: "Peony Luxury", img: "styles_hd/06_牡丹富貴.png" },
+  { name: "07 多肉植物", eng: "Succulents", img: "styles_hd/07_多肉植物.png" },
+  { name: "08 野花草原", eng: "Wildflower Meadow", img: "styles_hd/08_野花草原.png" },
+  { name: "09 蝴蝶花園", eng: "Butterfly Garden", img: "styles_hd/09_蝴蝶花園.png" },
+  { name: "10 貓咪", eng: "Kittens", img: "styles_hd/10_貓咪.png" },
+  { name: "11 柴犬", eng: "Shiba Inu", img: "styles_hd/11_柴犬.png" },
+  { name: "12 貓頭鷹", eng: "Owl", img: "styles_hd/12_貓頭鷹.png" },
+  { name: "13 兔子", eng: "Rabbit", img: "styles_hd/13_兔子.png" },
+  { name: "14 孔雀", eng: "Peacock", img: "styles_hd/14_孔雀.png" },
+  { name: "15 小鳥", eng: "Birds", img: "styles_hd/15_小鳥.png" },
+  { name: "16 海洋動物", eng: "Ocean Animals", img: "styles_hd/16_海洋動物.png" },
+  { name: "17 巴黎鐵塔", eng: "Eiffel Tower", img: "styles_hd/17_巴黎鐵塔.png" },
+  { name: "18 歐洲街景", eng: "European Street", img: "styles_hd/18_歐洲街景.png" },
+  { name: "19 英倫復古", eng: "British Vintage", img: "styles_hd/19_英倫復古.png" },
+  { name: "20 鄉村雜貨", eng: "Country Market", img: "styles_hd/20_鄉村雜貨.png" },
+  { name: "21 咖啡時光", eng: "Coffee Time", img: "styles_hd/21_咖啡時光.png" },
+  { name: "22 海邊風景", eng: "Seaside View", img: "styles_hd/22_海邊風景.png" },
+  { name: "23 老郵票拼貼", eng: "Vintage Stamps", img: "styles_hd/23_老郵票拼貼.png" },
+  { name: "24 復古時鐘", eng: "Vintage Clock", img: "styles_hd/24_復古時鐘.png" },
+  { name: "25 古典書房", eng: "Classic Study", img: "styles_hd/25_古典書房.png" },
+  { name: "26 老式腳踏車", eng: "Vintage Bicycle", img: "styles_hd/26_老式腳踏車.png" },
+  { name: "27 聖誕節", eng: "Christmas", img: "styles_hd/27_聖誕節.png" },
+  { name: "28 萬聖節", eng: "Halloween", img: "styles_hd/28_萬聖節.png" },
+  { name: "29 梵谷星空", eng: "Starry Night", img: "styles_hd/29_梵谷星空.png" },
+  { name: "30 書法文青", eng: "Calligraphy", img: "styles_hd/30_書法文青.png" }
+];
+
+const grid = document.getElementById('styleGrid');
+const modal = document.getElementById('modal');
+const modalImg = document.getElementById('modalImg');
+const modalTitle = document.getElementById('modalTitle');
+const modalSubtitle = document.getElementById('modalSubtitle');
+const closeBtn = document.getElementById('closeBtn');
+
+let activeIndex = -1;
+
+styles.forEach((s, i) => {
+  const div = document.createElement('div');
+  div.className = 'grid-item';
+  div.textContent = s.name;
+  div.addEventListener('click', () => {
+    document.querySelectorAll('.grid-item').forEach(el => el.classList.remove('active'));
+    div.classList.add('active');
+    activeIndex = i;
+    modalImg.style.backgroundImage = `url('${s.img}')`;
+    modalTitle.textContent = s.name;
+    modalSubtitle.textContent = s.eng;
+    modal.classList.add('open');
+  });
+  grid.appendChild(div);
+});
+
+function closeModal() {
+  modal.classList.remove('open');
+  if (activeIndex >= 0) {
+    document.querySelectorAll('.grid-item')[activeIndex]?.classList.remove('active');
+    activeIndex = -1;
+  }
+}
+closeBtn.addEventListener('click', closeModal);
+modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+</script>
+</body>
+</html>
