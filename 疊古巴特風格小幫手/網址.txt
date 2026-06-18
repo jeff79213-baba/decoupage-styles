@@ -1,5 +1,0 @@
-GitHub Pages:
-https://jeff79213-baba.github.io/decoupage-styles/疊古巴特風格小幫手/decoupage-styles.html
-
-Firebase:
-https://console.firebase.google.com/project/opencode-sk/firestore/data/~2Fprojects~2F疊古巴特風格小幫手

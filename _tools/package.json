@@ -1,0 +1,9 @@
+{
+  "name": "opencode-firebase-sync",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "node-telegram-bot-api": "^0.66.0"
+  }
+}
