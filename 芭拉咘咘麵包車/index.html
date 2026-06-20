@@ -633,22 +633,16 @@ function renderMenu() {
     return;
   }
   grid.innerHTML = cat.items.map((item, idx) => {
-    const single = item.prices.length === 1;
     return `<div class="itemCard" data-idx="${idx}">
       <div class="itemCardTop">
         <div class="itemName">${item.name}</div>
       </div>
       <div class="itemPrices">
-        ${single ? `
-          <div class="priceLine">
-            <span class="plLabel">${item.prices[0].label}</span>
-            <span class="plPrice">$${item.prices[0].price}</span>
-            <button class="addCartBtn" data-idx="${idx}" data-qty="1">+</button>
-          </div>` :
-          item.prices.map((p, pi) => `
-          <div class="priceLine${pi < item.prices.length-1 ? ' withDivider' : ''}" data-price="${pi}">
+        ${item.prices.map((p, pi) => `
+          <div class="priceLine${pi < item.prices.length-1 ? ' withDivider' : ''}">
             <span class="plLabel">${p.label}</span>
             <span class="plPrice">$${p.price}</span>
+            <button class="addCartBtn" data-idx="${idx}" data-price="${pi}" data-qty="1">+</button>
           </div>`).join("")
         }
       </div>
@@ -1026,12 +1020,13 @@ function renderAdminItems() {
       <span class="adminRowName">${item.name}</span>
       <div class="adminRowActions">
         <button class="editBtn" onclick="editItem(${i})">✏️</button>
+        <button class="editBtn" onclick="toggleAdminPrices(${i})" title="管理價位">💰</button>
         <button class="delBtn" onclick="deleteItem(${i})">🗑️</button>
       </div>
     </div>
-    <div class="adminPrices">
+    <div class="adminPrices" id="adminPrices${i}" style="display:none">
       ${pricesHtml}
-      <div class="adminPriceRow" style="border:none;gap:6px">
+      <div class="adminPriceRow" style="border:none;gap:6px;margin-top:6px">
         <input class="apInputLabel" id="apl${i}" placeholder="標籤" value="單個">
         <input class="apInputAmount" id="apa${i}" placeholder="金額" type="number" value="0">
         <button onclick="addItemPrice(${i})" style="padding:5px 12px;border:none;border-radius:6px;background:var(--primary);color:#fff;cursor:pointer;font-size:12px">+價位</button>
@@ -1049,7 +1044,12 @@ function addCategoryInline() {
   CATEGORIES.push({ name, items: [] });
   saveCategories();
   input.value = "";
-  renderAdmin();
+  renderAdminCategories();
+  renderAdminCatSelect();
+  renderAdminItems();
+  const sel = document.getElementById("adminCatSelect");
+  if (sel) sel.value = name;
+  document.getElementById("newItemName").focus();
   showToast(`已新增分類「${name}」`);
 }
 
@@ -1058,7 +1058,10 @@ function editCategory(idx) {
   if (!name || !name.trim()) return;
   CATEGORIES[idx].name = name.trim();
   saveCategories();
-  renderAdmin();
+  renderAdminCategories();
+  renderAdminCatSelect();
+  renderAdminItems();
+  if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
   showToast("分類名稱已更新");
 }
 
@@ -1067,7 +1070,9 @@ function deleteCategory(idx) {
     CATEGORIES.splice(idx, 1);
     if (currentCategory >= CATEGORIES.length) currentCategory = Math.max(0, CATEGORIES.length - 1);
     saveCategories();
-    renderAdmin();
+    renderAdminCategories();
+    renderAdminCatSelect();
+    renderAdminItems();
     if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
     showToast("分類已刪除");
   });
@@ -1096,7 +1101,8 @@ function addItemInline() {
   saveCategories();
   nameInput.value = "";
   priceInput.value = "0";
-  renderAdmin();
+  renderAdminItems();
+  if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
   showToast(`已新增品項「${name}」`);
 }
 
@@ -1107,7 +1113,8 @@ function editItem(idx) {
   if (!name || !name.trim()) return;
   cat.items[idx].name = name.trim();
   saveCategories();
-  renderAdmin();
+  renderAdminItems();
+  if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
   showToast("品項名稱已更新");
 }
 
@@ -1117,10 +1124,15 @@ function deleteItem(idx) {
   showConfirm(`確定刪除品項「${cat.items[idx].name}」？`, () => {
     cat.items.splice(idx, 1);
     saveCategories();
-    renderAdmin();
+    renderAdminItems();
     if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
     showToast("品項已刪除");
   });
+}
+
+function toggleAdminPrices(idx) {
+  const el = document.getElementById("adminPrices" + idx);
+  if (el) el.style.display = el.style.display === "none" ? "block" : "none";
 }
 
 function addItemPrice(itemIdx) {
@@ -1133,7 +1145,8 @@ function addItemPrice(itemIdx) {
   if (isNaN(price) || price < 0) { showToast("請輸入有效價格"); return; }
   item.prices.push({ label, price });
   saveCategories();
-  renderAdmin();
+  renderAdminItems();
+  if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
   showToast("價位已新增");
 }
 
@@ -1148,7 +1161,8 @@ function editItemPrice(itemIdx, priceIdx) {
   price.label = label.trim();
   price.price = amt;
   saveCategories();
-  renderAdmin();
+  renderAdminItems();
+  if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
   showToast("價位已更新");
 }
 
@@ -1160,7 +1174,8 @@ function deleteItemPrice(itemIdx, priceIdx) {
   showConfirm(`確定刪除「${item.prices[priceIdx].label} $${item.prices[priceIdx].price}」？`, () => {
     item.prices.splice(priceIdx, 1);
     saveCategories();
-    renderAdmin();
+    renderAdminItems();
+    if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
     showToast("價位已刪除");
   });
 }
@@ -1253,7 +1268,9 @@ function initDragSort(container, type) {
       const [item] = CATEGORIES.splice(dragSrc, 1);
       CATEGORIES.splice(dropIdx, 0, item);
       saveCategories();
-      renderAdmin();
+      renderAdminCategories();
+      renderAdminCatSelect();
+      renderAdminItems();
       if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
     } else if (type === "item") {
       const sel = document.getElementById("adminCatSelect");
@@ -1262,7 +1279,7 @@ function initDragSort(container, type) {
       const [item] = cat.items.splice(dragSrc, 1);
       cat.items.splice(dropIdx, 0, item);
       saveCategories();
-      renderAdmin();
+      renderAdminItems();
     }
     dragSrc = null;
   }
@@ -1437,26 +1454,12 @@ function init() {
     renderMenu();
   });
 
-  // Menu: item card / add-to-cart button / price line click
+  // Menu: add-to-cart button
   document.getElementById("itemGrid").addEventListener("click", e => {
     const addBtn = e.target.closest(".addCartBtn");
     if (addBtn) {
-      addToCart(currentCategory, parseInt(addBtn.dataset.idx), 0, 1);
-      return;
-    }
-    const priceLine = e.target.closest(".priceLine");
-    if (priceLine && priceLine.dataset.price !== undefined) {
-      const card = priceLine.closest(".itemCard");
-      if (card) {
-        openItemModal(currentCategory, parseInt(card.dataset.idx), parseInt(priceLine.dataset.price));
-        return;
-      }
-    }
-    const card = e.target.closest(".itemCard");
-    if (!card) return;
-    const item = CATEGORIES[currentCategory]?.items[parseInt(card.dataset.idx)];
-    if (item && item.prices.length > 1) {
-      openItemModal(currentCategory, parseInt(card.dataset.idx));
+      const priceIdx = addBtn.dataset.price !== undefined ? parseInt(addBtn.dataset.price) : 0;
+      addToCart(currentCategory, parseInt(addBtn.dataset.idx), priceIdx, 1);
     }
   });
 
