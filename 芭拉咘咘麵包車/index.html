@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>芭拉咘咘麵包車</title>
+<title id="pageTitle">芭拉咘咘麵包車</title>
 <style>
 :root {
   --primary: #C4843B;
@@ -22,12 +22,14 @@ body {
   display: flex; flex-direction: column; padding-bottom: calc(60px + var(--safe-bottom));
 }
 header {
-  background: var(--primary); color: #fff; padding: 12px 16px;
+  background: var(--primary); color: #fff; padding: 10px 16px;
   display: flex; align-items: center; justify-content: space-between;
   position: sticky; top: 0; z-index: 100;
 }
+.headerLeft { flex: 1; min-width: 0; }
 #shopTitle { font-size: 18px; font-weight: 700; cursor: pointer; user-select: none; }
-.headerBtns { display: flex; gap: 8px; align-items: center; }
+#shopContact { font-size: 11px; opacity: 0.8; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.headerBtns { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 .headerBtns button {
   background: rgba(255,255,255,0.2); border: none; color: #fff;
   padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 14px;
@@ -57,6 +59,13 @@ header {
   height: 3px; background: var(--primary); border-radius: 0 0 3px 3px;
 }
 #tabBar button.hidden { display: none; }
+.cartBadge {
+  position: absolute; top: -2px; right: 8px;
+  background: #e74c3c; color: #fff; font-size: 10px; font-weight: 700;
+  min-width: 18px; height: 18px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
 
 /* Category Tabs */
 .categoryTabs {
@@ -78,18 +87,28 @@ header {
 
 .itemCard {
   background: var(--card); border-radius: var(--radius); padding: 14px;
-  box-shadow: var(--shadow); cursor: pointer; transition: transform 0.15s;
+  box-shadow: var(--shadow); transition: transform 0.15s;
   display: flex; flex-direction: column; gap: 6px;
 }
-.itemCard:active { transform: scale(0.97); }
-.itemCard .itemName { font-size: 15px; font-weight: 600; }
+.itemCardTop { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.itemCard .itemName { font-size: 15px; font-weight: 600; flex: 1; }
+.addCartBtn {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--primary); color: #fff; border: none;
+  font-size: 20px; cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s;
+}
+.addCartBtn:active { transform: scale(0.9); }
 .itemCard .itemPrice {
   font-size: 13px; color: var(--primary); font-weight: 500;
 }
-.itemCard .priceCount {
+.itemCardFooter { display: flex; justify-content: space-between; align-items: center; }
+.priceCount {
   font-size: 11px; color: #999; background: #f5f5f5;
-  padding: 2px 8px; border-radius: 10px; align-self: flex-start;
+  padding: 2px 8px; border-radius: 10px;
 }
+.itemUnitPrice { font-size: 16px; font-weight: 700; color: var(--primary); }
 
 /* Cart */
 .cartEmpty { text-align: center; padding: 40px 0; color: #aaa; font-size: 15px; }
@@ -172,24 +191,45 @@ header {
 }
 .adminRow {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 0; border-bottom: 1px solid #f0f0f0; gap: 8px;
+  padding: 8px 0; border-bottom: 1px solid #f0f0f0; gap: 6px;
 }
 .adminRow:last-child { border-bottom: none; }
-.adminRowName { flex: 1; font-size: 14px; }
-.adminRowActions { display: flex; gap: 6px; flex-shrink: 0; }
+.adminRowName { flex: 1; font-size: 14px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adminRowActions { display: flex; gap: 4px; flex-shrink: 0; }
 .adminRowActions button {
-  padding: 4px 10px; border: 1px solid #ddd; border-radius: 6px;
-  background: var(--card); cursor: pointer; font-size: 12px;
+  padding: 4px 8px; border: 1px solid #ddd; border-radius: 6px;
+  background: var(--card); cursor: pointer; font-size: 11px; line-height: 1;
 }
 .adminRowActions .editBtn { color: var(--primary); border-color: var(--primary); }
 .adminRowActions .delBtn { color: #e74c3c; border-color: #e74c3c; }
 .adminRowActions .priceBtn { color: #27ae60; border-color: #27ae60; }
-.btnAdd {
-  margin-top: 8px; padding: 8px 16px; border: 1.5px dashed var(--primary);
-  border-radius: 8px; background: transparent; color: var(--primary);
-  cursor: pointer; font-size: 13px; width: 100%;
+.dragHandle {
+  cursor: grab; padding: 4px 6px 4px 2px; color: #bbb; font-size: 16px;
+  user-select: none; flex-shrink: 0; touch-action: none;
 }
-.btnAdd:hover { background: rgba(196,132,59,0.05); }
+.dragHandle:active { cursor: grabbing; }
+.adminRow.dragging { opacity: 0.4; }
+.adminRow.dragOver { border-top: 2px solid var(--primary) !important; }
+.dragGhost {
+  position: fixed; pointer-events: none; z-index: 999;
+  opacity: 0.85; transform: scale(1.02); box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  border-radius: var(--radius); background: var(--card); padding: 8px 14px;
+  font-size: 14px; min-width: 150px;
+}
+
+.inlineAddRow {
+  display: flex; gap: 8px; margin-top: 8px;
+}
+.inlineAddRow input {
+  flex: 1; padding: 8px 12px; border: 1.5px solid #ddd; border-radius: 8px;
+  font-size: 14px; outline: none;
+}
+.inlineAddRow input:focus { border-color: var(--primary); }
+.inlineAddRow button {
+  padding: 8px 16px; border: none; border-radius: 8px;
+  background: var(--primary); color: #fff; font-size: 14px; cursor: pointer;
+  white-space: nowrap;
+}
 
 /* Admin Theme */
 .themeGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -206,6 +246,29 @@ header {
 .colorEditItem { display: flex; align-items: center; gap: 8px; font-size: 13px; }
 .colorEditItem input[type="color"] { width: 40px; height: 34px; border: none; border-radius: 6px; cursor: pointer; padding: 0; }
 .colorEditItem label { flex: 1; }
+
+/* Admin Settings Grid */
+.settingRow {
+  display: flex; align-items: center; gap: 10px; padding: 6px 0;
+}
+.settingRow label { font-size: 14px; min-width: 60px; }
+.settingRow input[type="text"],
+.settingRow input[type="password"] {
+  flex: 1; padding: 8px 10px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 14px;
+}
+.settingRow input:focus { border-color: var(--primary); outline: none; }
+.settingRow .toggleWrap { display: flex; align-items: center; gap: 8px; }
+.toggleSwitch {
+  width: 44px; height: 24px; border-radius: 12px; background: #ccc;
+  cursor: pointer; position: relative; transition: background 0.2s; border: none; padding: 0;
+}
+.toggleSwitch.on { background: var(--primary); }
+.toggleSwitch::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 20px; height: 20px; border-radius: 50%; background: #fff;
+  transition: transform 0.2s;
+}
+.toggleSwitch.on::after { transform: translateX(20px); }
 
 /* Modal Overlay */
 .modalOverlay {
@@ -287,7 +350,10 @@ header {
 <body>
 
 <header>
-  <div id="shopTitle">芭拉咘咘麵包車</div>
+  <div class="headerLeft">
+    <div id="shopTitle">芭拉咘咘麵包車</div>
+    <div id="shopContact" style="display:none"></div>
+  </div>
   <div class="headerBtns">
     <button id="qrBtn">QR</button>
   </div>
@@ -368,6 +434,8 @@ header {
   </div>
 </div>
 
+<input type="file" id="importInput" accept=".json" style="display:none">
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -400,7 +468,11 @@ const DEFAULT_CATEGORIES = [
   ]}
 ];
 
-const DEFAULT_CONFIG = { password:"0000", themeName:"出爐暖棕", colors:{...THEMES["出爐暖棕"]} };
+const DEFAULT_CONFIG = {
+  password:"0000", shopName:"芭拉咘咘麵包車",
+  address:"", phone:"", showContact:false,
+  themeName:"出爐暖棕", colors:{...THEMES["出爐暖棕"]}
+};
 
 // ============ STATE ============
 let CONFIG = {};
@@ -409,47 +481,32 @@ let ORDERS = [];
 let CART = [];
 let isAdmin = false;
 let currentCategory = 0;
-let itemModalState = null; // { categoryIdx, itemIdx, selectedPrice, qty }
+let itemModalState = null;
 let confirmCallback = null;
 
 // ============ PERSISTENCE ============
 function loadData() {
-  try {
-    CONFIG = JSON.parse(localStorage.getItem("bala_config")) || JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+  try { CONFIG = JSON.parse(localStorage.getItem("bala_config")) || JSON.parse(JSON.stringify(DEFAULT_CONFIG));
   } catch(e) { CONFIG = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); }
-  try {
-    CATEGORIES = JSON.parse(localStorage.getItem("bala_categories")) || JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
+  try { CATEGORIES = JSON.parse(localStorage.getItem("bala_categories")) || JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
   } catch(e) { CATEGORIES = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)); }
-  try {
-    ORDERS = JSON.parse(localStorage.getItem("bala_orders")) || [];
+  try { ORDERS = JSON.parse(localStorage.getItem("bala_orders")) || [];
   } catch(e) { ORDERS = []; }
-  try {
-    CART = JSON.parse(localStorage.getItem("bala_cart")) || [];
+  try { CART = JSON.parse(localStorage.getItem("bala_cart")) || [];
   } catch(e) { CART = []; }
   isAdmin = localStorage.getItem("bala_admin") === "true";
 }
+function saveConfig() { localStorage.setItem("bala_config", JSON.stringify(CONFIG)); }
+function saveCategories() { localStorage.setItem("bala_categories", JSON.stringify(CATEGORIES)); }
+function saveOrders() { localStorage.setItem("bala_orders", JSON.stringify(ORDERS)); }
+function saveCart() { localStorage.setItem("bala_cart", JSON.stringify(CART)); }
+function saveAdmin() { localStorage.setItem("bala_admin", isAdmin ? "true" : ""); }
 
-function saveConfig() {
-  localStorage.setItem("bala_config", JSON.stringify(CONFIG));
+function getAllData() {
+  return { config: CONFIG, categories: CATEGORIES, orders: ORDERS, exportedAt: new Date().toISOString() };
 }
 
-function saveCategories() {
-  localStorage.setItem("bala_categories", JSON.stringify(CATEGORIES));
-}
-
-function saveOrders() {
-  localStorage.setItem("bala_orders", JSON.stringify(ORDERS));
-}
-
-function saveCart() {
-  localStorage.setItem("bala_cart", JSON.stringify(CART));
-}
-
-function saveAdmin() {
-  localStorage.setItem("bala_admin", isAdmin ? "true" : "");
-}
-
-// ============ THEME ============
+// ============ THEME & HEADER ============
 function applyTheme(colors) {
   const r = document.documentElement.style;
   r.setProperty("--primary", colors.primary);
@@ -459,11 +516,40 @@ function applyTheme(colors) {
   r.setProperty("--accent", colors.accent);
 }
 
+function updateHeader() {
+  const name = CONFIG.shopName || "芭拉咘咘麵包車";
+  document.getElementById("shopTitle").textContent = name;
+  document.getElementById("pageTitle").textContent = name;
+  const contact = document.getElementById("shopContact");
+  const parts = [CONFIG.address, CONFIG.phone].filter(Boolean);
+  if (CONFIG.showContact && parts.length) {
+    contact.style.display = "block";
+    contact.textContent = parts.join(" · ");
+  } else {
+    contact.style.display = "none";
+  }
+}
+
 // ============ TOAST ============
 function showToast(msg) {
   const t = document.getElementById("toast");
   t.textContent = msg; t.classList.add("show");
   clearTimeout(t._timer); t._timer = setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+// ============ CART BADGE ============
+function updateCartBadge() {
+  const total = CART.reduce((s, c) => s + c.qty, 0);
+  const cartBtn = document.querySelector('#tabBar button[data-view="cart"]');
+  if (!cartBtn) return;
+  const old = cartBtn.querySelector(".cartBadge");
+  if (old) old.remove();
+  if (total > 0) {
+    const badge = document.createElement("span");
+    badge.className = "cartBadge";
+    badge.textContent = total > 99 ? "99+" : total;
+    cartBtn.appendChild(badge);
+  }
 }
 
 // ============ TABS ============
@@ -498,6 +584,7 @@ function updateTabVisibility() {
       switchTab("menu");
     }
   }
+  updateCartBadge();
 }
 
 // ============ MENU ============
@@ -515,23 +602,25 @@ function renderMenu() {
   }
   grid.innerHTML = cat.items.map((item, idx) => {
     const priceStr = item.prices.map(p => `${p.label} $${p.price}`).join(" / ");
+    const single = item.prices.length === 1;
     return `<div class="itemCard" data-idx="${idx}">
-      <div class="itemName">${item.name}</div>
+      <div class="itemCardTop">
+        <div class="itemName">${item.name}</div>
+        ${single ? `<button class="addCartBtn" data-idx="${idx}">+</button>` : ''}
+      </div>
       <div class="itemPrice">${priceStr}</div>
-      <div class="priceCount">${item.prices.length} 種價位</div>
+      <div class="itemCardFooter">
+        <span class="priceCount">${item.prices.length} 種價位</span>
+        ${single ? `<span class="itemUnitPrice">$${item.prices[0].price}</span>` : ''}
+      </div>
     </div>`;
   }).join("");
 }
 
 // ============ ITEM MODAL ============
 function openItemModal(catIdx, itemIdx) {
-  const item = CATEGORIES[catIdx].items[itemIdx];
-  if (!item) return;
-  if (item.prices.length === 0) return;
-  if (item.prices.length === 1) {
-    addToCart(catIdx, itemIdx, 0, 1);
-    return;
-  }
+  const item = CATEGORIES[catIdx]?.items[itemIdx];
+  if (!item || item.prices.length < 2) return;
   itemModalState = { categoryIdx: catIdx, itemIdx, selectedPrice: 0, qty: 1 };
   document.getElementById("itemModalTitle").textContent = item.name;
   const container = document.getElementById("priceOptions");
@@ -541,12 +630,8 @@ function openItemModal(catIdx, itemIdx) {
       <span class="optPrice">$${p.price}</span>
     </div>`
   ).join("");
-  updateItemModalQty();
+  document.getElementById("itemQtyDisplay").textContent = "1";
   document.getElementById("itemModal").classList.add("open");
-}
-
-function updateItemModalQty() {
-  document.getElementById("itemQtyDisplay").textContent = itemModalState ? itemModalState.qty : 1;
 }
 
 // ============ CART ============
@@ -564,6 +649,7 @@ function addToCart(catIdx, itemIdx, priceIdx, qty) {
   }
   saveCart();
   showToast(`已加入 ${item.name} (${price.label}) × ${qty}`);
+  updateCartBadge();
   if (document.getElementById("view-cart").classList.contains("active")) renderCart();
 }
 
@@ -571,12 +657,14 @@ function removeFromCart(index) {
   CART.splice(index, 1);
   saveCart();
   renderCart();
+  updateCartBadge();
 }
 
 function changeCartQty(index, delta) {
   CART[index].qty = Math.max(1, CART[index].qty + delta);
   saveCart();
   renderCart();
+  updateCartBadge();
 }
 
 function renderCart() {
@@ -640,6 +728,7 @@ function checkout() {
   CART = [];
   saveCart();
   renderCart();
+  updateCartBadge();
   showToast("結帳成功！");
 }
 
@@ -692,6 +781,7 @@ let statsFilter = "week";
 
 function renderStats() {
   const container = document.getElementById("statsContent");
+  const sn = CONFIG.shopName || "芭拉咘咘麵包車";
   container.innerHTML = `
     <div class="statsFilter">
       <button data-filter="week" class="${statsFilter==='week'?'active':''}">本週</button>
@@ -705,8 +795,8 @@ function renderStats() {
   const now = new Date();
   let filtered = ORDERS;
   if (statsFilter === "week") {
-    const currentWeek = getWeekNumber(now);
-    filtered = ORDERS.filter(o => o.week === currentWeek && o.year === now.getFullYear());
+    const w = getWeekNumber(now);
+    filtered = ORDERS.filter(o => o.week === w && o.year === now.getFullYear());
   } else if (statsFilter === "month") {
     filtered = ORDERS.filter(o => o.month === now.getMonth()+1 && o.year === now.getFullYear());
   }
@@ -740,7 +830,8 @@ function renderStats() {
 
 function exportStats() {
   if (!ORDERS.length) { showToast("無資料可匯出"); return; }
-  let text = `芭拉咘咘麵包車 - 銷售報表\n`;
+  const sn = CONFIG.shopName || "芭拉咘咘麵包車";
+  let text = `${sn} - 銷售報表\n`;
   text += `產出時間: ${new Date().toLocaleString()}\n`;
   text += `================================\n\n`;
 
@@ -757,13 +848,11 @@ function exportStats() {
     });
   });
 
-  text += `【銷售統計】\n`;
-  text += `品項\t價位\t數量\t金額\n`;
+  text += `【銷售統計】\n品項\t價位\t數量\t金額\n`;
   Object.values(allStats).sort((a,b) => b.amount - a.amount).forEach(s => {
     text += `${s.name}\t${s.label}\t${s.qty}\t$${s.amount}\n`;
   });
-  text += `--------------------------------\n`;
-  text += `合計\t\t${totalQty}\t$${totalAmount}\n\n`;
+  text += `--------------------------------\n合計\t\t${totalQty}\t$${totalAmount}\n\n`;
 
   text += `【訂單明細】\n`;
   ORDERS.forEach((o, i) => {
@@ -777,7 +866,7 @@ function exportStats() {
   const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `芭拉咘咘麵包車_${new Date().toISOString().slice(0,10)}.txt`;
+  a.download = `${sn}_${new Date().toISOString().slice(0,10)}.txt`;
   a.click();
   URL.revokeObjectURL(a.href);
   showToast("報表已下載");
@@ -785,12 +874,16 @@ function exportStats() {
 
 // ============ ADMIN ============
 function renderAdmin() {
+  const sn = CONFIG.shopName || "芭拉咘咘麵包車";
   const container = document.getElementById("adminContent");
   container.innerHTML = `
     <div class="adminSection">
       <h3>📂 分類管理</h3>
       <div id="adminCategories"></div>
-      <button class="btnAdd" onclick="addCategory()">+ 新增分類</button>
+      <div class="inlineAddRow">
+        <input type="text" id="newCategoryInput" placeholder="新分類名稱..." maxlength="20">
+        <button onclick="addCategoryInline()">+ 新增</button>
+      </div>
     </div>
     <div class="adminSection">
       <h3>📋 品項管理</h3>
@@ -798,7 +891,10 @@ function renderAdmin() {
         <select id="adminCatSelect" style="width:100%;padding:8px;border-radius:8px;border:1.5px solid #ddd;font-size:14px"></select>
       </div>
       <div id="adminItems"></div>
-      <button class="btnAdd" onclick="addItem()">+ 新增品項</button>
+      <div class="inlineAddRow">
+        <input type="text" id="newItemInput" placeholder="新品項名稱..." maxlength="20">
+        <button onclick="addItemInline()">+ 新增</button>
+      </div>
     </div>
     <div class="adminSection">
       <h3>🎨 外觀設定</h3>
@@ -806,14 +902,42 @@ function renderAdmin() {
       <div class="colorEditGrid" id="colorEditGrid"></div>
     </div>
     <div class="adminSection">
-      <h3>🔐 系統設定</h3>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="password" id="newPwdInput" placeholder="新密碼" style="flex:1;padding:8px;border:1.5px solid #ddd;border-radius:8px;font-size:14px">
-          <button onclick="changePassword()" style="padding:8px 16px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;font-size:13px">修改</button>
+      <h3>📝 店家資訊</h3>
+      <div class="settingRow">
+        <label>店名</label>
+        <input type="text" id="editShopName" value="${sn}" maxlength="20">
+        <button onclick="saveShopInfo()" style="padding:8px 14px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;font-size:13px">儲存</button>
+      </div>
+      <div class="settingRow">
+        <label>地址</label>
+        <input type="text" id="editAddress" value="${CONFIG.address||''}" maxlength="50">
+      </div>
+      <div class="settingRow">
+        <label>電話</label>
+        <input type="text" id="editPhone" value="${CONFIG.phone||''}" maxlength="20">
+      </div>
+      <div class="settingRow">
+        <label>顯示</label>
+        <div class="toggleWrap">
+          <button class="toggleSwitch ${CONFIG.showContact?'on':''}" id="toggleContact"></button>
+          <span style="font-size:13px;color:#888">顯示地址與電話</span>
         </div>
-        <button onclick="resetAll()" style="padding:10px;border:1.5px solid #e74c3c;border-radius:8px;background:#fff;color:#e74c3c;cursor:pointer;font-size:14px">恢復預設值</button>
-        <button onclick="logout()" style="padding:10px;border:1.5px solid #999;border-radius:8px;background:#fff;color:#666;cursor:pointer;font-size:14px">登出管理員</button>
+      </div>
+    </div>
+    <div class="adminSection">
+      <h3>🔐 系統設定</h3>
+      <div class="settingRow">
+        <label>新密碼</label>
+        <input type="password" id="newPwdInput" placeholder="至少4位數">
+        <button onclick="changePassword()" style="padding:8px 14px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;font-size:13px">修改</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button onclick="exportData()" style="flex:1;padding:10px;border:1.5px solid var(--primary);border-radius:8px;background:var(--card);color:var(--primary);cursor:pointer;font-size:13px">📤 匯出設定</button>
+        <button onclick="document.getElementById('importInput').click()" style="flex:1;padding:10px;border:1.5px solid var(--primary);border-radius:8px;background:var(--card);color:var(--primary);cursor:pointer;font-size:13px">📥 匯入設定</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+        <button onclick="resetAll()" style="flex:1;padding:10px;border:1.5px solid #e74c3c;border-radius:8px;background:#fff;color:#e74c3c;cursor:pointer;font-size:13px">恢復預設值</button>
+        <button onclick="logout()" style="flex:1;padding:10px;border:1.5px solid #999;border-radius:8px;background:#fff;color:#666;cursor:pointer;font-size:13px">登出管理員</button>
       </div>
     </div>
   `;
@@ -826,7 +950,8 @@ function renderAdmin() {
 function renderAdminCategories() {
   const container = document.getElementById("adminCategories");
   container.innerHTML = CATEGORIES.map((c, i) =>
-    `<div class="adminRow">
+    `<div class="adminRow" draggable="true" data-idx="${i}">
+      <span class="dragHandle">☰</span>
       <span class="adminRowName">${c.name}</span>
       <div class="adminRowActions">
         <button class="editBtn" onclick="editCategory(${i})">✏️</button>
@@ -834,6 +959,7 @@ function renderAdminCategories() {
       </div>
     </div>`
   ).join("");
+  initDragSort(container, "category");
 }
 
 function renderAdminCatSelect() {
@@ -844,15 +970,15 @@ function renderAdminCatSelect() {
 }
 
 function renderAdminItems() {
-  const container = document.getElementById("adminItems");
   const sel = document.getElementById("adminCatSelect");
+  const container = document.getElementById("adminItems");
   if (!container || !sel) return;
-  const catName = sel.value;
-  const cat = CATEGORIES.find(c => c.name === catName);
+  const cat = CATEGORIES.find(c => c.name === sel.value);
   if (!cat) { container.innerHTML = '<div class="cartEmpty">請先新增分類</div>'; return; }
   container.innerHTML = cat.items.map((item, i) => {
     const priceStr = item.prices.map(p => `${p.label} $${p.price}`).join(", ");
-    return `<div class="adminRow">
+    return `<div class="adminRow" draggable="true" data-idx="${i}">
+      <span class="dragHandle">☰</span>
       <span class="adminRowName">${item.name} <span style="font-size:11px;color:#999">(${priceStr})</span></span>
       <div class="adminRowActions">
         <button class="priceBtn" onclick="editItemPrices(${i})">💰</button>
@@ -861,16 +987,19 @@ function renderAdminItems() {
       </div>
     </div>`;
   }).join("");
+  initDragSort(container, "item");
 }
 
-// Admin CRUD: Categories
-function addCategory() {
-  const name = prompt("請輸入新分類名稱：");
-  if (!name || !name.trim()) return;
-  CATEGORIES.push({ name: name.trim(), items: [] });
+// Admin: Categories
+function addCategoryInline() {
+  const input = document.getElementById("newCategoryInput");
+  const name = input.value.trim();
+  if (!name) { showToast("請輸入分類名稱"); return; }
+  CATEGORIES.push({ name, items: [] });
   saveCategories();
+  input.value = "";
   renderAdmin();
-  showToast(`已新增分類「${name.trim()}」`);
+  showToast(`已新增分類「${name}」`);
 }
 
 function editCategory(idx) {
@@ -893,22 +1022,24 @@ function deleteCategory(idx) {
   });
 }
 
-// Admin CRUD: Items
+// Admin: Items
 function getSelectedCategory() {
   const sel = document.getElementById("adminCatSelect");
   if (!sel) return null;
   return CATEGORIES.find(c => c.name === sel.value);
 }
 
-function addItem() {
+function addItemInline() {
   const cat = getSelectedCategory();
   if (!cat) { showToast("請先建立分類"); return; }
-  const name = prompt("請輸入品項名稱：");
-  if (!name || !name.trim()) return;
-  cat.items.push({ name: name.trim(), prices: [{ label: "單個", price: 0 }] });
+  const input = document.getElementById("newItemInput");
+  const name = input.value.trim();
+  if (!name) { showToast("請輸入品項名稱"); return; }
+  cat.items.push({ name, prices: [{ label: "單個", price: 0 }] });
   saveCategories();
+  input.value = "";
   renderAdmin();
-  showToast(`已新增品項「${name.trim()}」`);
+  showToast(`已新增品項「${name}」`);
 }
 
 function editItem(idx) {
@@ -1007,15 +1138,130 @@ function selectTheme(name) {
   applyTheme(CONFIG.colors);
   saveConfig();
   renderThemeSettings();
-  showToast(`已切換為「${name}」主題`);
 }
 
 function customColor(input) {
   CONFIG.colors[input.dataset.key] = input.value;
-  CONFIG.themeName = ""; // custom mode
+  CONFIG.themeName = "";
   applyTheme(CONFIG.colors);
   saveConfig();
   document.querySelectorAll(".themeCard").forEach(c => c.classList.remove("active"));
+}
+
+// ============ DRAG & DROP SORT ============
+function initDragSort(container, type) {
+  let dragSrc = null;
+  const rows = () => container.querySelectorAll(".adminRow");
+
+  function onDragStart(e) {
+    const row = e.target.closest(".adminRow");
+    if (!row) return;
+    dragSrc = parseInt(row.dataset.idx);
+    row.classList.add("dragging");
+    e.dataTransfer.effectAllowed = "move";
+    try { e.dataTransfer.setData("text/plain", ""); } catch(ex) {}
+  }
+
+  function onDragEnd(e) {
+    const row = e.target.closest(".adminRow");
+    if (row) row.classList.remove("dragging");
+    rows().forEach(r => r.classList.remove("dragOver"));
+  }
+
+  function onDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    const row = e.target.closest(".adminRow");
+    if (!row) return;
+    rows().forEach(r => r.classList.remove("dragOver"));
+    if (parseInt(row.dataset.idx) !== dragSrc) row.classList.add("dragOver");
+  }
+
+  function onDrop(e) {
+    e.preventDefault();
+    rows().forEach(r => r.classList.remove("dragOver", "dragging"));
+    const row = e.target.closest(".adminRow");
+    if (!row || dragSrc === null) return;
+    const dropIdx = parseInt(row.dataset.idx);
+    if (dragSrc === dropIdx) { dragSrc = null; return; }
+
+    if (type === "category") {
+      const [item] = CATEGORIES.splice(dragSrc, 1);
+      CATEGORIES.splice(dropIdx, 0, item);
+      saveCategories();
+      renderAdmin();
+      if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
+    } else if (type === "item") {
+      const sel = document.getElementById("adminCatSelect");
+      const cat = CATEGORIES.find(c => c.name === sel?.value);
+      if (!cat) return;
+      const [item] = cat.items.splice(dragSrc, 1);
+      cat.items.splice(dropIdx, 0, item);
+      saveCategories();
+      renderAdmin();
+    }
+    dragSrc = null;
+  }
+
+  container.removeEventListener("dragstart", onDragStart);
+  container.removeEventListener("dragend", onDragEnd);
+  container.removeEventListener("dragover", onDragOver);
+  container.removeEventListener("drop", onDrop);
+  container.addEventListener("dragstart", onDragStart);
+  container.addEventListener("dragend", onDragEnd);
+  container.addEventListener("dragover", onDragOver);
+  container.addEventListener("drop", onDrop);
+}
+
+// ============ SHOP INFO ============
+function saveShopInfo() {
+  const name = document.getElementById("editShopName").value.trim();
+  if (!name) { showToast("店名不能為空"); return; }
+  CONFIG.shopName = name;
+  CONFIG.address = document.getElementById("editAddress").value.trim();
+  CONFIG.phone = document.getElementById("editPhone").value.trim();
+  saveConfig();
+  updateHeader();
+  showToast("店家資訊已更新");
+}
+
+// ============ EXPORT / IMPORT ============
+function exportData() {
+  const data = getAllData();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${CONFIG.shopName}_備份_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast("資料已匯出");
+}
+
+function importData(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (data.config && data.categories) {
+        CONFIG = data.config;
+        CATEGORIES = data.categories;
+        ORDERS = data.orders || [];
+        saveConfig();
+        saveCategories();
+        saveOrders();
+        applyTheme(CONFIG.colors);
+        updateHeader();
+        renderAdmin();
+        showToast("資料已還原");
+      } else {
+        showToast("檔案格式錯誤");
+      }
+    } catch(e) {
+      showToast("檔案格式錯誤");
+    }
+  };
+  reader.readAsText(file);
 }
 
 // ============ SYSTEM ============
@@ -1095,25 +1341,23 @@ function showQR() {
 function init() {
   loadData();
   applyTheme(CONFIG.colors);
+  updateHeader();
   updateTabVisibility();
   switchTab("menu");
 
-  // Tab switching
   document.querySelectorAll("#tabBar button").forEach(btn => {
     btn.addEventListener("click", () => switchTab(btn.dataset.view));
   });
 
-  // Login
   document.getElementById("shopTitle").addEventListener("click", showLogin);
   document.getElementById("loginBtn").addEventListener("click", attemptLogin);
   document.getElementById("loginPwd").addEventListener("keydown", e => { if (e.key === "Enter") attemptLogin(); });
   document.getElementById("loginCancelBtn").addEventListener("click", () => document.getElementById("loginModal").classList.remove("open"));
 
-  // QR
   document.getElementById("qrBtn").addEventListener("click", showQR);
   document.getElementById("qrCloseBtn").addEventListener("click", () => document.getElementById("qrModal").classList.remove("open"));
 
-  // Menu category tabs (event delegation)
+  // Menu: category tabs
   document.getElementById("categoryTabs").addEventListener("click", e => {
     const btn = e.target.closest("button");
     if (!btn) return;
@@ -1121,11 +1365,19 @@ function init() {
     renderMenu();
   });
 
-  // Item clicks (event delegation)
+  // Menu: item card / add-to-cart button
   document.getElementById("itemGrid").addEventListener("click", e => {
+    const addBtn = e.target.closest(".addCartBtn");
+    if (addBtn) {
+      addToCart(currentCategory, parseInt(addBtn.dataset.idx), 0, 1);
+      return;
+    }
     const card = e.target.closest(".itemCard");
     if (!card) return;
-    openItemModal(currentCategory, parseInt(card.dataset.idx));
+    const item = CATEGORIES[currentCategory]?.items[parseInt(card.dataset.idx)];
+    if (item && item.prices.length > 1) {
+      openItemModal(currentCategory, parseInt(card.dataset.idx));
+    }
   });
 
   // Item Modal
@@ -1136,32 +1388,26 @@ function init() {
     opt.classList.add("selected");
     itemModalState.selectedPrice = parseInt(opt.dataset.idx);
   });
-
   document.getElementById("itemQtyMinus").addEventListener("click", () => {
     if (!itemModalState) return;
     itemModalState.qty = Math.max(1, itemModalState.qty - 1);
-    updateItemModalQty();
+    document.getElementById("itemQtyDisplay").textContent = itemModalState.qty;
   });
-
   document.getElementById("itemQtyPlus").addEventListener("click", () => {
     if (!itemModalState) return;
     itemModalState.qty = Math.min(99, itemModalState.qty + 1);
-    updateItemModalQty();
+    document.getElementById("itemQtyDisplay").textContent = itemModalState.qty;
   });
-
   document.getElementById("btnAddToCart").addEventListener("click", () => {
     if (!itemModalState) return;
-    const { categoryIdx, itemIdx, selectedPrice, qty } = itemModalState;
-    addToCart(categoryIdx, itemIdx, selectedPrice, qty);
+    addToCart(itemModalState.categoryIdx, itemModalState.itemIdx, itemModalState.selectedPrice, itemModalState.qty);
     document.getElementById("itemModal").classList.remove("open");
     itemModalState = null;
   });
 
   // Close modals on overlay click
   document.querySelectorAll(".modalOverlay").forEach(m => {
-    m.addEventListener("click", e => {
-      if (e.target === m) m.classList.remove("open");
-    });
+    m.addEventListener("click", e => { if (e.target === m) m.classList.remove("open"); });
   });
 
   // Confirm modal
@@ -1174,18 +1420,37 @@ function init() {
     confirmCallback = null;
   });
 
+  // Import file handler
+  document.getElementById("importInput").addEventListener("change", e => {
+    importData(e.target.files[0]);
+  });
+
   // Admin: category select change
   document.addEventListener("change", e => {
     if (e.target.id === "adminCatSelect") renderAdminItems();
+    if (e.target.id === "editShopName" || e.target.id === "editAddress" || e.target.id === "editPhone") {
+      // auto-save on change? no, user clicks save button
+    }
   });
 
-  // Admin: theme card click via delegation
+  // Toggle contact switch
+  document.addEventListener("click", e => {
+    const toggle = e.target.closest("#toggleContact");
+    if (toggle) {
+      CONFIG.showContact = !CONFIG.showContact;
+      toggle.classList.toggle("on", CONFIG.showContact);
+      saveConfig();
+      updateHeader();
+    }
+  });
+
+  // Theme cards
   document.addEventListener("click", e => {
     const card = e.target.closest(".themeCard");
     if (card && card.dataset.theme) selectTheme(card.dataset.theme);
   });
 
-  // Stats filter delegation
+  // Stats filter
   document.addEventListener("click", e => {
     const btn = e.target.closest(".statsFilter button");
     if (!btn) return;
