@@ -1,0 +1,3 @@
+GitHub Pages: https://jeff79213-baba.github.io/dance-rehearsal-tool/
+GitHub Repo: https://github.com/jeff79213-baba/dance-rehearsal-tool
+Firebase: projects > dance-rehearsal-tool > files

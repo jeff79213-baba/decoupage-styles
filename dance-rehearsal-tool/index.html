@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>舞蹈排練工具</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <div id="toolbar">
+    <div class="toolbar-left">
+      <span class="logo">🩰 舞蹈排練</span>
+    </div>
+    <div class="toolbar-center">
+      <button class="tool-btn" id="btnFirst" title="第一小節">⏮</button>
+      <button class="tool-btn" id="btnPrev" title="上一小節">◀</button>
+      <button class="tool-btn play-btn" id="btnPlay" title="播放">▶</button>
+      <button class="tool-btn" id="btnNext" title="下一小節">▶</button>
+      <button class="tool-btn" id="btnLast" title="最後小節">⏭</button>
+      <span class="bpm-control">
+        <input type="range" id="bpmSlider" min="40" max="240" value="120">
+        <span id="bpmLabel">120</span>
+      </span>
+    </div>
+    <div class="toolbar-right">
+      <button class="tool-btn" id="btnExport" title="匯出">📤</button>
+      <button class="tool-btn" id="btnImport" title="匯入">📥</button>
+    </div>
+  </div>
+
+  <div id="mainContent">
+    <div id="sidebar">
+      <div class="sidebar-header">
+        <h3>👤 舞者</h3>
+        <button id="addDancer" class="small-btn">＋</button>
+      </div>
+      <div id="dancerList"></div>
+      <div class="stage-config">
+        <h4>🎭 舞台</h4>
+        <label>寬 <input type="range" id="stageW" min="600" max="1400" step="50" value="1000"></label>
+        <label>深 <input type="range" id="stageH" min="400" max="1000" step="50" value="700"></label>
+      </div>
+    </div>
+
+    <div id="stageArea">
+      <div id="stageWrap">
+        <canvas id="stageCanvas"></canvas>
+      </div>
+      <div id="stageInfo">
+        <span id="barTitle">第 1 小節</span>
+        <span id="barDetailHint">點擊時間軸小節進入細部編輯</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="timeline">
+    <button class="tl-nav" id="tlPrev">◀</button>
+    <div id="tlContent">
+      <div id="tlBars"></div>
+      <div id="tlPageInfo">1 / 1</div>
+    </div>
+    <button class="tl-nav" id="tlNext">▶</button>
+    <button class="small-btn" id="addBar">＋吧</button>
+    <button class="small-btn" id="delBar" style="color:#ff6b6b">－</button>
+  </div>
+
+  <div id="detailOverlay" class="hidden">
+    <div id="detailPanel">
+      <div id="detailHeader">
+        <h3>細部編輯 - <span id="detailBarTitle">第 1 小節</span></h3>
+        <button id="detailClose" class="small-btn">✕</button>
+      </div>
+      <div id="detailContent">
+        <canvas id="detailCanvas"></canvas>
+      </div>
+      <div id="detailFooter">
+        <div id="beatTrack">
+          <div id="beatMarkers"></div>
+          <div id="beatIndicator" style="left:0%"></div>
+        </div>
+        <div class="detail-controls">
+          <button class="tool-btn" id="detailAddKey">＋ 關鍵幀</button>
+          <button class="tool-btn" id="detailDelKey">－ 移除</button>
+          <span id="detailBeatInfo">第 1 拍</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="newBarOverlay" class="hidden">
+    <div id="newBarPanel">
+      <h3>新增第 <span id="newBarNum">?</span> 小節</h3>
+      <button id="newBarCopy" class="tool-btn">📋 沿用上一小節位置</button>
+      <button id="newBarEmpty" class="tool-btn">⬜ 空白小節</button>
+      <button id="newBarCancel" class="tool-btn" style="background:#3a3a5a;color:#888">取消</button>
+    </div>
+  </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
