@@ -90,7 +90,9 @@ header {
   box-shadow: var(--shadow); transition: transform 0.15s;
   display: flex; flex-direction: column; gap: 6px;
 }
+.itemCardTop { display: flex; align-items: baseline; }
 .itemCardTop .itemName { font-size: 15px; font-weight: 600; }
+.itemCardTop .itemUnit { font-size: 12px; color: #999; margin-left: 4px; }
 .itemPrices { display: flex; flex-direction: column; gap: 6px; }
 .priceLine { display: flex; justify-content: space-between; align-items: center; }
 .priceLine .plLabel { font-size: 14px; }
@@ -195,6 +197,7 @@ header {
 }
 .adminRow:last-child { border-bottom: none; }
 .adminRowName { flex: 1; font-size: 14px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adminRowUnit { font-size: 12px; color: #999; flex-shrink: 0; margin: 0 4px; }
 .adminRowActions { display: flex; gap: 4px; flex-shrink: 0; }
 .adminRowActions button {
   padding: 4px 8px; border: 1px solid #ddd; border-radius: 6px;
@@ -208,6 +211,10 @@ header {
   user-select: none; flex-shrink: 0; touch-action: none;
 }
 .dragHandle:active { cursor: grabbing; }
+.inlineEditInput {
+  padding: 4px 8px; border: 1.5px solid var(--primary); border-radius: 6px;
+  font-size: 14px; outline: none;
+}
 .adminRow.dragging { opacity: 0.4; }
 .adminRow.dragOver { border-top: 2px solid var(--primary) !important; }
 .dragGhost {
@@ -460,6 +467,20 @@ header {
 
 <input type="file" id="importInput" accept=".json" style="display:none">
 
+<div id="importModal" class="modalOverlay">
+  <div class="modalBox" style="max-width:500px">
+    <h2>📥 匯入品項</h2>
+    <div style="margin-bottom:10px;font-size:13px;color:#666">選擇要匯入到的分類：</div>
+    <select id="importCatSelect" style="width:100%;padding:8px;border-radius:8px;border:1.5px solid #ddd;font-size:14px;margin-bottom:12px"></select>
+    <div style="margin-bottom:6px;font-size:13px;color:#666">貼上品項資料（每行一筆）：</div>
+    <textarea id="importTextarea" style="width:100%;height:180px;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;resize:vertical;box-sizing:border-box" placeholder="品項名稱,單位,價錢&#10;紅豆麵包,個,35&#10;菠蘿麵包,個,30&#10;蛋塔,個,25"></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button onclick="execImport()" style="flex:1;padding:10px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;font-size:14px">匯入</button>
+      <button onclick="document.getElementById('importModal').classList.remove('open')" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;background:var(--card);cursor:pointer;font-size:14px">取消</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -474,21 +495,21 @@ const THEMES = {
 
 const DEFAULT_CATEGORIES = [
   { name:"麵包", items:[
-    { name:"菠蘿麵包", prices:[{ label:"單個", price:30 },{ label:"三個", price:80 }] },
-    { name:"蔥花麵包", prices:[{ label:"單個", price:28 }] },
-    { name:"紅豆麵包", prices:[{ label:"單個", price:30 }] },
-    { name:"克林姆麵包", prices:[{ label:"單個", price:30 }] }
+    { name:"菠蘿麵包", unit:"個", prices:[{ label:"單個", price:30 },{ label:"三個", price:80 }] },
+    { name:"蔥花麵包", unit:"個", prices:[{ label:"單個", price:28 }] },
+    { name:"紅豆麵包", unit:"個", prices:[{ label:"單個", price:30 }] },
+    { name:"克林姆麵包", unit:"個", prices:[{ label:"單個", price:30 }] }
   ]},
   { name:"蛋糕", items:[
-    { name:"蜂蜜蛋糕", prices:[{ label:"片", price:45 },{ label:"條", price:180 }] },
-    { name:"輕乳酪蛋糕", prices:[{ label:"片", price:50 },{ label:"整個", price:250 }] }
+    { name:"蜂蜜蛋糕", unit:"片", prices:[{ label:"片", price:45 },{ label:"條", price:180 }] },
+    { name:"輕乳酪蛋糕", unit:"片", prices:[{ label:"片", price:50 },{ label:"整個", price:250 }] }
   ]},
   { name:"吐司", items:[
-    { name:"白吐司", prices:[{ label:"半條", price:40 },{ label:"整條", price:75 }] },
-    { name:"全麥吐司", prices:[{ label:"半條", price:45 },{ label:"整條", price:80 }] }
+    { name:"白吐司", unit:"半條", prices:[{ label:"半條", price:40 },{ label:"整條", price:75 }] },
+    { name:"全麥吐司", unit:"半條", prices:[{ label:"半條", price:45 },{ label:"整條", price:80 }] }
   ]},
   { name:"季節限定", items:[
-    { name:"草莓麵包", prices:[{ label:"單個", price:45 }] }
+    { name:"草莓麵包", unit:"個", prices:[{ label:"單個", price:45 }] }
   ]}
 ];
 
@@ -507,6 +528,10 @@ let isAdmin = false;
 let currentCategory = 0;
 let itemModalState = null;
 let confirmCallback = null;
+let editingCatIdx = -1;
+let editingItemIdx = -1;
+let editingPriceIdx = -1;
+let expandedPrices = new Set();
 
 // ============ PERSISTENCE ============
 function loadData() {
@@ -633,9 +658,11 @@ function renderMenu() {
     return;
   }
   grid.innerHTML = cat.items.map((item, idx) => {
+    const u = item.unit || "個";
     return `<div class="itemCard" data-idx="${idx}">
       <div class="itemCardTop">
         <div class="itemName">${item.name}</div>
+        <span class="itemUnit">/ ${u}</span>
       </div>
       <div class="itemPrices">
         ${item.prices.map((p, pi) => `
@@ -908,6 +935,10 @@ function exportStats() {
 
 // ============ ADMIN ============
 function renderAdmin() {
+  editingCatIdx = -1;
+  editingItemIdx = -1;
+  editingPriceIdx = -1;
+  expandedPrices = new Set();
   const sn = CONFIG.shopName || "芭拉咘咘麵包車";
   const container = document.getElementById("adminContent");
   container.innerHTML = `
@@ -930,6 +961,7 @@ function renderAdmin() {
         <input type="text" id="newItemLabel" placeholder="單個" value="單個" style="flex:1;min-width:60px">
         <input type="number" id="newItemPrice" placeholder="0" value="0" style="width:70px">
         <button onclick="addItemInline()">+ 新增</button>
+        <button onclick="showImportModal()" style="padding:6px 12px;border:1px solid var(--primary);border-radius:6px;background:var(--card);color:var(--primary);cursor:pointer;font-size:12px">📥 匯入</button>
       </div>
     </div>
     <div class="adminSection">
@@ -980,17 +1012,31 @@ function renderAdmin() {
 
 function renderAdminCategories() {
   const container = document.getElementById("adminCategories");
-  container.innerHTML = CATEGORIES.map((c, i) =>
-    `<div class="adminRow" draggable="true" data-idx="${i}">
+  container.innerHTML = CATEGORIES.map((c, i) => {
+    if (editingCatIdx === i) {
+      return `<div class="adminRow" draggable="true" data-idx="${i}">
+        <span class="dragHandle">☰</span>
+        <input class="inlineEditInput" id="catEditInput" value="${c.name}" maxlength="20" style="flex:1;min-width:0">
+        <div class="adminRowActions">
+          <button class="editBtn" onclick="saveEditCategory(${i})">✔️</button>
+          <button class="delBtn" onclick="cancelEditCategory()">✕</button>
+        </div>
+      </div>`;
+    }
+    return `<div class="adminRow" draggable="true" data-idx="${i}">
       <span class="dragHandle">☰</span>
       <span class="adminRowName">${c.name}</span>
       <div class="adminRowActions">
-        <button class="editBtn" onclick="editCategory(${i})">✏️</button>
+        <button class="editBtn" onclick="startEditCategory(${i})">✏️</button>
         <button class="delBtn" onclick="deleteCategory(${i})">🗑️</button>
       </div>
-    </div>`
-  ).join("");
+    </div>`;
+  }).join("");
   initDragSort(container, "category");
+  if (editingCatIdx >= 0) {
+    const inp = document.getElementById("catEditInput");
+    if (inp) { inp.focus(); inp.select(); }
+  }
 }
 
 function renderAdminCatSelect() {
@@ -1007,24 +1053,54 @@ function renderAdminItems() {
   const cat = CATEGORIES.find(c => c.name === sel.value);
   if (!cat) { container.innerHTML = '<div class="cartEmpty">請先新增分類</div>'; return; }
   container.innerHTML = cat.items.map((item, i) => {
-    const pricesHtml = item.prices.map((p, pi) =>
-      `<div class="adminPriceRow">
+    const pricesHtml = item.prices.map((p, pi) => {
+      if (editingItemIdx === i && editingPriceIdx === pi) {
+        return `<div class="adminPriceRow">
+          <input class="apInputLabel" id="peLabel_${i}_${pi}" value="${p.label}" style="flex:1">
+          <input class="apInputAmount" id="peAmt_${i}_${pi}" value="${p.price}" type="number" style="width:70px">
+          <button class="editBtn" onclick="saveEditPrice(${i},${pi})">✔️</button>
+          <button class="delBtn" onclick="cancelEditPrice()">✕</button>
+        </div>`;
+      }
+      return `<div class="adminPriceRow">
         <span class="aplLabel">${p.label}</span>
         <span class="aplAmount">$${p.price}</span>
-        <button class="editBtn" onclick="editItemPrice(${i},${pi})">✏️</button>
+        <button class="editBtn" onclick="startEditPrice(${i},${pi})">✏️</button>
         <button class="delBtn" onclick="deleteItemPrice(${i},${pi})">🗑️</button>
-      </div>`
-    ).join("");
+      </div>`;
+    }).join("");
+    if (editingItemIdx === i) {
+      return `<div class="adminRow" draggable="true" data-idx="${i}">
+        <span class="dragHandle">☰</span>
+        <input class="inlineEditInput" id="itemEditName" value="${item.name}" maxlength="20" style="flex:1;min-width:0">
+        <span class="adminRowUnit">[</span>
+        <input class="inlineEditInput" id="itemEditUnit" value="${item.unit||"個"}" maxlength="5" style="width:50px;text-align:center">
+        <span class="adminRowUnit">]</span>
+        <div class="adminRowActions">
+          <button class="editBtn" onclick="saveEditItem(${i})">✔️</button>
+          <button class="delBtn" onclick="cancelEditItem()">✕</button>
+        </div>
+      </div>
+      <div class="adminPrices" id="adminPrices${i}" style="display:${expandedPrices.has(i)?'block':'none'}">
+        ${pricesHtml}
+        <div class="adminPriceRow" style="border:none;gap:6px;margin-top:6px">
+          <input class="apInputLabel" id="apl${i}" placeholder="標籤" value="單個">
+          <input class="apInputAmount" id="apa${i}" placeholder="金額" type="number" value="0">
+          <button onclick="addItemPrice(${i})" style="padding:5px 12px;border:none;border-radius:6px;background:var(--primary);color:#fff;cursor:pointer;font-size:12px">+價位</button>
+        </div>
+      </div>`;
+    }
     return `<div class="adminRow" draggable="true" data-idx="${i}">
       <span class="dragHandle">☰</span>
       <span class="adminRowName">${item.name}</span>
+      <span class="adminRowUnit">[${item.unit||"個"}]</span>
       <div class="adminRowActions">
-        <button class="editBtn" onclick="editItem(${i})">✏️</button>
+        <button class="editBtn" onclick="startEditItem(${i})">✏️</button>
         <button class="editBtn" onclick="toggleAdminPrices(${i})" title="管理價位">💰</button>
         <button class="delBtn" onclick="deleteItem(${i})">🗑️</button>
       </div>
     </div>
-    <div class="adminPrices" id="adminPrices${i}" style="display:none">
+    <div class="adminPrices" id="adminPrices${i}" style="display:${expandedPrices.has(i)?'block':'none'}">
       ${pricesHtml}
       <div class="adminPriceRow" style="border:none;gap:6px;margin-top:6px">
         <input class="apInputLabel" id="apl${i}" placeholder="標籤" value="單個">
@@ -1053,16 +1129,33 @@ function addCategoryInline() {
   showToast(`已新增分類「${name}」`);
 }
 
-function editCategory(idx) {
-  const name = prompt("修改分類名稱：", CATEGORIES[idx].name);
-  if (!name || !name.trim()) return;
-  CATEGORIES[idx].name = name.trim();
+function startEditCategory(idx) {
+  editingCatIdx = idx;
+  editingItemIdx = -1;
+  editingPriceIdx = -1;
+  renderAdminCategories();
+  renderAdminCatSelect();
+  renderAdminItems();
+}
+
+function saveEditCategory(idx) {
+  const val = document.getElementById("catEditInput")?.value.trim();
+  if (!val) { showToast("名稱不能為空"); return; }
+  CATEGORIES[idx].name = val;
+  editingCatIdx = -1;
   saveCategories();
   renderAdminCategories();
   renderAdminCatSelect();
   renderAdminItems();
   if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
   showToast("分類名稱已更新");
+}
+
+function cancelEditCategory() {
+  editingCatIdx = -1;
+  renderAdminCategories();
+  renderAdminCatSelect();
+  renderAdminItems();
 }
 
 function deleteCategory(idx) {
@@ -1097,7 +1190,7 @@ function addItemInline() {
   if (!name) { showToast("請輸入品項名稱"); return; }
   if (!label) { showToast("請輸入價位標籤"); return; }
   if (isNaN(price) || price < 0) { showToast("請輸入有效價格"); return; }
-  cat.items.push({ name, prices: [{ label, price }] });
+  cat.items.push({ name, unit: "個", prices: [{ label, price }] });
   saveCategories();
   nameInput.value = "";
   priceInput.value = "0";
@@ -1106,16 +1199,32 @@ function addItemInline() {
   showToast(`已新增品項「${name}」`);
 }
 
-function editItem(idx) {
+function startEditItem(idx) {
+  editingItemIdx = idx;
+  editingCatIdx = -1;
+  editingPriceIdx = -1;
+  renderAdminItems();
+}
+
+function saveEditItem(idx) {
+  const name = document.getElementById("itemEditName")?.value.trim();
+  const unit = document.getElementById("itemEditUnit")?.value.trim();
+  if (!name) { showToast("名稱不能為空"); return; }
   const cat = getSelectedCategory();
-  if (!cat) return;
-  const name = prompt("修改品項名稱：", cat.items[idx].name);
-  if (!name || !name.trim()) return;
-  cat.items[idx].name = name.trim();
+  if (!cat || !cat.items[idx]) return;
+  cat.items[idx].name = name;
+  cat.items[idx].unit = unit || "個";
+  editingItemIdx = -1;
   saveCategories();
   renderAdminItems();
   if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
-  showToast("品項名稱已更新");
+  showToast("品項已更新");
+}
+
+function cancelEditItem() {
+  editingItemIdx = -1;
+  editingPriceIdx = -1;
+  renderAdminItems();
 }
 
 function deleteItem(idx) {
@@ -1131,8 +1240,9 @@ function deleteItem(idx) {
 }
 
 function toggleAdminPrices(idx) {
-  const el = document.getElementById("adminPrices" + idx);
-  if (el) el.style.display = el.style.display === "none" ? "block" : "none";
+  if (expandedPrices.has(idx)) expandedPrices.delete(idx);
+  else expandedPrices.add(idx);
+  renderAdminItems();
 }
 
 function addItemPrice(itemIdx) {
@@ -1150,20 +1260,34 @@ function addItemPrice(itemIdx) {
   showToast("價位已新增");
 }
 
-function editItemPrice(itemIdx, priceIdx) {
+function startEditPrice(itemIdx, priceIdx) {
+  editingItemIdx = itemIdx;
+  editingPriceIdx = priceIdx;
+  editingCatIdx = -1;
+  renderAdminItems();
+}
+
+function saveEditPrice(itemIdx, priceIdx) {
+  const label = document.getElementById(`peLabel_${itemIdx}_${priceIdx}`)?.value.trim();
+  const amt = parseInt(document.getElementById(`peAmt_${itemIdx}_${priceIdx}`)?.value);
+  if (!label) { showToast("標籤不能為空"); return; }
+  if (isNaN(amt) || amt < 0) { showToast("請輸入有效價格"); return; }
   const cat = getSelectedCategory();
-  if (!cat || !cat.items[itemIdx]) return;
-  const price = cat.items[itemIdx].prices[priceIdx];
-  const label = prompt("修改價位標籤：", price.label);
-  if (!label) return;
-  const amt = parseInt(prompt("修改價格：", price.price));
-  if (isNaN(amt) || amt < 0) return;
-  price.label = label.trim();
-  price.price = amt;
+  if (!cat || !cat.items[itemIdx] || !cat.items[itemIdx].prices[priceIdx]) return;
+  cat.items[itemIdx].prices[priceIdx].label = label;
+  cat.items[itemIdx].prices[priceIdx].price = amt;
+  editingItemIdx = -1;
+  editingPriceIdx = -1;
   saveCategories();
   renderAdminItems();
   if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
   showToast("價位已更新");
+}
+
+function cancelEditPrice() {
+  editingItemIdx = -1;
+  editingPriceIdx = -1;
+  renderAdminItems();
 }
 
 function deleteItemPrice(itemIdx, priceIdx) {
@@ -1316,6 +1440,52 @@ function exportData() {
   a.click();
   URL.revokeObjectURL(a.href);
   showToast("資料已匯出");
+}
+
+function showImportModal() {
+  const sel = document.getElementById("importCatSelect");
+  if (!sel) return;
+  sel.innerHTML = CATEGORIES.map(c => `<option value="${c.name}">${c.name}</option>`).join("");
+  document.getElementById("importTextarea").value = "";
+  document.getElementById("importModal").classList.add("open");
+}
+
+function execImport() {
+  const text = document.getElementById("importTextarea").value.trim();
+  if (!text) { showToast("請貼入品項資料"); return; }
+  const sel = document.getElementById("importCatSelect");
+  const cat = CATEGORIES.find(c => c.name === sel?.value);
+  if (!cat) { showToast("請選擇分類"); return; }
+  const lines = text.split("\n").filter(l => l.trim());
+  let count = 0;
+  lines.forEach(line => {
+    const parts = line.split(",").map(s => s.trim());
+    if (parts.length >= 3) {
+      const name = parts[0];
+      const unit = parts[1];
+      const price = parseInt(parts[2]);
+      if (name && !isNaN(price)) {
+        cat.items.push({ name, unit: unit || "個", prices: [{ label: unit || "單個", price }] });
+        count++;
+      }
+    } else if (parts.length >= 2) {
+      const name = parts[0];
+      const price = parseInt(parts[1]);
+      if (name && !isNaN(price)) {
+        cat.items.push({ name, unit: "個", prices: [{ label: "單個", price }] });
+        count++;
+      }
+    }
+  });
+  if (count > 0) {
+    saveCategories();
+    document.getElementById("importModal").classList.remove("open");
+    renderAdminItems();
+    if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
+    showToast(`已匯入 ${count} 筆品項`);
+  } else {
+    showToast("沒有可匯入的資料，請檢查格式");
+  }
 }
 
 function importData(file) {
