@@ -1,0 +1,378 @@
+[
+  {
+    "name": "財政部稅務入口網",
+    "url": "https://www.etax.nat.gov.tw",
+    "category": "稅務",
+    "tags": ["稅務", "報稅", "綜所稅", "營業稅", "發票", "統一發票", "電子發票"],
+    "description": "綜合所得稅申報、營業稅申報、統一發票對獎、線上稅務試算",
+    "city": ""
+  },
+  {
+    "name": "臺北市稅捐稽徵處",
+    "url": "https://tpctax.gov.taipei/",
+    "category": "稅務",
+    "tags": ["房屋稅", "地價稅", "土地增值稅", "契稅", "使用牌照稅", "臺北", "北市"],
+    "description": "臺北市房屋稅、地價稅、土地增值稅等地方稅務業務",
+    "city": "臺北市"
+  },
+  {
+    "name": "新北市政府稅捐稽徵處",
+    "url": "https://www.tax.ntpc.gov.tw/",
+    "category": "稅務",
+    "tags": ["房屋稅", "地價稅", "土地增值稅", "契稅", "使用牌照稅", "新北"],
+    "description": "新北市房屋稅、地價稅、土地增值稅等地方稅務業務",
+    "city": "新北市"
+  },
+  {
+    "name": "高雄市稅捐稽徵處",
+    "url": "https://www.kctax.gov.tw/",
+    "category": "稅務",
+    "tags": ["房屋稅", "地價稅", "土地增值稅", "契稅", "使用牌照稅", "高雄", "港都"],
+    "description": "高雄市房屋稅、地價稅、土地增值稅等地方稅務業務",
+    "city": "高雄市"
+  },
+  {
+    "name": "臺中市政府地方稅務局",
+    "url": "https://www.tax.taichung.gov.tw/",
+    "category": "稅務",
+    "tags": ["房屋稅", "地價稅", "土地增值稅", "契稅", "使用牌照稅", "臺中"],
+    "description": "臺中市房屋稅、地價稅、土地增值稅等地方稅務業務",
+    "city": "臺中市"
+  },
+  {
+    "name": "桃園市政府地方稅務局",
+    "url": "https://www.tytax.gov.tw/",
+    "category": "稅務",
+    "tags": ["房屋稅", "地價稅", "土地增值稅", "契稅", "使用牌照稅", "桃園"],
+    "description": "桃園市房屋稅、地價稅、土地增值稅等地方稅務業務",
+    "city": "桃園市"
+  },
+  {
+    "name": "臺南市政府財政稅務局",
+    "url": "https://www.tntb.gov.tw/",
+    "category": "稅務",
+    "tags": ["房屋稅", "地價稅", "土地增值稅", "契稅", "使用牌照稅", "臺南"],
+    "description": "臺南市房屋稅、地價稅、土地增值稅等地方稅務業務",
+    "city": "臺南市"
+  },
+  {
+    "name": "財政部臺北國稅局",
+    "url": "https://www.ntbt.gov.tw/",
+    "category": "稅務",
+    "tags": ["國稅", "綜合所得稅", "營利事業所得稅", "營業稅", "臺北"],
+    "description": "臺北地區綜合所得稅、營利事業所得稅等國稅業務",
+    "city": "臺北市"
+  },
+  {
+    "name": "財政部高雄國稅局",
+    "url": "https://www.ntbk.gov.tw/",
+    "category": "稅務",
+    "tags": ["國稅", "綜合所得稅", "營利事業所得稅", "營業稅", "高雄"],
+    "description": "高雄地區綜合所得稅、營利事業所得稅等國稅業務",
+    "city": "高雄市"
+  },
+  {
+    "name": "衛生福利部中央健康保險署",
+    "url": "https://www.nhi.gov.tw",
+    "category": "衛生醫療",
+    "tags": ["健保", "健康保險", "全民健保", "醫療", "保險費", "就醫", "健保卡"],
+    "description": "全民健康保險業務、健保費查詢、就醫記錄、健保卡申辦",
+    "city": ""
+  },
+  {
+    "name": "勞動部勞工保險局",
+    "url": "https://www.bli.gov.tw",
+    "category": "勞工保險",
+    "tags": ["勞保", "勞工保險", "國民年金", "保費", "勞工", "退休金", "勞退"],
+    "description": "勞工保險、就業保險、國民年金、勞工退休金業務",
+    "city": ""
+  },
+  {
+    "name": "勞動部勞動力發展署",
+    "url": "https://www.wda.gov.tw",
+    "category": "勞工保險",
+    "tags": ["就業", "求職", "失業", "職業訓練", "技能檢定", "勞動力"],
+    "description": "就業服務、職業訓練、技能檢定、失業給付",
+    "city": ""
+  },
+  {
+    "name": "內政部戶政司",
+    "url": "https://www.ris.gov.tw",
+    "category": "戶政",
+    "tags": ["戶籍", "戶政", "身份證", "出生登記", "結婚登記", "遷徙", "國民身分證"],
+    "description": "戶籍登記、國民身分證、戶籍謄本、結婚登記、出生登記",
+    "city": ""
+  },
+  {
+    "name": "內政部移民署",
+    "url": "https://www.immigration.gov.tw",
+    "category": "戶政",
+    "tags": ["移民", "簽證", "居留", "入出境", "外籍", "大陸", "港澳"],
+    "description": "入出國管理、外籍居留簽證、大陸港澳人士入臺業務",
+    "city": ""
+  },
+  {
+    "name": "內政部地政司",
+    "url": "https://www.land.moi.gov.tw",
+    "category": "戶政",
+    "tags": ["地政", "土地", "登記", "地籍", "實價登錄", "不動產"],
+    "description": "土地登記、地籍管理、實價登錄、不動產交易",
+    "city": ""
+  },
+  {
+    "name": "內政部營建署",
+    "url": "https://www.cpami.gov.tw",
+    "category": "戶政",
+    "tags": ["營建", "建築", "住宅補貼", "都市更新", "國家公園", "租賃"],
+    "description": "建築管理、住宅補貼、都市更新、國家公園管理",
+    "city": ""
+  },
+  {
+    "name": "教育部",
+    "url": "https://www.edu.tw",
+    "category": "教育",
+    "tags": ["教育", "學校", "升學", "學費", "助學貸款", "留學", "十二年國教"],
+    "description": "全國教育政策、升學制度、獎助學金、留學資訊",
+    "city": ""
+  },
+  {
+    "name": "教育部體育署",
+    "url": "https://www.sa.gov.tw",
+    "category": "教育",
+    "tags": ["體育", "運動", "健身", "賽事", "運動中心"],
+    "description": "體育政策、運動設施、全國賽事、全民運動推廣",
+    "city": ""
+  },
+  {
+    "name": "交通部公路局",
+    "url": "https://www.thb.gov.tw",
+    "category": "交通",
+    "tags": ["公路", "監理", "駕照", "行照", "違規", "罰單", "交通"],
+    "description": "公路監理業務、駕照行照申換、交通違規查詢繳費",
+    "city": ""
+  },
+  {
+    "name": "交通部高速公路局",
+    "url": "https://www.freeway.gov.tw",
+    "category": "交通",
+    "tags": ["國道", "高速公路", "ETC", "通行費", "路況"],
+    "description": "國道高速公路路況、通行費試算、ETC業務",
+    "city": ""
+  },
+  {
+    "name": "交通部臺灣鐵路管理局",
+    "url": "https://www.railway.gov.tw",
+    "category": "交通",
+    "tags": ["臺鐵", "火車", "鐵路", "訂票", "時刻表", "車票"],
+    "description": "臺鐵時刻表查詢、線上訂票、列車動態、票價查詢",
+    "city": ""
+  },
+  {
+    "name": "交通部觀光署",
+    "url": "https://www.taiwan.net.tw",
+    "category": "交通",
+    "tags": ["觀光", "旅遊", "景點", "旅宿", "旅行", "臺灣景點"],
+    "description": "臺灣觀光旅遊資訊、景點推薦、旅宿查詢、旅遊行程",
+    "city": ""
+  },
+  {
+    "name": "內政部警政署",
+    "url": "https://www.npa.gov.tw",
+    "category": "警政",
+    "tags": ["警政", "警察", "報案", "治安", "交通違規檢舉", "165"],
+    "description": "警政治安、報案服務、165反詐騙、交通違規檢舉",
+    "city": ""
+  },
+  {
+    "name": "內政部消防署",
+    "url": "https://www.nfa.gov.tw",
+    "category": "警政",
+    "tags": ["消防", "火災", "救護", "防災", "地震", "避難"],
+    "description": "消防救護、防災宣導、火災預防、緊急救護",
+    "city": ""
+  },
+  {
+    "name": "法務部",
+    "url": "https://www.moj.gov.tw",
+    "category": "法務",
+    "tags": ["法務", "法律", "律師", "檢察", "更生保護", "犯罪保護"],
+    "description": "法律服務、檢察業務、更生保護、犯罪被害人保護",
+    "city": ""
+  },
+  {
+    "name": "法務部行政執行署",
+    "url": "https://www.tpk.moj.gov.tw",
+    "category": "法務",
+    "tags": ["行政執行", "欠稅", "強制執行", "法務", "滯納"],
+    "description": "公法上金錢給付義務強制執行、欠稅追討",
+    "city": ""
+  },
+  {
+    "name": "司法院",
+    "url": "https://www.judicial.gov.tw",
+    "category": "法務",
+    "tags": ["法院", "訴訟", "判決", "書狀範例", "法律諮詢", "司法院"],
+    "description": "各級法院業務、判決書查詢、訴訟輔導、書狀範例",
+    "city": ""
+  },
+  {
+    "name": "經濟部商業發展署",
+    "url": "https://www.moea.gov.tw",
+    "category": "工商登記",
+    "tags": ["公司登記", "商業登記", "工商", "統一編號", "營業登記", "經濟部"],
+    "description": "公司登記、商業登記、統一編號查詢、工商管理",
+    "city": ""
+  },
+  {
+    "name": "經濟部智慧財產局",
+    "url": "https://www.tipo.gov.tw",
+    "category": "工商登記",
+    "tags": ["專利", "商標", "著作權", "智慧財產", "智財權"],
+    "description": "專利申請、商標註冊、著作權保護、智慧財產權管理",
+    "city": ""
+  },
+  {
+    "name": "經濟部標準檢驗局",
+    "url": "https://www.bsmi.gov.tw",
+    "category": "工商登記",
+    "tags": ["標準檢驗", "商品檢驗", "度量衡", "CNS", "產品安全"],
+    "description": "商品檢驗、度量衡檢定、國家標準制定、產品安全標章",
+    "city": ""
+  },
+  {
+    "name": "經濟部能源署",
+    "url": "https://www.moeaboe.gov.tw",
+    "category": "工商登記",
+    "tags": ["能源", "節能", "用電", "油價", "天然氣", "補助"],
+    "description": "能源管理、節能減碳、油電價格、再生能源補助",
+    "city": ""
+  },
+  {
+    "name": "農業部",
+    "url": "https://www.moa.gov.tw",
+    "category": "農業環保",
+    "tags": ["農業", "農民", "農保", "農田", "漁業", "畜牧", "農產品"],
+    "description": "農業政策、農民福利、農產品資訊、漁業畜牧管理",
+    "city": ""
+  },
+  {
+    "name": "環境部",
+    "url": "https://www.moenv.gov.tw",
+    "category": "農業環保",
+    "tags": ["環保", "垃圾", "回收", "空汙", "廢棄物", "環境"],
+    "description": "環境保護、廢棄物清理、空氣品質、環保稽查",
+    "city": ""
+  },
+  {
+    "name": "衛生福利部",
+    "url": "https://www.mohw.gov.tw",
+    "category": "衛生醫療",
+    "tags": ["衛福部", "醫療", "長照", "社福", "食品", "藥品", "疫情"],
+    "description": "衛生醫療政策、長照服務、社會福利、食品藥品安全",
+    "city": ""
+  },
+  {
+    "name": "衛生福利部疾病管制署",
+    "url": "https://www.cdc.gov.tw",
+    "category": "衛生醫療",
+    "tags": ["疾病管制", "疫苗", "疫情", "傳染病", "COVID-19", "流感", "防疫"],
+    "description": "傳染病防治、疫苗接種、疫情資訊、防疫措施",
+    "city": ""
+  },
+  {
+    "name": "衛生福利部食品藥物管理署",
+    "url": "https://www.fda.gov.tw",
+    "category": "衛生醫療",
+    "tags": ["食品", "藥品", "藥物", "醫療器材", "食安", "藥品查驗"],
+    "description": "食品安全管理、藥品查驗登記、醫療器材管理",
+    "city": ""
+  },
+  {
+    "name": "衛生福利部社會及家庭署",
+    "url": "https://www.sfaa.gov.tw",
+    "category": "衛生醫療",
+    "tags": ["社福", "老人", "幼兒", "身障", "福利", "補助"],
+    "description": "老人福利、幼兒托育、身心障礙福利、社會救助",
+    "city": ""
+  },
+  {
+    "name": "勞動部",
+    "url": "https://www.mol.gov.tw",
+    "category": "勞工保險",
+    "tags": ["勞動", "勞工", "基本工資", "勞動檢查", "職安", "性別平等"],
+    "description": "勞動政策、基本工資、勞動檢查、職業安全、性別平等",
+    "city": ""
+  },
+  {
+    "name": "國家通訊傳播委員會",
+    "url": "https://www.ncc.gov.tw",
+    "category": "工商登記",
+    "tags": ["NCC", "通訊", "傳播", "電信", "頻道", "寬頻"],
+    "description": "通訊傳播監理、電信管理、頻道審查、網路治理",
+    "city": ""
+  },
+  {
+    "name": "金融監督管理委員會",
+    "url": "https://www.fsc.gov.tw",
+    "category": "工商登記",
+    "tags": ["金管會", "金融", "銀行", "保險", "證券", "股市"],
+    "description": "金融市場監理、銀行保險證券管理、金融消費保護",
+    "city": ""
+  },
+  {
+    "name": "國家發展委員會",
+    "url": "https://www.ndc.gov.tw",
+    "category": "戶政",
+    "tags": ["國發會", "發展", "人口", "資安", "個資", "檔案管理"],
+    "description": "國家發展規劃、人口政策、資訊安全、個人資料保護",
+    "city": ""
+  },
+  {
+    "name": "數位發展部",
+    "url": "https://www.moda.gov.tw",
+    "category": "戶政",
+    "tags": ["數位", "數位發展", "網路", "資通安全", "數據"],
+    "description": "數位政策、網路治理、資通安全、數據治理",
+    "city": ""
+  },
+  {
+    "name": "外交部",
+    "url": "https://www.mofa.gov.tw",
+    "category": "戶政",
+    "tags": ["外交", "護照", "簽證", "出國", "領務", "僑務"],
+    "description": "護照申辦、簽證資訊、出國旅遊警示、外交政策",
+    "city": ""
+  },
+  {
+    "name": "海洋委員會海巡署",
+    "url": "https://www.cga.gov.tw",
+    "category": "警政",
+    "tags": ["海巡", "海岸", "海洋", "救難", "漁業巡護"],
+    "description": "海岸巡防、海洋救難、漁業巡護、海域安全",
+    "city": ""
+  },
+  {
+    "name": "故宮博物院",
+    "url": "https://www.npm.gov.tw",
+    "category": "教育",
+    "tags": ["故宮", "展覽", "文物", "博物館", "歷史", "文化"],
+    "description": "國立故宮博物院展覽資訊、文物典藏、參觀資訊",
+    "city": "臺北市"
+  },
+  {
+    "name": "國防部",
+    "url": "https://www.mnd.gov.tw",
+    "category": "戶政",
+    "tags": ["國防", "兵役", "軍事", "募兵", "後備"],
+    "description": "國防政策、兵役資訊、募兵資訊、後備軍人服務",
+    "city": ""
+  },
+  {
+    "name": "內政部國土管理署",
+    "url": "https://www.nlma.gov.tw",
+    "category": "戶政",
+    "tags": ["國土", "都市計畫", "區域計畫", "土地利用"],
+    "description": "國土規劃、都市計畫、區域計畫審議、土地利用管理",
+    "city": ""
+  }
+]

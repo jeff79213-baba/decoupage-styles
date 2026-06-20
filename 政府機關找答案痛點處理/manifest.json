@@ -1,0 +1,18 @@
+{
+  "name": "政府網站快速搜尋",
+  "short_name": "政府搜尋",
+  "description": "快速找到正確的臺灣政府機關網站",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f0f2f5",
+  "theme_color": "#1a73e8",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

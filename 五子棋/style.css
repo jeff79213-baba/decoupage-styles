@@ -1,0 +1,288 @@
+﻿* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #1a1a2e;
+  font-family: 'Segoe UI', 'Noto Sans TC', sans-serif;
+  color: #eee;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+}
+
+#app {
+  text-align: center;
+  max-width: 700px;
+  width: 100%;
+}
+#app.game-mode {
+  max-width: none;
+  padding: 0 16px;
+}
+
+/* ===== 編輯階段 ===== */
+#editingPhase { }
+
+h1 {
+  font-size: 1.5rem;
+  margin-bottom: 16px;
+  color: #f0c27a;
+  letter-spacing: 2px;
+}
+
+.players-container {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.player-panel {
+  background: #16213e;
+  border-radius: 12px;
+  padding: 14px 16px 16px;
+  width: 220px;
+  border: 1px solid #0f3460;
+}
+
+.player-panel h2 {
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+.p1-symbol { color: #222; background: #ddd; border-radius: 50%; padding: 0 6px; }
+.p2-symbol { color: #ddd; background: #444; border-radius: 50%; padding: 0 6px; }
+
+.preview-wrap {
+  margin: 0 auto 10px;
+  width: 150px;
+  height: 150px;
+}
+
+.preview-wrap canvas {
+  border-radius: 50%;
+  display: block;
+  cursor: grab;
+  border: 3px solid #0f3460;
+}
+
+.preview-wrap canvas:active {
+  cursor: grabbing;
+}
+
+.upload-btn {
+  display: inline-block;
+  background: #0f3460;
+  color: #eee;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.upload-btn:hover {
+  background: #1a4a80;
+}
+
+.upload-btn input {
+  display: none;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 6px;
+  font-size: 0.8rem;
+}
+
+.slider-row input[type="range"] {
+  flex: 1;
+  accent-color: #f0c27a;
+}
+
+.slider-row span:last-child {
+  min-width: 34px;
+  text-align: right;
+}
+
+.confirm-btn {
+  width: 100%;
+  padding: 7px;
+  border: none;
+  border-radius: 6px;
+  background: #2d6a4f;
+  color: #fff;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-bottom: 6px;
+}
+
+.confirm-btn:hover {
+  background: #40916c;
+}
+
+.p-status {
+  font-size: 0.75rem;
+  color: #aaa;
+}
+
+.p-status.editing { color: #f0c27a; }
+.p-status.confirmed { color: #52b788; }
+
+.start-btn {
+  margin-top: 10px;
+  padding: 14px 48px;
+  font-size: 1.15rem;
+  border: none;
+  border-radius: 10px;
+  background: #2d6a4f;
+  color: #fff;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.start-btn:hover:not(:disabled) {
+  background: #40916c;
+  transform: scale(1.04);
+}
+.start-btn:disabled {
+  background: #333;
+  color: #777;
+  cursor: not-allowed;
+}
+
+.start-status {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: #aaa;
+}
+
+/* ===== 對戰階段 ===== */
+#gamePhase {
+  display: none;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.game-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  background: #16213e;
+  border-radius: 10px;
+  padding: 10px 20px;
+  border: 1px solid #0f3460;
+  flex-wrap: wrap;
+}
+
+.game-status canvas {
+  border-radius: 50%;
+  border: 2px solid #0f3460;
+  display: block;
+}
+
+.gs-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.gs-name.p1 { color: #ddd; }
+.gs-name.p2 { color: #ddd; }
+
+.gs-vs {
+  color: #f0c27a;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.gs-turn {
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 4px 14px;
+  background: #0f3460;
+  border-radius: 6px;
+  margin-left: 4px;
+}
+
+.big-board {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+#boardCanvas {
+  border-radius: 6px;
+  cursor: pointer;
+  max-width: 100%;
+  height: auto;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.controls button {
+  background: #0f3460;
+  color: #eee;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.controls button:hover {
+  background: #1a4a80;
+}
+
+.back-btn {
+  background: #5a3a1a !important;
+}
+.back-btn:hover {
+  background: #7a4a2a !important;
+}
+
+.turn-indicator {
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 6px 16px;
+  background: #16213e;
+  border-radius: 6px;
+  min-width: 150px;
+}
+
+.winner-msg {
+  margin-top: 12px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  min-height: 2rem;
+}
+
+/* ===== 響應式 ===== */
+@media (max-width: 700px) {
+  .players-container {
+    flex-direction: column;
+    align-items: center;
+  }
+  .player-panel {
+    width: 100%;
+    max-width: 280px;
+  }
+  h1 { font-size: 1.2rem; }
+  .game-status { font-size: 0.85rem; gap: 6px; padding: 8px 12px; }
+  .game-status canvas { width: 36px; height: 36px; }
+}

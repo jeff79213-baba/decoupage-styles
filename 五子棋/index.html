@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>五子棋 - 照片棋子對戰</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== 編輯階段 ===== -->
+  <div id="editingPhase">
+    <h1>五子棋 · 照片棋子對戰</h1>
+
+    <div class="players-container">
+      <div class="player-panel" id="panel1">
+        <h2><span class="p1-symbol">●</span> 玩家 1</h2>
+        <div class="preview-wrap">
+          <canvas id="preview1" width="150" height="150"></canvas>
+        </div>
+        <label class="upload-btn">
+          上傳照片 <input type="file" id="upload1" accept="image/*">
+        </label>
+        <div class="slider-row">
+          <span>縮放</span>
+          <input type="range" id="zoom1" min="0.5" max="4" step="0.1" value="1">
+          <span id="zoom1-val">1.0x</span>
+        </div>
+        <button class="confirm-btn" id="confirm1">&#10003; 確定套用</button>
+        <div class="p-status" id="status1">請上傳照片</div>
+      </div>
+
+      <div class="player-panel" id="panel2">
+        <h2><span class="p2-symbol">○</span> 玩家 2</h2>
+        <div class="preview-wrap">
+          <canvas id="preview2" width="150" height="150"></canvas>
+        </div>
+        <label class="upload-btn">
+          上傳照片 <input type="file" id="upload2" accept="image/*">
+        </label>
+        <div class="slider-row">
+          <span>縮放</span>
+          <input type="range" id="zoom2" min="0.5" max="4" step="0.1" value="1">
+          <span id="zoom2-val">1.0x</span>
+        </div>
+        <button class="confirm-btn" id="confirm2">&#10003; 確定套用</button>
+        <div class="p-status" id="status2">請上傳照片</div>
+      </div>
+    </div>
+
+    <button id="startGameBtn" class="start-btn" disabled>&#127915; 開始對戰</button>
+    <div id="startStatus" class="start-status">請兩人各自上傳照片並按「確定套用」</div>
+  </div>
+
+  <!-- ===== 對戰階段 ===== -->
+  <div id="gamePhase" style="display:none">
+    <div class="game-status">
+      <canvas id="gsThumb1" width="48" height="48"></canvas>
+      <span class="gs-name p1">&#9679; 玩家 1</span>
+      <span class="gs-vs">VS</span>
+      <span class="gs-name p2">玩家 2 &#9675;</span>
+      <canvas id="gsThumb2" width="48" height="48"></canvas>
+      <span class="gs-turn" id="turnIndicator">輪到: &#9679; 玩家 1</span>
+    </div>
+
+    <div class="board-wrapper big-board">
+      <canvas id="boardCanvas"></canvas>
+    </div>
+
+    <div class="controls">
+      <button id="newGameBtn">&#128260; 重新開始</button>
+      <button id="undoBtn">&#8617; 悔棋</button>
+      <button id="backEditBtn" class="back-btn">&#9998; 返回編輯照片</button>
+    </div>
+
+    <div class="winner-msg" id="winnerMsg"></div>
+  </div>
+
+</div>
+<script src="script.js"></script>
+</body>
+</html>

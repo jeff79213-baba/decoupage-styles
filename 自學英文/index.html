@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英單發音小幫手</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:linear-gradient(135deg,#f0f4f8,#d9e2ec);min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans TC',sans-serif;display:flex;justify-content:center;align-items:flex-start;padding:20px}
+#app{background:#fff;border-radius:24px;box-shadow:0 8px 32px rgba(0,0,0,.1);width:100%;max-width:560px;padding:28px 24px;margin-top:10px}
+h1{text-align:center;color:#2d3748;font-size:24px;margin-bottom:20px}
+h1 span{background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.search-box{display:flex;gap:8px;margin-bottom:20px}
+.search-box .input-wrapper{flex:1;position:relative}
+.search-box .input-wrapper input{width:100%;padding:12px 16px;font-size:16px;border:2px solid #e2e8f0;border-radius:14px;outline:none;transition:border-color .2s}
+.search-box .input-wrapper input:focus{border-color:#667eea}
+.autocomplete-dropdown{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,.12);max-height:300px;overflow-y:auto;z-index:999;display:none}
+.autocomplete-dropdown .item{padding:10px 16px;font-size:14px;color:#2d3748;cursor:pointer;border-bottom:1px solid #f7fafc;transition:background .1s}
+.autocomplete-dropdown .item:last-child{border-bottom:none}
+.autocomplete-dropdown .item:hover,.autocomplete-dropdown .item.active{background:#f0f4ff;color:#667eea}
+.autocomplete-dropdown .item .hl{font-weight:700;color:#667eea}
+.autocomplete-dropdown .no-result{padding:12px 16px;color:#a0aec0;font-size:14px;text-align:center}
+.search-box button{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:14px;padding:12px 20px;font-size:16px;cursor:pointer;white-space:nowrap;transition:transform .15s,box-shadow .15s}
+.search-box button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(102,126,234,.4)}
+.search-box button:active{transform:translateY(0)}
+.search-box button:disabled{opacity:.6;cursor:not-allowed;transform:none}
+#result{display:none;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.word-header{text-align:center;margin-bottom:16px}
+.word-header .word{font-size:36px;font-weight:800;color:#2d3748}
+.word-header .phonetic{font-size:16px;color:#718096;margin-top:4px;font-family:'Courier New',monospace}
+.syllable-section{background:linear-gradient(135deg,#faf5ff,#f3e8ff);border-radius:16px;padding:16px;text-align:center;margin-bottom:16px}
+.syllable-section .label{font-size:14px;color:#7c3aed;font-weight:600;margin-bottom:8px}
+.syllable-section .syllables{font-size:28px;font-weight:700;color:#5b21b6;letter-spacing:2px}
+.syllable-section .syllables .dot{color:#a78bfa;margin:0 2px}
+.chinese-section{background:linear-gradient(135deg,#fff7ed,#ffedd5);border-radius:16px;padding:16px;text-align:center;margin-bottom:16px}
+.chinese-section .label{font-size:14px;color:#c2410c;font-weight:600;margin-bottom:8px}
+.chinese-section .chinese-chars{font-size:26px;font-weight:700;color:#9a3412;letter-spacing:4px}
+.chinese-section .chinese-chars .dot{color:#fdba74;margin:0 4px}
+.chinese-section .hint{font-size:13px;color:#92400e;margin-top:6px;opacity:.8}
+.audio-controls{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.audio-controls button{flex:1;min-width:80px;padding:12px 8px;border:none;border-radius:12px;font-size:15px;cursor:pointer;transition:transform .15s,box-shadow .15s;font-weight:600}
+.audio-controls button:hover{transform:translateY(-1px)}
+.audio-controls button:active{transform:translateY(0)}
+.audio-controls .btn-play{background:linear-gradient(135deg,#34d399,#059669);color:#fff}
+.audio-controls .btn-play:hover{box-shadow:0 4px 12px rgba(5,150,105,.4)}
+.audio-controls .btn-slow{background:linear-gradient(135deg,#60a5fa,#3b82f6);color:#fff}
+.audio-controls .btn-slow:hover{box-shadow:0 4px 12px rgba(59,130,246,.4)}
+.audio-controls .btn-syllable{background:linear-gradient(135deg,#f472b6,#ec4899);color:#fff}
+.audio-controls .btn-syllable:hover{box-shadow:0 4px 12px rgba(236,72,153,.4)}
+.audio-controls .btn-stop{background:linear-gradient(135deg,#f87171,#ef4444);color:#fff}
+.audio-controls .btn-stop:hover{box-shadow:0 4px 12px rgba(239,68,68,.4)}
+.info-section{border-top:1px solid #e2e8f0;padding-top:16px;margin-bottom:12px}
+.info-section .meaning{font-size:18px;color:#2d3748;margin-bottom:8px}
+.info-section .meaning .label-text{color:#718096;font-size:14px}
+.info-section .example{font-size:16px;color:#4a5568;line-height:1.6;padding:10px 14px;background:#f7fafc;border-radius:10px;border-left:3px solid #667eea}
+.history-section{border-top:1px solid #e2e8f0;padding-top:14px}
+.history-section .h-title{font-size:14px;color:#a0aec0;margin-bottom:8px}
+.history-tags{display:flex;flex-wrap:wrap;gap:6px}
+.history-tags span{padding:4px 12px;background:#edf2f7;border-radius:20px;font-size:14px;color:#4a5568;cursor:pointer;transition:background .2s}
+.history-tags span:hover{background:#e2e8f0}
+.history-tags .clear-btn{background:transparent;color:#fc8181;font-size:13px;padding:4px 8px;cursor:pointer}
+.history-tags .clear-btn:hover{background:#fff5f5}
+.not-found{text-align:center;padding:20px;color:#a0aec0;font-size:16px}
+.loading{text-align:center;padding:12px;color:#a0aec0}
+.status-bar{text-align:center;font-size:12px;color:#a0aec0;margin-top:16px;padding-top:12px;border-top:1px solid #e2e8f0}
+.wordlist-section{display:none;animation:fadeIn .3s ease;margin-bottom:16px}
+.wordlist-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.wordlist-header .wl-title{font-size:16px;font-weight:600;color:#2d3748}
+.wordlist-header .wl-close{background:none;border:none;font-size:20px;color:#a0aec0;cursor:pointer;padding:2px 8px;border-radius:6px}
+.wordlist-header .wl-close:hover{background:#f7fafc;color:#4a5568}
+.letter-tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px}
+.letter-tab{padding:5px 9px;border-radius:7px;font-size:13px;font-weight:600;background:#edf2f7;color:#4a5568;cursor:pointer;transition:all .12s;min-width:30px;text-align:center}
+.letter-tab:hover{background:#e2e8f0}
+.letter-tab.active{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
+.wordlist-words{display:flex;flex-wrap:wrap;gap:5px;max-height:420px;overflow-y:auto;padding:4px 2px}
+.wordlist-word{padding:5px 10px;border-radius:7px;font-size:13px;background:#f7fafc;color:#4a5568;cursor:pointer;transition:all .12s;border:1px solid #e2e8f0}
+.wordlist-word:hover{background:#667eea;color:#fff;border-color:#667eea}
+.wordlist-count{font-size:13px;color:#a0aec0;margin-bottom:8px}
+@media(max-width:480px){#app{padding:20px 16px}h1{font-size:20px}.word-header .word{font-size:28px}.syllable-section .syllables{font-size:22px}.chinese-section .chinese-chars{font-size:22px}.audio-controls button{font-size:13px;padding:10px 6px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1><span>📖 英單發音小幫手</span></h1>
+  <div class="search-box">
+    <div class="input-wrapper">
+      <input id="wordInput" type="text" placeholder="輸入英文單字..." autofocus>
+      <div class="autocomplete-dropdown" id="autocompleteDropdown"></div>
+    </div>
+    <button id="searchBtn">🔍 查詢</button>
+  </div>
+  <div style="margin-bottom:16px"><button id="showWordlistBtn" style="width:100%;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:14px;padding:12px;font-size:15px;cursor:pointer;font-weight:600">📚 瀏覽單字庫</button></div>
+  <div class="wordlist-section" id="wordlistSection">
+    <div class="wordlist-header">
+      <span class="wl-title">📚 單字庫</span>
+      <button class="wl-close" id="closeWordlistBtn">✕</button>
+    </div>
+    <div class="wordlist-count" id="wordlistCount"></div>
+    <div class="letter-tabs" id="letterTabs"></div>
+    <div class="wordlist-words" id="wordlistWords"></div>
+  </div>
+  <div id="result">
+    <div class="word-header">
+      <div class="word" id="wordDisplay"></div>
+      <div class="phonetic" id="phoneticDisplay"></div>
+    </div>
+    <div class="syllable-section">
+      <div class="label">🎵 音節拆解</div>
+      <div class="syllables" id="syllableDisplay"></div>
+    </div>
+    <div class="chinese-section">
+      <div class="label">🈶 中文類似唸法</div>
+      <div class="chinese-chars" id="chineseDisplay"></div>
+      <div class="hint" id="chineseHint">試著用中文來幫助記憶發音吧！</div>
+    </div>
+    <div class="audio-controls">
+      <button class="btn-play" id="playBtn">▶ 播放</button>
+      <button class="btn-slow" id="slowBtn">🐢 慢速</button>
+      <button class="btn-syllable" id="syllableBtn">🎵 逐音節</button>
+      <button class="btn-stop" id="stopBtn" style="display:none">⏹ 停止</button>
+    </div>
+    <div class="info-section">
+      <div class="meaning"><span class="label-text">📘 意思：</span><span id="meaningDisplay"></span></div>
+      <div class="example" id="exampleDisplay"></div>
+    </div>
+  </div>
+  <div id="notFound" class="not-found" style="display:none"></div>
+  <div class="history-section" id="historySection">
+    <div class="h-title">📋 最近查詢</div>
+    <div class="history-tags" id="historyTags"></div>
+  </div>
+  <div class="status-bar">離線可用・不需網路・內建字典</div>
+</div>
+
+<script>
+const VOWELS=['AA','AE','AH','AO','AW','AY','EH','ER','EY','IH','IY','OW','OY','UH','UW'];
+
+function splitSyllables(phonemes){
+  const clean=phonemes.map(p=>p.replace(/[012]$/,''));
+  const vPos=[];
+  clean.forEach((p,i)=>{if(VOWELS.includes(p))vPos.push(i)});
+  if(vPos.length<=1)return[phonemes];
+  const result=[];
+  let start=0;
+  for(let i=0;i<vPos.length;i++){
+    const cv=vPos[i],nv=vPos[i+1];
+    if(nv===undefined){
+      result.push(phonemes.slice(start));
+    }else{
+      const between=nv-cv-1;
+      if(between<=1){
+        result.push(phonemes.slice(start,cv+1));
+        start=cv+1;
+      }else{
+        result.push(phonemes.slice(start,cv+2));
+        start=cv+2;
+      }
+    }
+  }
+  return result;
+}
+
+const SYL2CN={
+  'B+AA':'巴','B+AE':'拜','B+AH':'巴','B+AO':'寶','B+AW':'包','B+AY':'拜','B+EH':'貝',
+  'B+ER':'伯','B+EY':'貝','B+IH':'比','B+IY':'比','B+OW':'波','B+UH':'布','B+UW':'布',
+  'P+AA':'帕','P+AE':'派','P+AH':'帕','P+AO':'跑','P+AW':'泡','P+AY':'派','P+EH':'佩',
+  'P+ER':'普','P+EY':'佩','P+IH':'皮','P+IY':'皮','P+OW':'剖','P+UH':'普','P+UW':'普',
+  'T+AA':'塔','T+AE':'泰','T+AH':'塔','T+AO':'套','T+AW':'套','T+AY':'泰','T+EH':'特',
+  'T+ER':'特','T+EY':'特','T+IH':'提','T+IY':'提','T+OW':'透','T+UH':'土','T+UW':'土',
+  'K+AA':'卡','K+AE':'凱','K+AH':'卡','K+AO':'考','K+AW':'靠','K+AY':'凱','K+EH':'可',
+  'K+ER':'克','K+EY':'科','K+IH':'奇','K+IY':'奇','K+OW':'寇','K+UH':'庫','K+UW':'庫',
+  'D+AA':'大','D+AE':'戴','D+AH':'達','D+AO':'道','D+AW':'道','D+AY':'戴','D+EH':'德',
+  'D+ER':'德','D+EY':'德','D+IH':'迪','D+IY':'迪','D+OW':'斗','D+UH':'杜','D+UW':'杜',
+  'G+AA':'嘎','G+AE':'蓋','G+AH':'嘎','G+AO':'高','G+AW':'告','G+AY':'蓋','G+EH':'葛',
+  'G+ER':'戈','G+EY':'給','G+IH':'吉','G+IY':'吉','G+OW':'勾','G+UH':'古','G+UW':'古',
+  'M+AA':'馬','M+AE':'麥','M+AH':'馬','M+AO':'毛','M+AW':'毛','M+AY':'買','M+EH':'梅',
+  'M+ER':'默','M+EY':'梅','M+IH':'米','M+IY':'米','M+OW':'某','M+UH':'木','M+UW':'木',
+  'N+AA':'那','N+AE':'奈','N+AH':'那','N+AO':'鬧','N+AW':'鬧','N+AY':'奈','N+EH':'內',
+  'N+ER':'訥','N+EY':'內','N+IH':'尼','N+IY':'尼','N+OW':'諾','N+UH':'努','N+UW':'努',
+  'L+AA':'拉','L+AE':'萊','L+AH':'拉','L+AO':'勞','L+AW':'勞','L+AY':'萊','L+EH':'雷',
+  'L+ER':'勒','L+EY':'雷','L+IH':'利','L+IY':'利','L+OW':'樓','L+UH':'路','L+UW':'路',
+  'S+AA':'薩','S+AE':'賽','S+AH':'薩','S+AO':'騷','S+AW':'騷','S+AY':'賽','S+EH':'瑟',
+  'S+ER':'瑟','S+EY':'瑟','S+IH':'西','S+IY':'西','S+OW':'搜','S+UH':'蘇','S+UW':'蘇',
+  'SH+AA':'沙','SH+AE':'篩','SH+AH':'沙','SH+AO':'少','SH+AW':'紹','SH+AY':'篩','SH+EH':'設',
+  'SH+ER':'舍','SH+EY':'設','SH+IH':'希','SH+IY':'希','SH+OW':'收','SH+UH':'書','SH+UW':'書',
+  'H+AA':'哈','H+AE':'海','H+AH':'哈','H+AO':'好','H+AW':'好','H+AY':'海','H+EH':'賀',
+  'H+ER':'赫','H+EY':'黑','H+IH':'希','H+IY':'希','H+OW':'侯','H+UH':'胡','H+UW':'胡',
+  'HH+AA':'哈','HH+AE':'海','HH+AH':'哈','HH+AY':'海','HH+EH':'赫','HH+EY':'黑','HH+IH':'希',
+  'HH+IY':'希','HH+OW':'侯',
+  'R+AA':'拉','R+AE':'萊','R+AH':'拉','R+AO':'勞','R+AW':'勞','R+AY':'萊','R+EH':'瑞',
+  'R+ER':'爾','R+EY':'瑞','R+IH':'瑞','R+IY':'瑞','R+OW':'柔','R+UH':'如','R+UW':'如',
+  'F+AA':'法','F+AE':'法','F+AH':'法','F+AO':'佛','F+AW':'佛','F+AY':'法','F+EH':'費',
+  'F+ER':'佛','F+EY':'費','F+IH':'費','F+IY':'費','F+OW':'否','F+UH':'夫','F+UW':'夫',
+  'V+AA':'瓦','V+AE':'維','V+AH':'瓦','V+AY':'維','V+EH':'維','V+ER':'佛','V+EY':'維',
+  'V+IH':'維','V+IY':'維','V+UH':'屋','V+UW':'屋',
+  'W+AA':'瓦','W+AE':'瓦','W+AH':'瓦','W+AY':'外','W+EH':'威','W+EY':'威','W+IH':'威',
+  'W+IY':'威','W+OW':'我','W+UH':'屋',
+  'Y+AA':'雅','Y+AE':'耶','Y+AH':'雅','Y+AY':'耶','Y+EH':'耶','Y+EY':'耶','Y+IH':'伊',
+  'Y+IY':'伊','Y+OW':'唷',
+  'Z+AA':'薩','Z+AE':'賽','Z+AH':'薩','Z+AY':'賽','Z+EH':'澤','Z+EY':'澤','Z+IH':'茲',
+  'Z+IY':'茲','Z+OW':'鄒',
+  'CH+AA':'查','CH+AE':'柴','CH+AH':'查','CH+AO':'超','CH+AW':'超','CH+AY':'柴','CH+EH':'徹',
+  'CH+ER':'徹','CH+EY':'徹','CH+IH':'奇','CH+IY':'奇','CH+OW':'抽','CH+UH':'出','CH+UW':'出',
+  'JH+AA':'賈','JH+AE':'傑','JH+AH':'賈','JH+AO':'交','JH+AW':'交','JH+AY':'傑','JH+EH':'傑',
+  'JH+ER':'哲','JH+EY':'傑','JH+IH':'吉','JH+IY':'吉','JH+OW':'究','JH+UH':'朱','JH+UW':'朱',
+  'TH+AA':'撒','TH+AE':'賽','TH+AH':'撒','TH+AY':'賽','TH+EH':'瑟','TH+EY':'瑟','TH+IH':'西',
+  'TH+IY':'西','TH+OW':'搜','TH+UH':'蘇',
+  'DH+AA':'扎','DH+AE':'宰','DH+AH':'扎','DH+AY':'宰','DH+EH':'澤','DH+EY':'澤','DH+IH':'茲',
+  'DH+IY':'茲',
+  'AA':'阿','AE':'艾','AH':'阿','AO':'奧','AW':'奧','AY':'愛','EH':'欸','ER':'爾',
+  'EY':'欸','IH':'伊','IY':'伊','OW':'歐','OY':'歐伊','UH':'屋','UW':'屋'
+};
+
+const CODA_CN={'L':'歐','R':'爾','N':'恩','M':'姆','NG':'嗯','T':'特','D':'德','K':'克',
+  'P':'普','S':'斯','F':'夫','V':'五','TH':'斯','DH':'茲','SH':'許','CH':'區','JH':'居','Z':'茲'};
+
+function syllToChinese(syllable){
+  const clean=syllable.map(p=>p.replace(/[012]$/,''));
+  if(clean.length===0)return'？';
+  const vIdx=clean.findIndex(p=>VOWELS.includes(p));
+  if(vIdx===-1)return clean.map(p=>CODA_CN[p]||p).join('');
+  const onset=clean.slice(0,vIdx);
+  const vowel=clean[vIdx];
+  const coda=clean.slice(vIdx+1);
+  let key;
+  if(onset.length>0){
+    key=onset[onset.length-1]+'+'+vowel;
+  }else{
+    key=vowel;
+  }
+  let cn=SYL2CN[key]||'';
+  if(!cn){
+    cn=SYL2CN[vowel]||vowel;
+  }
+  if(onset.length>1&&onset[0]==='S')cn='絲'+cn;
+  if(coda.length>0&&cn){
+    const codaCn=coda.map(p=>CODA_CN[p]||'').filter(Boolean).join('');
+    if(codaCn)cn+=codaCn;
+  }
+  return cn||clean.map(p=>SYL2CN[p]||CODA_CN[p]||p).join('');
+}
+
+function genChineseApprox(phonemes){
+  const syls=splitSyllables(phonemes);
+  return syls.map(s=>syllToChinese(s));
+}
+
+function syllToStr(syl){
+  return syl.map(p=>p.replace(/[012]$/,'')).join(' ');
+}
+
+function wordToPhonetic(phonemeStr){
+  return phonemeStr.split(' ').map(p=>p.replace(/([012])$/,(m)=>['','ˈ','ˌ'][parseInt(m)])).join(' ');
+}
+
+let currentWord='',currentPhonemes=[],currentSyllables=[],currentChinese=[];
+
+function lookup(word){
+  word=word.trim().toLowerCase();
+  if(!word)return;
+  const entry=DICT[word];
+  const resultDiv=document.getElementById('result');
+  const notFoundDiv=document.getElementById('notFound');
+  resultDiv.style.display='none';
+  notFoundDiv.style.display='none';
+  if(!entry){
+    notFoundDiv.textContent='😕 找不到「'+word+'」，試試其他單字';
+    notFoundDiv.style.display='block';
+    return;
+  }
+  const phonemeStr=entry.p;
+  const phonemes=phonemeStr.split(' ');
+  const syllables=splitSyllables(phonemes);
+  let chineseApprox;
+  if(entry.z){
+    chineseApprox=entry.z.split('');
+  }else{
+    chineseApprox=genChineseApprox(phonemes);
+  }
+  currentWord=word;
+  currentPhonemes=phonemes;
+  currentSyllables=syllables;
+  currentChinese=chineseApprox;
+  document.getElementById('wordDisplay').textContent=word;
+  document.getElementById('phoneticDisplay').textContent='/'+wordToPhonetic(phonemeStr)+'/';
+  const sylHtml=syllables.map(s=>syllToStr(s)).join('<span class="dot">・</span>');
+  document.getElementById('syllableDisplay').innerHTML=sylHtml;
+  const cnHtml=chineseApprox.join('<span class="dot">・</span>');
+  document.getElementById('chineseDisplay').innerHTML=cnHtml;
+  document.getElementById('meaningDisplay').textContent=entry.m;
+  let ex=entry.e;
+  const regex=new RegExp(word,'gi');
+  ex=ex.replace(regex,'<strong>$&</strong>');
+  document.getElementById('exampleDisplay').innerHTML=ex;
+  resultDiv.style.display='block';
+  addHistory(word);
+  document.getElementById('stopBtn').style.display='none';
+}
+
+function speak(text,rate=0.9){
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='en-US';
+  u.rate=rate;
+  u.pitch=1;
+  u.volume=1;
+  const voices=window.speechSynthesis.getVoices();
+  const enVoice=voices.find(v=>v.lang.startsWith('en'));
+  if(enVoice)u.voice=enVoice;
+  window.speechSynthesis.speak(u);
+  return u;
+}
+
+function speakSyllables(syllables,rate=0.7){
+  window.speechSynthesis.cancel();
+  let i=0;
+  function speakNext(){
+    if(i>=syllables.length)return;
+    const sylStr=syllables[i].join(' ');
+    const u=new SpeechSynthesisUtterance(sylStr);
+    u.lang='en-US';
+    u.rate=rate;
+    u.pitch=1;
+    u.volume=1;
+    const voices=window.speechSynthesis.getVoices();
+    const enVoice=voices.find(v=>v.lang.startsWith('en'));
+    if(enVoice)u.voice=enVoice;
+    u.onend=()=>{i++;setTimeout(speakNext,400)};
+    window.speechSynthesis.speak(u);
+  }
+  speakNext();
+}
+
+document.getElementById('searchBtn').addEventListener('click',()=>{
+  lookup(document.getElementById('wordInput').value);
+});
+
+document.getElementById('playBtn').addEventListener('click',()=>{
+  if(currentWord)speak(currentWord,0.9);
+});
+document.getElementById('slowBtn').addEventListener('click',()=>{
+  if(currentWord)speak(currentWord,0.35);
+});
+document.getElementById('syllableBtn').addEventListener('click',()=>{
+  if(currentSyllables.length>0)speakSyllables(currentSyllables,0.6);
+});
+document.getElementById('stopBtn').addEventListener('click',()=>{
+  window.speechSynthesis.cancel();
+  document.getElementById('stopBtn').style.display='none';
+});
+
+if(window.speechSynthesis){
+  window.speechSynthesis.onvoiceschanged=()=>{window.speechSynthesis.getVoices()};
+}
+
+function addHistory(word){
+  let h=JSON.parse(localStorage.getItem('engHist')||'[]');
+  h=h.filter(w=>w!==word);
+  h.unshift(word);
+  if(h.length>12)h=h.slice(0,12);
+  localStorage.setItem('engHist',JSON.stringify(h));
+  renderHistory();
+}
+function clearHistory(){
+  localStorage.removeItem('engHist');
+  renderHistory();
+}
+function renderHistory(){
+  const tags=document.getElementById('historyTags');
+  const h=JSON.parse(localStorage.getItem('engHist')||'[]');
+  if(h.length===0){
+    tags.innerHTML='<span style="color:#a0aec0;font-size:13px">還沒有查詢紀錄</span>';
+    return;
+  }
+  tags.innerHTML=h.map(w=>'<span data-word="'+w+'">'+w+'</span>').join('')
+    +'<span class="clear-btn" id="clearHistBtn">清除</span>';
+  tags.querySelectorAll('span[data-word]').forEach(el=>{
+    el.addEventListener('click',()=>{
+      document.getElementById('wordInput').value=el.dataset.word;
+      lookup(el.dataset.word);
+    });
+  });
+  const cb=document.getElementById('clearHistBtn');
+  if(cb)cb.addEventListener('click',clearHistory);
+}
+renderHistory();
+
+let sortedWords=[],wordlistInitialized=false;
+function initWordlist(){
+  sortedWords=Object.keys(DICT).sort();
+  document.getElementById('wordlistCount').textContent='共 '+sortedWords.length+' 個單字';
+  renderLetterTabs();
+  wordlistInitialized=true;
+}
+function renderLetterTabs(){
+  const letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const tabs=document.getElementById('letterTabs');
+  tabs.innerHTML=letters.map(l=>'<span class="letter-tab" data-letter="'+l+'">'+l+'</span>').join('');
+  tabs.querySelectorAll('.letter-tab').forEach(el=>{
+    el.addEventListener('click',()=>showWordsByLetter(el.dataset.letter));
+  });
+}
+function showWordsByLetter(letter){
+  document.querySelectorAll('.letter-tab').forEach(el=>el.classList.toggle('active',el.dataset.letter===letter));
+  const words=sortedWords.filter(w=>w.startsWith(letter.toLowerCase()));
+  const container=document.getElementById('wordlistWords');
+  if(words.length===0){
+    container.innerHTML='<span style="color:#a0aec0;font-size:14px">沒有以 '+letter+' 開頭的單字</span>';
+    return;
+  }
+  container.innerHTML=words.map(w=>'<span class="wordlist-word" data-word="'+w+'">'+w+'</span>').join('');
+  container.querySelectorAll('.wordlist-word').forEach(el=>{
+    el.addEventListener('click',()=>{
+      document.getElementById('wordInput').value=el.dataset.word;
+      lookup(el.dataset.word);
+      closeWordlist();
+    });
+  });
+}
+function openWordlist(){
+  if(!wordlistInitialized)initWordlist();
+  document.getElementById('wordlistSection').style.display='block';
+  document.getElementById('result').style.display='none';
+  document.getElementById('notFound').style.display='none';
+  showWordsByLetter('A');
+}
+function closeWordlist(){
+  document.getElementById('wordlistSection').style.display='none';
+}
+document.getElementById('showWordlistBtn').addEventListener('click',openWordlist);
+document.getElementById('closeWordlistBtn').addEventListener('click',closeWordlist);
+
+document.getElementById('wordInput').focus();
+</script>
+<script src="dict.js"></script>
+<script>
+const acDropdown=document.getElementById('autocompleteDropdown');
+const wordInput=document.getElementById('wordInput');
+let acWords=[],acIndex=-1;
+
+function initAcDict(){
+  if(acWords.length===0)acWords=Object.keys(DICT).sort();
+}
+
+function highlightMatch(word,prefix){
+  return word.replace(new RegExp('^('+prefix.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','i'),'<span class="hl">$1</span>');
+}
+
+function filterWords(prefix){
+  initAcDict();
+  if(!prefix||prefix.length<1){acDropdown.style.display='none';return}
+  const lower=prefix.toLowerCase();
+  const matches=acWords.filter(w=>w.startsWith(lower));
+  if(matches.length===0){
+    acDropdown.innerHTML='<div class="no-result">沒有相符的單字</div>';
+    acDropdown.style.display='block';
+    return;
+  }
+  const maxShow=50;
+  const shown=matches.slice(0,maxShow);
+  acDropdown.innerHTML=shown.map((w,i)=>'<div class="item" data-index="'+i+'">'+highlightMatch(w,prefix)+'</div>').join('');
+  acDropdown.style.display='block';
+  acIndex=-1;
+}
+
+function selectAcWord(word){
+  wordInput.value=word;
+  acDropdown.style.display='none';
+  lookup(word);
+}
+
+acDropdown.addEventListener('click',e=>{
+  const item=e.target.closest('.item');
+  if(item){
+    const idx=parseInt(item.dataset.index);
+    const lower=wordInput.value.toLowerCase();
+    const matches=acWords.filter(w=>w.startsWith(lower));
+    if(idx>=0&&idx<matches.length)selectAcWord(matches[idx]);
+  }
+});
+
+wordInput.addEventListener('input',()=>filterWords(wordInput.value));
+
+wordInput.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){acDropdown.style.display='none';return}
+  if(e.key==='Enter'){
+    if(acDropdown.style.display==='block'&&acIndex>=0){
+      e.preventDefault();
+      const lower=wordInput.value.toLowerCase();
+      const matches=acWords.filter(w=>w.startsWith(lower));
+      if(acIndex<matches.length)selectAcWord(matches[acIndex]);
+      return;
+    }
+    acDropdown.style.display='none';
+    lookup(wordInput.value);
+    return;
+  }
+  if(acDropdown.style.display!=='block')return;
+  const items=acDropdown.querySelectorAll('.item');
+  if(items.length===0)return;
+  if(e.key==='ArrowDown'){
+    e.preventDefault();
+    acIndex=acIndex<items.length-1?acIndex+1:0;
+    items.forEach((el,i)=>el.classList.toggle('active',i===acIndex));
+    if(items[acIndex])items[acIndex].scrollIntoView({block:'nearest'});
+  }else if(e.key==='ArrowUp'){
+    e.preventDefault();
+    acIndex=acIndex>0?acIndex-1:items.length-1;
+    items.forEach((el,i)=>el.classList.toggle('active',i===acIndex));
+    if(items[acIndex])items[acIndex].scrollIntoView({block:'nearest'});
+  }
+});
+
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.input-wrapper'))acDropdown.style.display='none';
+});
+</script>
+</body>
+</html>
