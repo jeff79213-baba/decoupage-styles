@@ -431,6 +431,26 @@
     .settings-actions button { min-width: 100px; }
   }
   .paste-area { margin-top: 12px; }
+  .text-import-area { margin-top: 16px; padding: 14px; background: #f9f6f0; border-radius: 12px; border: 1px solid #e8e0d4; }
+  .text-import-area textarea {
+    width: 100%;
+    height: 120px;
+    padding: 10px;
+    border: 2px solid #e0d8ce;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: monospace;
+    resize: vertical;
+    outline: none;
+    background: var(--card-bg, #fff);
+    color: var(--text-color, #3d2b1a);
+    box-sizing: border-box;
+  }
+  .text-import-area textarea:focus { border-color: var(--color-header-bg, #e85d2c); }
+  .text-import-area .import-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .batch-unit-bar { display: flex; align-items: center; gap: 8px; margin: 8px 0 12px; flex-wrap: wrap; }
+  .batch-unit-bar label { font-size: 13px; color: #888; }
+  .batch-unit-bar input { width: 60px; padding: 4px 8px; border: 1.5px solid #ddd; border-radius: 6px; font-size: 13px; text-align: center; }
   .paste-area textarea {
     width: 100%;
     height: 160px;
@@ -674,6 +694,11 @@
     <h2>物品設定</h2>
     <p style="font-size:13px;color:#999;margin-bottom:10px;">設定品項名稱、單價與單位</p>
     <div id="settingsItems"></div>
+    <div class="batch-unit-bar">
+      <label>全部單位替換為</label>
+      <input type="text" id="batchUnitInput" placeholder="個" maxlength="10">
+      <button class="btn-secondary" id="batchUnitBtn" style="padding:4px 12px;font-size:13px">套用</button>
+    </div>
     <button class="add-item-btn" id="addItemBtn">＋ 新增品項</button>
 
     <h2>快速主題</h2>
@@ -729,6 +754,16 @@
       <div class="paste-actions">
         <button class="btn-primary" id="importPasteBtn">📥 匯入</button>
         <button class="btn-secondary" id="cancelPasteBtn">清除</button>
+      </div>
+    </div>
+
+    <div class="text-import-area">
+      <div style="font-size:13px;font-weight:600;margin-bottom:6px;">📋 文字匯入品項</div>
+      <div style="font-size:12px;color:#999;margin-bottom:6px;">每行一筆，格式：<code>品名-單位-價格</code>，例如 <code>益生菌-盒-1980</code></div>
+      <textarea id="textImportInput" placeholder="益生菌-盒-1980&#10;樟芝益-盒-5960&#10;995-盒-5960"></textarea>
+      <div class="import-actions">
+        <button class="btn-primary" id="textImportBtn">📥 匯入品項</button>
+        <button class="btn-secondary" id="textImportAppendBtn">➕ 追加品項</button>
       </div>
     </div>
 
@@ -918,6 +953,12 @@ function renderMainView() {
   document.getElementById('mainFooter').textContent = config.footer;
   document.getElementById('totalLabelText').textContent = config.totalLabel;
   document.getElementById('resetBtn').textContent = config.resetText;
+
+  // Consumer mode: hide settings gear, share button & local notice
+  document.getElementById('btnSettings').style.display = isConsumerMode ? 'none' : '';
+  document.getElementById('shareConfig').style.display = isConsumerMode ? 'none' : '';
+  var notice = document.querySelector('.local-notice');
+  if (notice) notice.style.display = isConsumerMode ? 'none' : '';
 
   // Colors
   applyColors(config.colors);
@@ -1135,6 +1176,8 @@ function fallbackCopy(text, label) {
   document.body.removeChild(ta);
 }
 
+let isConsumerMode = false;
+
 function loadConfigFromHash() {
   var hash = location.hash;
   if (!hash || hash.length < 3) return false;
@@ -1145,6 +1188,7 @@ function loadConfigFromHash() {
     var cfg = JSON.parse(json);
     saveConfig(cfg);
     location.hash = '';
+    isConsumerMode = true;
     return true;
   } catch (e) {
     return false;
@@ -1274,7 +1318,7 @@ function gatherSettingsFromForm() {
         id: row.dataset.id || generateId(),
         name: name,
         price: Math.max(0, price),
-        unit: unit || '份'
+        unit: unit || '個'
       });
     }
   });
@@ -1399,6 +1443,53 @@ function pasteConfig() {
 }
 
 // ================================================================
+// TEXT IMPORT (名稱-單位-價格)
+// ================================================================
+function parseTextItems(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+  const items = [];
+  for (const line of lines) {
+    const parts = line.split('-').map(s => s.trim());
+    if (parts.length === 3) {
+      const name = parts[0];
+      const unit = parts[1];
+      const price = parseInt(parts[2].replace(/,/g, '')) || 0;
+      if (name) {
+        items.push({ id: generateId(), name, unit: unit || '個', price });
+      }
+    }
+  }
+  return items;
+}
+
+function importTextItems(replace) {
+  const text = document.getElementById('textImportInput').value.trim();
+  if (!text) { alert('請輸入品項文字'); return; }
+  const newItems = parseTextItems(text);
+  if (newItems.length === 0) { alert('無法解析任何品項，請確認格式為：品名-單位-價格'); return; }
+  if (replace) {
+    config.items = newItems;
+  } else {
+    config.items.push(...newItems);
+  }
+  itemIdCounter = config.items.length;
+  saveConfig(config);
+  renderSettingsItems();
+  document.getElementById('textImportInput').value = '';
+  alert('成功' + (replace ? '匯入' : '追加') + ' ' + newItems.length + ' 個品項');
+}
+
+function batchReplaceUnit() {
+  const unit = document.getElementById('batchUnitInput').value.trim();
+  if (!unit) { alert('請輸入單位名稱'); return; }
+  if (!confirm('確定要將所有品項的單位替換為「' + unit + '」嗎？')) return;
+  config.items.forEach(item => { item.unit = unit; });
+  saveConfig(config);
+  renderSettingsItems();
+  document.getElementById('batchUnitInput').value = '';
+}
+
+// ================================================================
 // EVENT BINDING
 // ================================================================
 function bindEvents() {
@@ -1469,13 +1560,23 @@ function bindEvents() {
   });
   document.getElementById('importPasteBtn').addEventListener('click', pasteConfig);
 
+  // Text import
+  document.getElementById('textImportBtn').addEventListener('click', function() { importTextItems(true); });
+  document.getElementById('textImportAppendBtn').addEventListener('click', function() { importTextItems(false); });
+
+  // Batch replace unit
+  document.getElementById('batchUnitBtn').addEventListener('click', batchReplaceUnit);
+  document.getElementById('batchUnitInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') batchReplaceUnit();
+  });
+
   // Add item
   document.getElementById('addItemBtn').addEventListener('click', function() {
     config.items.push({
       id: generateId(),
       name: '',
       price: 0,
-      unit: '份'
+      unit: '個'
     });
     renderSettingsItems();
     // Focus the last row's name input
