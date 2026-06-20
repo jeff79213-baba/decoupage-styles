@@ -90,25 +90,25 @@ header {
   box-shadow: var(--shadow); transition: transform 0.15s;
   display: flex; flex-direction: column; gap: 6px;
 }
-.itemCardTop { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-.itemCard .itemName { font-size: 15px; font-weight: 600; flex: 1; }
-.addCartBtn {
-  width: 32px; height: 32px; border-radius: 50%;
+.itemCardTop .itemName { font-size: 15px; font-weight: 600; }
+.itemPrices { display: flex; flex-direction: column; gap: 6px; }
+.priceLine { display: flex; justify-content: space-between; align-items: center; }
+.priceLine .plLabel { font-size: 14px; }
+.priceLine .plPrice { font-size: 14px; font-weight: 600; color: var(--primary); }
+.priceLine .addCartBtn {
+  width: 30px; height: 30px; border-radius: 50%;
   background: var(--primary); color: #fff; border: none;
-  font-size: 20px; cursor: pointer; flex-shrink: 0;
+  font-size: 18px; cursor: pointer; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
   transition: transform 0.15s;
 }
-.addCartBtn:active { transform: scale(0.9); }
-.itemCard .itemPrice {
-  font-size: 13px; color: var(--primary); font-weight: 500;
+.priceLine .addCartBtn:active { transform: scale(0.9); }
+.priceLine.withDivider {
+  padding-bottom: 6px; border-bottom: 1px dashed #ddd;
+  margin-bottom: 2px;
 }
-.itemCardFooter { display: flex; justify-content: space-between; align-items: center; }
-.priceCount {
-  font-size: 11px; color: #999; background: #f5f5f5;
-  padding: 2px 8px; border-radius: 10px;
-}
-.itemUnitPrice { font-size: 16px; font-weight: 700; color: var(--primary); }
+.priceLine.clickable { cursor: pointer; }
+.priceLine.clickable:active { background: rgba(0,0,0,0.03); border-radius: 6px; }
 
 /* Cart */
 .cartEmpty { text-align: center; padding: 40px 0; color: #aaa; font-size: 15px; }
@@ -216,6 +216,20 @@ header {
   border-radius: var(--radius); background: var(--card); padding: 8px 14px;
   font-size: 14px; min-width: 150px;
 }
+.adminPrices { padding: 0 0 4px 28px; display: flex; flex-direction: column; }
+.adminPriceRow {
+  display: flex; align-items: center; gap: 6px; padding: 5px 0;
+  border-bottom: 1px solid #f0f0f0; font-size: 13px;
+}
+.adminPriceRow:last-of-type { border-bottom: none; }
+.adminPriceRow .aplLabel { flex: 1; min-width: 0; }
+.adminPriceRow .aplAmount { width: 60px; text-align: right; font-weight: 600; color: var(--primary); }
+.adminPriceRow input {
+  padding: 5px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px;
+}
+.adminPriceRow input:focus { border-color: var(--primary); outline: none; }
+.adminPriceRow input.apInputLabel { flex: 1; min-width: 0; }
+.adminPriceRow input.apInputAmount { width: 70px; text-align: right; }
 
 .inlineAddRow {
   display: flex; gap: 8px; margin-top: 8px;
@@ -285,8 +299,15 @@ header {
 
 /* Login Modal */
 .loginForm { display: flex; flex-direction: column; gap: 12px; }
-.loginForm input {
-  padding: 12px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 16px;
+.pwdWrap { position: relative; width: 100%; }
+.pwdWrap input {
+  width: 100%; padding: 12px 40px 12px 12px; border: 1.5px solid #ddd;
+  border-radius: 8px; font-size: 16px; box-sizing: border-box;
+}
+.pwdWrap .eyeBtn {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; font-size: 18px;
+  padding: 4px; color: #999; line-height: 1;
 }
 .loginForm .loginError { color: #e74c3c; font-size: 13px; display: none; }
 .loginForm button {
@@ -390,7 +411,10 @@ header {
   <div class="modalBox">
     <h2>管理員登入</h2>
     <div class="loginForm">
-      <input type="password" id="loginPwd" placeholder="請輸入管理員密碼" autocomplete="off">
+      <div class="pwdWrap">
+        <input type="password" id="loginPwd" placeholder="請輸入管理員密碼" autocomplete="off">
+        <button class="eyeBtn" id="pwdEye" type="button" tabindex="-1">👁️</button>
+      </div>
       <div class="loginError" id="loginError">密碼錯誤，請重試</div>
       <button id="loginBtn">登入</button>
       <button style="background:none;color:#999;border:1px solid #ddd;padding:10px;border-radius:8px;cursor:pointer;font-size:14px" id="loginCancelBtn">取消</button>
@@ -470,8 +494,8 @@ const DEFAULT_CATEGORIES = [
 
 const DEFAULT_CONFIG = {
   password:"0000", shopName:"芭拉咘咘麵包車",
-  address:"", phone:"", showContact:false,
-  themeName:"出爐暖棕", colors:{...THEMES["出爐暖棕"]}
+  address:"", phone:"", showAddress:false, showPhone:false,
+  themeName:"甜蜜粉嫩", colors:{...THEMES["甜蜜粉嫩"]}
 };
 
 // ============ STATE ============
@@ -488,6 +512,12 @@ let confirmCallback = null;
 function loadData() {
   try { CONFIG = JSON.parse(localStorage.getItem("bala_config")) || JSON.parse(JSON.stringify(DEFAULT_CONFIG));
   } catch(e) { CONFIG = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); }
+  // migrate old showContact -> showAddress/showPhone
+  if (CONFIG.showContact !== undefined && CONFIG.showAddress === undefined) {
+    CONFIG.showAddress = CONFIG.showContact;
+    CONFIG.showPhone = CONFIG.showPhone === undefined ? CONFIG.showContact : CONFIG.showPhone;
+    delete CONFIG.showContact;
+  }
   try { CATEGORIES = JSON.parse(localStorage.getItem("bala_categories")) || JSON.parse(JSON.stringify(DEFAULT_CATEGORIES));
   } catch(e) { CATEGORIES = JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)); }
   try { ORDERS = JSON.parse(localStorage.getItem("bala_orders")) || [];
@@ -521,8 +551,10 @@ function updateHeader() {
   document.getElementById("shopTitle").textContent = name;
   document.getElementById("pageTitle").textContent = name;
   const contact = document.getElementById("shopContact");
-  const parts = [CONFIG.address, CONFIG.phone].filter(Boolean);
-  if (CONFIG.showContact && parts.length) {
+  const parts = [];
+  if (CONFIG.showAddress && CONFIG.address) parts.push(CONFIG.address);
+  if (CONFIG.showPhone && CONFIG.phone) parts.push(CONFIG.phone);
+  if (parts.length) {
     contact.style.display = "block";
     contact.textContent = parts.join(" · ");
   } else {
@@ -601,31 +633,39 @@ function renderMenu() {
     return;
   }
   grid.innerHTML = cat.items.map((item, idx) => {
-    const priceStr = item.prices.map(p => `${p.label} $${p.price}`).join(" / ");
     const single = item.prices.length === 1;
     return `<div class="itemCard" data-idx="${idx}">
       <div class="itemCardTop">
         <div class="itemName">${item.name}</div>
-        ${single ? `<button class="addCartBtn" data-idx="${idx}">+</button>` : ''}
       </div>
-      <div class="itemPrice">${priceStr}</div>
-      <div class="itemCardFooter">
-        <span class="priceCount">${item.prices.length} 種價位</span>
-        ${single ? `<span class="itemUnitPrice">$${item.prices[0].price}</span>` : ''}
+      <div class="itemPrices">
+        ${single ? `
+          <div class="priceLine">
+            <span class="plLabel">${item.prices[0].label}</span>
+            <span class="plPrice">$${item.prices[0].price}</span>
+            <button class="addCartBtn" data-idx="${idx}" data-qty="1">+</button>
+          </div>` :
+          item.prices.map((p, pi) => `
+          <div class="priceLine${pi < item.prices.length-1 ? ' withDivider' : ''}" data-price="${pi}">
+            <span class="plLabel">${p.label}</span>
+            <span class="plPrice">$${p.price}</span>
+          </div>`).join("")
+        }
       </div>
     </div>`;
   }).join("");
 }
 
 // ============ ITEM MODAL ============
-function openItemModal(catIdx, itemIdx) {
+function openItemModal(catIdx, itemIdx, preselectIdx) {
   const item = CATEGORIES[catIdx]?.items[itemIdx];
   if (!item || item.prices.length < 2) return;
-  itemModalState = { categoryIdx: catIdx, itemIdx, selectedPrice: 0, qty: 1 };
+  const startPrice = (preselectIdx !== undefined && preselectIdx < item.prices.length) ? preselectIdx : 0;
+  itemModalState = { categoryIdx: catIdx, itemIdx, selectedPrice: startPrice, qty: 1 };
   document.getElementById("itemModalTitle").textContent = item.name;
   const container = document.getElementById("priceOptions");
   container.innerHTML = item.prices.map((p, i) =>
-    `<div class="priceOption ${i===0?'selected':''}" data-idx="${i}">
+    `<div class="priceOption ${i===startPrice?'selected':''}" data-idx="${i}">
       <span class="optLabel">${p.label}</span>
       <span class="optPrice">$${p.price}</span>
     </div>`
@@ -892,7 +932,9 @@ function renderAdmin() {
       </div>
       <div id="adminItems"></div>
       <div class="inlineAddRow">
-        <input type="text" id="newItemInput" placeholder="新品項名稱..." maxlength="20">
+        <input type="text" id="newItemName" placeholder="新品項名稱..." maxlength="20" style="flex:2">
+        <input type="text" id="newItemLabel" placeholder="單個" value="單個" style="flex:1;min-width:60px">
+        <input type="number" id="newItemPrice" placeholder="0" value="0" style="width:70px">
         <button onclick="addItemInline()">+ 新增</button>
       </div>
     </div>
@@ -910,18 +952,13 @@ function renderAdmin() {
       </div>
       <div class="settingRow">
         <label>地址</label>
-        <input type="text" id="editAddress" value="${CONFIG.address||''}" maxlength="50">
+        <input type="text" id="editAddress" value="${CONFIG.address||''}" maxlength="50" style="flex:1">
+        <button class="toggleSwitch ${CONFIG.showAddress?'on':''}" id="toggleAddress" style="flex-shrink:0"></button>
       </div>
       <div class="settingRow">
         <label>電話</label>
-        <input type="text" id="editPhone" value="${CONFIG.phone||''}" maxlength="20">
-      </div>
-      <div class="settingRow">
-        <label>顯示</label>
-        <div class="toggleWrap">
-          <button class="toggleSwitch ${CONFIG.showContact?'on':''}" id="toggleContact"></button>
-          <span style="font-size:13px;color:#888">顯示地址與電話</span>
-        </div>
+        <input type="text" id="editPhone" value="${CONFIG.phone||''}" maxlength="20" style="flex:1">
+        <button class="toggleSwitch ${CONFIG.showPhone?'on':''}" id="togglePhone" style="flex-shrink:0"></button>
       </div>
     </div>
     <div class="adminSection">
@@ -976,14 +1013,28 @@ function renderAdminItems() {
   const cat = CATEGORIES.find(c => c.name === sel.value);
   if (!cat) { container.innerHTML = '<div class="cartEmpty">請先新增分類</div>'; return; }
   container.innerHTML = cat.items.map((item, i) => {
-    const priceStr = item.prices.map(p => `${p.label} $${p.price}`).join(", ");
+    const pricesHtml = item.prices.map((p, pi) =>
+      `<div class="adminPriceRow">
+        <span class="aplLabel">${p.label}</span>
+        <span class="aplAmount">$${p.price}</span>
+        <button class="editBtn" onclick="editItemPrice(${i},${pi})">✏️</button>
+        <button class="delBtn" onclick="deleteItemPrice(${i},${pi})">🗑️</button>
+      </div>`
+    ).join("");
     return `<div class="adminRow" draggable="true" data-idx="${i}">
       <span class="dragHandle">☰</span>
-      <span class="adminRowName">${item.name} <span style="font-size:11px;color:#999">(${priceStr})</span></span>
+      <span class="adminRowName">${item.name}</span>
       <div class="adminRowActions">
-        <button class="priceBtn" onclick="editItemPrices(${i})">💰</button>
         <button class="editBtn" onclick="editItem(${i})">✏️</button>
         <button class="delBtn" onclick="deleteItem(${i})">🗑️</button>
+      </div>
+    </div>
+    <div class="adminPrices">
+      ${pricesHtml}
+      <div class="adminPriceRow" style="border:none;gap:6px">
+        <input class="apInputLabel" id="apl${i}" placeholder="標籤" value="單個">
+        <input class="apInputAmount" id="apa${i}" placeholder="金額" type="number" value="0">
+        <button onclick="addItemPrice(${i})" style="padding:5px 12px;border:none;border-radius:6px;background:var(--primary);color:#fff;cursor:pointer;font-size:12px">+價位</button>
       </div>
     </div>`;
   }).join("");
@@ -1032,12 +1083,19 @@ function getSelectedCategory() {
 function addItemInline() {
   const cat = getSelectedCategory();
   if (!cat) { showToast("請先建立分類"); return; }
-  const input = document.getElementById("newItemInput");
-  const name = input.value.trim();
+  const nameInput = document.getElementById("newItemName");
+  const labelInput = document.getElementById("newItemLabel");
+  const priceInput = document.getElementById("newItemPrice");
+  const name = nameInput.value.trim();
+  const label = labelInput.value.trim();
+  const price = parseInt(priceInput.value);
   if (!name) { showToast("請輸入品項名稱"); return; }
-  cat.items.push({ name, prices: [{ label: "單個", price: 0 }] });
+  if (!label) { showToast("請輸入價位標籤"); return; }
+  if (isNaN(price) || price < 0) { showToast("請輸入有效價格"); return; }
+  cat.items.push({ name, prices: [{ label, price }] });
   saveCategories();
-  input.value = "";
+  nameInput.value = "";
+  priceInput.value = "0";
   renderAdmin();
   showToast(`已新增品項「${name}」`);
 }
@@ -1065,40 +1123,46 @@ function deleteItem(idx) {
   });
 }
 
-function editItemPrices(idx) {
+function addItemPrice(itemIdx) {
   const cat = getSelectedCategory();
-  if (!cat) return;
-  const item = cat.items[idx];
-  let msg = `【${item.name}】價位管理\n`;
-  item.prices.forEach((p, i) => { msg += `${i+1}. ${p.label} = $${p.price}\n`; });
-  msg += `\n請輸入操作代碼：\n1. 新增價位\n2. 編輯價位\n3. 刪除價位`;
-  const op = prompt(msg);
-  if (op === "1") {
-    const label = prompt("請輸入價位標籤（如：單個、三個、半條）：");
-    if (!label) return;
-    const price = parseInt(prompt("請輸入價格："));
-    if (isNaN(price) || price < 0) { showToast("請輸入有效價格"); return; }
-    item.prices.push({ label: label.trim(), price });
-    saveCategories(); renderAdmin(); showToast("價位已新增");
-  } else if (op === "2") {
-    const idx2 = parseInt(prompt(`要編輯第幾個價位？（1~${item.prices.length}）`)) - 1;
-    if (isNaN(idx2) || idx2 < 0 || idx2 >= item.prices.length) return;
-    const label = prompt("新標籤：", item.prices[idx2].label);
-    if (!label) return;
-    const price = parseInt(prompt("新價格：", item.prices[idx2].price));
-    if (isNaN(price) || price < 0) return;
-    item.prices[idx2].label = label.trim();
-    item.prices[idx2].price = price;
-    saveCategories(); renderAdmin(); showToast("價位已更新");
-  } else if (op === "3") {
-    const idx2 = parseInt(prompt(`要刪除第幾個價位？（1~${item.prices.length}）`)) - 1;
-    if (isNaN(idx2) || idx2 < 0 || idx2 >= item.prices.length) return;
-    if (item.prices.length <= 1) { showToast("至少需保留一個價位"); return; }
-    showConfirm(`確定刪除「${item.prices[idx2].label} $${item.prices[idx2].price}」？`, () => {
-      item.prices.splice(idx2, 1);
-      saveCategories(); renderAdmin(); showToast("價位已刪除");
-    });
-  }
+  if (!cat || !cat.items[itemIdx]) return;
+  const item = cat.items[itemIdx];
+  const label = document.getElementById("apl" + itemIdx)?.value.trim();
+  const price = parseInt(document.getElementById("apa" + itemIdx)?.value);
+  if (!label) { showToast("請輸入價位標籤"); return; }
+  if (isNaN(price) || price < 0) { showToast("請輸入有效價格"); return; }
+  item.prices.push({ label, price });
+  saveCategories();
+  renderAdmin();
+  showToast("價位已新增");
+}
+
+function editItemPrice(itemIdx, priceIdx) {
+  const cat = getSelectedCategory();
+  if (!cat || !cat.items[itemIdx]) return;
+  const price = cat.items[itemIdx].prices[priceIdx];
+  const label = prompt("修改價位標籤：", price.label);
+  if (!label) return;
+  const amt = parseInt(prompt("修改價格：", price.price));
+  if (isNaN(amt) || amt < 0) return;
+  price.label = label.trim();
+  price.price = amt;
+  saveCategories();
+  renderAdmin();
+  showToast("價位已更新");
+}
+
+function deleteItemPrice(itemIdx, priceIdx) {
+  const cat = getSelectedCategory();
+  if (!cat || !cat.items[itemIdx]) return;
+  const item = cat.items[itemIdx];
+  if (item.prices.length <= 1) { showToast("至少需保留一個價位"); return; }
+  showConfirm(`確定刪除「${item.prices[priceIdx].label} $${item.prices[priceIdx].price}」？`, () => {
+    item.prices.splice(priceIdx, 1);
+    saveCategories();
+    renderAdmin();
+    showToast("價位已刪除");
+  });
 }
 
 // ============ THEME SETTINGS ============
@@ -1354,6 +1418,14 @@ function init() {
   document.getElementById("loginPwd").addEventListener("keydown", e => { if (e.key === "Enter") attemptLogin(); });
   document.getElementById("loginCancelBtn").addEventListener("click", () => document.getElementById("loginModal").classList.remove("open"));
 
+  // Password eye toggle
+  document.getElementById("pwdEye").addEventListener("click", () => {
+    const input = document.getElementById("loginPwd");
+    const isPwd = input.type === "password";
+    input.type = isPwd ? "text" : "password";
+    document.getElementById("pwdEye").textContent = isPwd ? "👁️‍🗨️" : "👁️";
+  });
+
   document.getElementById("qrBtn").addEventListener("click", showQR);
   document.getElementById("qrCloseBtn").addEventListener("click", () => document.getElementById("qrModal").classList.remove("open"));
 
@@ -1365,12 +1437,20 @@ function init() {
     renderMenu();
   });
 
-  // Menu: item card / add-to-cart button
+  // Menu: item card / add-to-cart button / price line click
   document.getElementById("itemGrid").addEventListener("click", e => {
     const addBtn = e.target.closest(".addCartBtn");
     if (addBtn) {
       addToCart(currentCategory, parseInt(addBtn.dataset.idx), 0, 1);
       return;
+    }
+    const priceLine = e.target.closest(".priceLine");
+    if (priceLine && priceLine.dataset.price !== undefined) {
+      const card = priceLine.closest(".itemCard");
+      if (card) {
+        openItemModal(currentCategory, parseInt(card.dataset.idx), parseInt(priceLine.dataset.price));
+        return;
+      }
     }
     const card = e.target.closest(".itemCard");
     if (!card) return;
@@ -1433,12 +1513,13 @@ function init() {
     }
   });
 
-  // Toggle contact switch
+  // Toggle switches for address/phone
   document.addEventListener("click", e => {
-    const toggle = e.target.closest("#toggleContact");
-    if (toggle) {
-      CONFIG.showContact = !CONFIG.showContact;
-      toggle.classList.toggle("on", CONFIG.showContact);
+    const id = e.target.id;
+    if (id === "toggleAddress" || id === "togglePhone") {
+      const key = id === "toggleAddress" ? "showAddress" : "showPhone";
+      CONFIG[key] = !CONFIG[key];
+      e.target.classList.toggle("on", CONFIG[key]);
       saveConfig();
       updateHeader();
     }
