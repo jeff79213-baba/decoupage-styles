@@ -473,7 +473,7 @@ header {
     <div style="margin-bottom:10px;font-size:13px;color:#666">選擇要匯入到的分類：</div>
     <select id="importCatSelect" style="width:100%;padding:8px;border-radius:8px;border:1.5px solid #ddd;font-size:14px;margin-bottom:12px"></select>
     <div style="margin-bottom:6px;font-size:13px;color:#666">貼上品項資料（每行一筆）：</div>
-    <textarea id="importTextarea" style="width:100%;height:180px;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;resize:vertical;box-sizing:border-box" placeholder="品項名稱,單位,價錢&#10;紅豆麵包,個,35&#10;菠蘿麵包,個,30&#10;蛋塔,個,25"></textarea>
+    <textarea id="importTextarea" style="width:100%;height:180px;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;resize:vertical;box-sizing:border-box" placeholder="品項名稱-單位-價錢&#10;紅豆麵包-個-35&#10;菠蘿麵包-個-30&#10;蛋塔-個-25&#10;益生菌-盒-1980"></textarea>
     <div style="display:flex;gap:8px;margin-top:12px">
       <button onclick="execImport()" style="flex:1;padding:10px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;font-size:14px">匯入</button>
       <button onclick="document.getElementById('importModal').classList.remove('open')" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;background:var(--card);cursor:pointer;font-size:14px">取消</button>
@@ -962,6 +962,7 @@ function renderAdmin() {
         <input type="number" id="newItemPrice" placeholder="0" value="0" style="width:70px">
         <button onclick="addItemInline()">+ 新增</button>
         <button onclick="showImportModal()" style="padding:6px 12px;border:1px solid var(--primary);border-radius:6px;background:var(--card);color:var(--primary);cursor:pointer;font-size:12px">📥 匯入</button>
+        <button onclick="batchReplaceUnit()" style="padding:6px 12px;border:1px solid var(--accent);border-radius:6px;background:var(--card);color:var(--accent);cursor:pointer;font-size:12px">📦 批量換單位</button>
       </div>
     </div>
     <div class="adminSection">
@@ -1459,18 +1460,18 @@ function execImport() {
   const lines = text.split("\n").filter(l => l.trim());
   let count = 0;
   lines.forEach(line => {
-    const parts = line.split(",").map(s => s.trim());
+    const parts = line.split("-").map(s => s.trim());
     if (parts.length >= 3) {
-      const name = parts[0];
-      const unit = parts[1];
-      const price = parseInt(parts[2]);
+      const name = parts.slice(0, parts.length - 2).join("-");
+      const unit = parts[parts.length - 2];
+      const price = parseInt(parts[parts.length - 1]);
       if (name && !isNaN(price)) {
         cat.items.push({ name, unit: unit || "個", prices: [{ label: unit || "單個", price }] });
         count++;
       }
     } else if (parts.length >= 2) {
-      const name = parts[0];
-      const price = parseInt(parts[1]);
+      const name = parts.slice(0, parts.length - 1).join("-");
+      const price = parseInt(parts[parts.length - 1]);
       if (name && !isNaN(price)) {
         cat.items.push({ name, unit: "個", prices: [{ label: "單個", price }] });
         count++;
@@ -1485,6 +1486,30 @@ function execImport() {
     showToast(`已匯入 ${count} 筆品項`);
   } else {
     showToast("沒有可匯入的資料，請檢查格式");
+  }
+}
+
+function batchReplaceUnit() {
+  const newUnit = prompt("請輸入新的單位名稱（例如：盒、罐、包）：", "盒");
+  if (!newUnit) return;
+  const trimmed = newUnit.trim();
+  if (!trimmed) { showToast("單位不能為空"); return; }
+  let changed = 0;
+  CATEGORIES.forEach(cat => {
+    cat.items.forEach(item => {
+      if (item.unit !== trimmed) {
+        item.unit = trimmed;
+        changed++;
+      }
+    });
+  });
+  if (changed > 0) {
+    saveCategories();
+    renderAdminItems();
+    if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
+    showToast(`已將 ${changed} 個品項的單位改為「${trimmed}」`);
+  } else {
+    showToast("所有品項已是此單位，無需更換");
   }
 }
 
@@ -1581,8 +1606,11 @@ function attemptLogin() {
 }
 
 // ============ QR CODE ============
+let isCustomerMode = false;
+
 function showQR() {
-  const url = window.location.href;
+  const base = window.location.origin + window.location.pathname;
+  const url = base + "?customer";
   document.getElementById("qrImage").src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
   document.getElementById("qrUrl").textContent = url;
   document.getElementById("qrModal").classList.add("open");
@@ -1591,16 +1619,21 @@ function showQR() {
 // ============ EVENT BINDING ============
 function init() {
   loadData();
+  isCustomerMode = new URLSearchParams(window.location.search).has("customer");
+  if (isCustomerMode) { isAdmin = false; saveAdmin(); }
   applyTheme(CONFIG.colors);
   updateHeader();
   updateTabVisibility();
   switchTab("menu");
+  if (isCustomerMode) {
+    document.getElementById("qrBtn").style.display = "none";
+  }
 
   document.querySelectorAll("#tabBar button").forEach(btn => {
     btn.addEventListener("click", () => switchTab(btn.dataset.view));
   });
 
-  document.getElementById("shopTitle").addEventListener("click", showLogin);
+  document.getElementById("shopTitle").addEventListener("click", () => { if (!isCustomerMode) showLogin(); });
   document.getElementById("loginBtn").addEventListener("click", attemptLogin);
   document.getElementById("loginPwd").addEventListener("keydown", e => { if (e.key === "Enter") attemptLogin(); });
   document.getElementById("loginCancelBtn").addEventListener("click", () => document.getElementById("loginModal").classList.remove("open"));
