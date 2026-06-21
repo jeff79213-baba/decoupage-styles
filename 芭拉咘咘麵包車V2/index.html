@@ -903,11 +903,12 @@ function getWeekNumber(date) {
 // ============ ORDERS ============
 function renderOrders() {
   const container = document.getElementById("ordersContent");
-  if (!ORDERS.length) {
+  const displayOrders = isCustomerMode ? ORDERS.filter(o => o.status === "pending") : ORDERS;
+  if (!displayOrders.length) {
     container.innerHTML = '<div class="cartEmpty">暫無訂單記錄</div>';
     return;
   }
-  container.innerHTML = ORDERS.map((o, i) => {
+  container.innerHTML = displayOrders.map((o, i) => {
     const isPending = o.status === "pending";
     const statusHtml = `<span class="orderStatus ${isPending?'pending':'completed'}">${isPending ? '🕐 待取貨' : '✅ 已完成'}</span>`;
     const itemsHtml = o.items.map(item =>
