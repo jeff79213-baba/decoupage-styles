@@ -594,6 +594,33 @@ async function saveStockToFirebase() {
   }
 }
 
+async function loadShopFromFirebase() {
+  try {
+    const doc = await db.collection("shops").doc(SHOP_ID).get();
+    if (doc.exists) {
+      const data = doc.data();
+      if (data.categories) CATEGORIES = data.categories;
+      if (data.config) CONFIG = data.config;
+      return true;
+    }
+  } catch (e) {
+    console.error("讀取商店資料失敗", e);
+  }
+  return false;
+}
+
+async function saveShopToFirebase() {
+  try {
+    await db.collection("shops").doc(SHOP_ID).set({
+      categories: CATEGORIES,
+      config: CONFIG,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  } catch (e) {
+    console.error("儲存商店資料失敗", e);
+  }
+}
+
 // ============ PERSISTENCE ============
 function loadData() {
   try { CONFIG = JSON.parse(localStorage.getItem("bala_config")) || JSON.parse(JSON.stringify(DEFAULT_CONFIG));
@@ -612,8 +639,8 @@ function loadData() {
   } catch(e) { CART = []; }
   isAdmin = localStorage.getItem("bala_admin") === "true";
 }
-function saveConfig() { localStorage.setItem("bala_config", JSON.stringify(CONFIG)); }
-function saveCategories() { localStorage.setItem("bala_categories", JSON.stringify(CATEGORIES)); }
+function saveConfig() { localStorage.setItem("bala_config", JSON.stringify(CONFIG)); saveShopToFirebase(); }
+function saveCategories() { localStorage.setItem("bala_categories", JSON.stringify(CATEGORIES)); saveShopToFirebase(); }
 function saveOrders() { localStorage.setItem("bala_orders", JSON.stringify(ORDERS)); }
 function saveCart() { localStorage.setItem("bala_cart", JSON.stringify(CART)); }
 function saveAdmin() { localStorage.setItem("bala_admin", isAdmin ? "true" : ""); }
@@ -1922,6 +1949,8 @@ function showQR() {
 async function init() {
   loadData();
   await loadStockFromFirebase();
+  const loaded = await loadShopFromFirebase();
+  if (loaded) { saveCategories(); saveConfig(); }
   isCustomerMode = new URLSearchParams(window.location.search).has("customer");
   isAdmin = false;
   saveAdmin();
