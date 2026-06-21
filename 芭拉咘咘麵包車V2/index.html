@@ -614,11 +614,26 @@ async function saveShopToFirebase() {
     await db.collection("shops").doc(SHOP_ID).set({
       categories: CATEGORIES,
       config: CONFIG,
+      orders: ORDERS,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
   } catch (e) {
     console.error("儲存商店資料失敗", e);
   }
+}
+
+async function loadOrdersFromFirebase() {
+  try {
+    const doc = await db.collection("shops").doc(SHOP_ID).get();
+    if (doc.exists) {
+      const data = doc.data();
+      if (data.orders && data.orders.length) ORDERS = data.orders;
+      return true;
+    }
+  } catch (e) {
+    console.error("讀取訂單失敗", e);
+  }
+  return false;
 }
 
 // ============ PERSISTENCE ============
@@ -641,7 +656,7 @@ function loadData() {
 }
 function saveConfig() { localStorage.setItem("bala_config", JSON.stringify(CONFIG)); saveShopToFirebase(); }
 function saveCategories() { localStorage.setItem("bala_categories", JSON.stringify(CATEGORIES)); saveShopToFirebase(); }
-function saveOrders() { localStorage.setItem("bala_orders", JSON.stringify(ORDERS)); }
+function saveOrders() { localStorage.setItem("bala_orders", JSON.stringify(ORDERS)); saveShopToFirebase(); }
 function saveCart() { localStorage.setItem("bala_cart", JSON.stringify(CART)); }
 function saveAdmin() { localStorage.setItem("bala_admin", isAdmin ? "true" : ""); }
 
@@ -936,6 +951,7 @@ function renderOrders() {
     return;
   }
   container.innerHTML = displayOrders.map((o, i) => {
+    const origIdx = ORDERS.indexOf(o);
     const isPending = o.status === "pending";
     const statusHtml = `<span class="orderStatus ${isPending?'pending':'completed'}">${isPending ? '🕐 待取貨' : '✅ 已完成'}</span>`;
     const itemsHtml = o.items.map(item =>
@@ -946,9 +962,9 @@ function renderOrders() {
     ).join("");
     const actionsHtml = isAdmin
       ? (isPending
-          ? `<button class="btnCompleteOrder" onclick="completeOrder(${i})">✔ 結單</button> <button class="btnCancelOrder" onclick="cancelOrder(${i})">取消</button>`
-          : `<button class="btnCancelOrder" onclick="cancelOrder(${i})">取消訂單</button>`)
-      : '';
+          ? `<button class="btnCompleteOrder" onclick="completeOrder(${origIdx})">✔ 結單</button> <button class="btnCancelOrder" onclick="cancelOrder(${origIdx})">取消</button>`
+          : `<button class="btnCancelOrder" onclick="cancelOrder(${origIdx})">取消訂單</button>`)
+      : (isPending ? `<button class="btnCancelOrder" onclick="cancelOrder(${origIdx})">取消訂單</button>` : '');
     return `<div class="orderCard">
       <div class="orderHeader">
         <span>🕐 ${o.date} ${o.time} ${statusHtml}</span>
@@ -1951,6 +1967,7 @@ async function init() {
   await loadStockFromFirebase();
   const loaded = await loadShopFromFirebase();
   if (loaded) { saveCategories(); saveConfig(); }
+  await loadOrdersFromFirebase();
   isCustomerMode = new URLSearchParams(window.location.search).has("customer");
   isAdmin = false;
   saveAdmin();
