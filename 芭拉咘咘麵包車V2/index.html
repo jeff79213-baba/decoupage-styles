@@ -20,6 +20,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
   background: var(--bg); color: var(--text); min-height: 100dvh;
   display: flex; flex-direction: column; padding-bottom: calc(60px + var(--safe-bottom));
+  touch-action: manipulation;
 }
 header {
   background: var(--primary); color: #fff; padding: 10px 16px;
@@ -160,9 +161,19 @@ header {
   margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;
   display: flex; justify-content: space-between; font-weight: 700; font-size: 15px;
 }
+.orderStatus {
+  display: inline-block; padding: 2px 8px; border-radius: 10px;
+  font-size: 11px; font-weight: 600;
+}
+.orderStatus.pending { background: #fff3cd; color: #856404; }
+.orderStatus.completed { background: #d4edda; color: #155724; }
 .btnCancelOrder {
   padding: 4px 12px; border: 1px solid #e74c3c; border-radius: 6px;
   background: #fff; color: #e74c3c; cursor: pointer; font-size: 12px;
+}
+.btnCompleteOrder {
+  padding: 4px 12px; border: 1px solid var(--primary); border-radius: 6px;
+  background: var(--primary); color: #fff; cursor: pointer; font-size: 12px;
 }
 
 /* Stats */
@@ -682,12 +693,12 @@ function renderView(viewName) {
 function updateTabVisibility() {
   document.querySelectorAll("#tabBar button[data-view]").forEach(b => {
     const v = b.dataset.view;
-    if (v === "menu" || v === "cart") { b.classList.remove("hidden"); return; }
+    if (v === "menu" || v === "cart" || v === "orders") { b.classList.remove("hidden"); return; }
     b.classList.toggle("hidden", !isAdmin);
   });
   if (!isAdmin) {
     const active = document.querySelector("#tabBar button.active");
-    if (active && active.dataset.view !== "menu" && active.dataset.view !== "cart") {
+    if (active && active.dataset.view !== "menu" && active.dataset.view !== "cart" && active.dataset.view !== "orders") {
       switchTab("menu");
     }
   }
@@ -825,26 +836,20 @@ async function checkout() {
 
   const insufficient = [];
   for (const c of CART) {
+    const needStock = c.qty * getStockQty(c.priceLabel);
     const s = STOCK[c.itemName]?.stock;
-    if (s !== undefined && s !== null && s !== -1 && c.qty > s) {
-      insufficient.push({ name: c.itemName, stock: s, ordered: c.qty });
+    if (s !== undefined && s !== null && s !== -1 && needStock > s) {
+      insufficient.push({ name: c.itemName, stock: s, ordered: needStock });
     }
   }
 
   if (insufficient.length > 0) {
     const msg = insufficient.map(i =>
-      `「${i.name}」只剩 ${i.stock} 個，您點 ${i.ordered} 個`
+      `「${i.name}」只剩 ${i.stock} 個，您需要 ${i.ordered} 個`
     ).join("\n");
     showToast("庫存不足！\n" + msg);
     return;
   }
-
-  for (const c of CART) {
-    if (STOCK[c.itemName]) {
-      STOCK[c.itemName].stock = Math.max(0, (STOCK[c.itemName].stock || 0) - c.qty);
-    }
-  }
-  await saveStockToFirebase();
 
   const now = new Date();
   const y = now.getFullYear();
@@ -859,12 +864,14 @@ async function checkout() {
     week: getWeekNumber(now),
     month: now.getMonth()+1,
     year: y,
+    status: "pending",
     items: CART.map(c => ({
       category: CATEGORIES[c.catIdx]?.name || "",
       name: c.itemName,
       priceLabel: c.priceLabel,
       unitPrice: c.unitPrice,
       quantity: c.qty,
+      stockQty: c.qty * getStockQty(c.priceLabel),
       subtotal: c.unitPrice * c.qty
     })),
     total: CART.reduce((s, c) => s + c.unitPrice * c.qty, 0)
@@ -876,7 +883,14 @@ async function checkout() {
   renderCart();
   updateCartBadge();
   if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
-  showToast("結帳成功！庫存已更新");
+  switchTab("orders");
+  showToast("訂單已送出，待取貨");
+}
+
+function getStockQty(priceLabel) {
+  const cnMap = { '單':1,'一':1,'二':2,'兩':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10 };
+  const first = priceLabel.charAt(0);
+  return cnMap[first] || 1;
 }
 
 function getWeekNumber(date) {
@@ -894,16 +908,23 @@ function renderOrders() {
     return;
   }
   container.innerHTML = ORDERS.map((o, i) => {
+    const isPending = o.status === "pending";
+    const statusHtml = `<span class="orderStatus ${isPending?'pending':'completed'}">${isPending ? '🕐 待取貨' : '✅ 已完成'}</span>`;
     const itemsHtml = o.items.map(item =>
       `<div class="orderItemLine">
         <span>${item.name} (${item.priceLabel}) × ${item.quantity}</span>
         <span>$${item.subtotal}</span>
       </div>`
     ).join("");
+    const actionsHtml = isAdmin
+      ? (isPending
+          ? `<button class="btnCompleteOrder" onclick="completeOrder(${i})">✔ 結單</button> <button class="btnCancelOrder" onclick="cancelOrder(${i})">取消</button>`
+          : `<button class="btnCancelOrder" onclick="cancelOrder(${i})">取消訂單</button>`)
+      : '';
     return `<div class="orderCard">
       <div class="orderHeader">
-        <span>🕐 ${o.date} ${o.time}</span>
-        <button class="btnCancelOrder" onclick="cancelOrder(${i})">取消訂單</button>
+        <span>🕐 ${o.date} ${o.time} ${statusHtml}</span>
+        <span>${actionsHtml}</span>
       </div>
       <div class="orderItems">${itemsHtml}</div>
       <div class="orderTotal">
@@ -914,23 +935,74 @@ function renderOrders() {
   }).join("");
 }
 
-async function cancelOrder(index) {
-  showConfirm("確定要取消此訂單嗎？（庫存將加回）", async () => {
-    const order = ORDERS[index];
-    for (const item of order.items) {
-      if (STOCK[item.name]) {
-        STOCK[item.name].stock = (STOCK[item.name].stock || 0) + item.quantity;
-      } else {
-        STOCK[item.name] = { stock: item.quantity };
-      }
+async function completeOrder(index) {
+  await loadStockFromFirebase();
+  const order = ORDERS[index];
+  const insufficient = [];
+  for (const item of order.items) {
+    const s = STOCK[item.name]?.stock;
+    if (s !== undefined && s !== null && s !== -1 && item.stockQty > s) {
+      insufficient.push({ name: item.name, stock: s, needed: item.stockQty });
     }
-    await saveStockToFirebase();
-    ORDERS.splice(index, 1);
-    saveOrders();
-    renderOrders();
-    if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
-    showToast("訂單已取消，庫存已加回");
-  });
+  }
+  if (insufficient.length > 0) {
+    const msg = insufficient.map(i => `「${i.name}」只剩 ${i.stock}，需 ${i.needed}`).join("\n");
+    showConfirm(`庫存不足無法結單：\n${msg}\n\n仍要強制結單嗎？（庫存變負數）`, async () => {
+      await deductStockForOrder(order);
+      order.status = "completed";
+      saveOrders();
+      renderOrders();
+      if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
+      showToast("已結單（強制，庫存為負）");
+    });
+    return;
+  }
+  await deductStockForOrder(order);
+  order.status = "completed";
+  saveOrders();
+  renderOrders();
+  if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
+  showToast("訂單已完成，庫存已扣");
+}
+
+async function deductStockForOrder(order) {
+  for (const item of order.items) {
+    if (STOCK[item.name]) {
+      STOCK[item.name].stock = Math.max(-999, (STOCK[item.name].stock || 0) - item.stockQty);
+    } else {
+      STOCK[item.name] = { stock: -item.stockQty };
+    }
+  }
+  await saveStockToFirebase();
+}
+
+async function cancelOrder(index) {
+  const order = ORDERS[index];
+  if (order.status === "completed") {
+    showConfirm("確定取消此已完成訂單？（庫存將加回）", async () => {
+      await loadStockFromFirebase();
+      for (const item of order.items) {
+        if (STOCK[item.name]) {
+          STOCK[item.name].stock = (STOCK[item.name].stock || 0) + item.stockQty;
+        } else {
+          STOCK[item.name] = { stock: item.stockQty };
+        }
+      }
+      await saveStockToFirebase();
+      ORDERS.splice(index, 1);
+      saveOrders();
+      renderOrders();
+      if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
+      showToast("訂單已取消，庫存已加回");
+    });
+  } else {
+    showConfirm("確定取消此待取貨訂單？", () => {
+      ORDERS.splice(index, 1);
+      saveOrders();
+      renderOrders();
+      showToast("訂單已取消");
+    });
+  }
 }
 
 // ============ STATS ============
@@ -1797,7 +1869,6 @@ function logout() {
   saveAdmin();
   updateTabVisibility();
   if (document.getElementById("view-admin").classList.contains("active") ||
-      document.getElementById("view-orders").classList.contains("active") ||
       document.getElementById("view-stats").classList.contains("active")) {
     switchTab("menu");
   }
