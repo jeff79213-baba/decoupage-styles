@@ -806,13 +806,21 @@ function renderMenu() {
       </div>
       <div class="itemPrices">
         ${item.prices.map((p, pi) => {
+          const needPerUnit = getStockQty(p.label);
           const isSoldOut = itemStock !== undefined && itemStock !== null && itemStock <= 0;
+          const isShort = !isSoldOut && itemStock !== undefined && itemStock !== null && itemStock > 0 && needPerUnit > itemStock;
+          let actionHtml;
+          if (isSoldOut) {
+            actionHtml = `<span style="font-size:11px;color:#e74c3c;font-weight:600">售完</span>`;
+          } else if (isShort) {
+            actionHtml = `<span style="font-size:11px;color:#e74c3c;font-weight:600">庫存不足</span>`;
+          } else {
+            actionHtml = `<button class="addCartBtn" data-idx="${idx}" data-price="${pi}" data-qty="1">+</button>`;
+          }
           return `<div class="priceLine${pi < item.prices.length-1 ? ' withDivider' : ''}">
             <span class="plLabel">${p.label}</span>
             <span class="plPrice">$${p.price}</span>
-            ${isSoldOut
-              ? `<span style="font-size:11px;color:#e74c3c;font-weight:600">售完</span>`
-              : `<button class="addCartBtn" data-idx="${idx}" data-price="${pi}" data-qty="1">+</button>`}
+            ${actionHtml}
           </div>`;
         }).join("")}
       </div>
@@ -842,11 +850,27 @@ function openItemModal(catIdx, itemIdx, preselectIdx) {
 function addToCart(catIdx, itemIdx, priceIdx, qty) {
   const item = CATEGORIES[catIdx].items[itemIdx];
   const price = item.prices[priceIdx];
+  const itemStock = STOCK[item.name]?.stock;
+  if (itemStock !== undefined && itemStock !== null && itemStock <= 0) {
+    showToast(`${item.name} 已售完`);
+    return;
+  }
+  const needStock = qty * getStockQty(price.label);
+  if (itemStock !== undefined && itemStock !== null && itemStock !== -1 && needStock > itemStock) {
+    showToast(`${item.name} 庫存不足（剩 ${itemStock}${item.unit||"個"}，需要 ${needStock}${item.unit||"個"}）`);
+    return;
+  }
   const existing = CART.find(c =>
     c.catIdx === catIdx && c.itemIdx === itemIdx && c.priceIdx === priceIdx
   );
   if (existing) {
-    existing.qty += qty;
+    const newQty = existing.qty + qty;
+    const totalNeed = newQty * getStockQty(price.label);
+    if (itemStock !== undefined && itemStock !== null && itemStock !== -1 && totalNeed > itemStock) {
+      showToast(`${item.name} 庫存不足（購物車已有 ${existing.qty}${item.unit||"個"}）`);
+      return;
+    }
+    existing.qty = newQty;
   } else {
     CART.push({ catIdx, itemIdx, priceIdx, qty,
       itemName: item.name, priceLabel: price.label, unitPrice: price.price });
@@ -993,8 +1017,8 @@ function renderOrders() {
     ).join("");
     const actionsHtml = isAdmin
       ? (isPending
-          ? `<button class="btnCompleteOrder" onclick="completeOrder(${origIdx})">✔ 結單</button> <button class="btnCancelOrder" onclick="cancelOrder(${origIdx})">取消</button>`
-          : `<button class="btnCancelOrder" onclick="cancelOrder(${origIdx})">取消訂單</button>`)
+          ? `<button class="btnCompleteOrder" onclick="completeOrder(${origIdx})">✔ 結單</button> <button class="btnCancelOrder" onclick="deleteOrder(${origIdx})">刪除</button>`
+          : `<button class="btnCancelOrder" onclick="cancelOrder(${origIdx})">取消訂單</button> <button class="btnCancelOrder" onclick="deleteOrder(${origIdx})">刪除</button>`)
       : (isPending ? `<button class="btnCancelOrder" onclick="cancelOrder(${origIdx})">取消訂單</button>` : '');
     return `<div class="orderCard">
       <div class="orderHeader">
@@ -1080,6 +1104,15 @@ async function cancelOrder(index) {
   }
 }
 
+function deleteOrder(index) {
+  showConfirm("確定刪除此訂單？（僅刪除記錄，不影響庫存）", () => {
+    ORDERS.splice(index, 1);
+    saveOrders();
+    renderOrders();
+    showToast("訂單已刪除");
+  });
+}
+
 // ============ STATS ============
 let statsFilter = "week";
 
@@ -1097,7 +1130,7 @@ function renderStats() {
   `;
 
   const now = new Date();
-  let filtered = ORDERS.filter(o => o.status === "completed");
+  let filtered = [...ORDERS];
   if (statsFilter === "week") {
     const w = getWeekNumber(now);
     filtered = filtered.filter(o => o.week === w && o.year === now.getFullYear());
@@ -1133,8 +1166,8 @@ function renderStats() {
 }
 
 function exportStats() {
-  const completed = ORDERS.filter(o => o.status === "completed");
-  if (!completed.length) { showToast("無已結單資料可匯出"); return; }
+  const exportOrders = [...ORDERS];
+  if (!exportOrders.length) { showToast("無訂單資料可匯出"); return; }
   const sn = CONFIG.shopName || "芭拉咘咘麵包車";
   let text = `${sn} - 銷售報表\n`;
   text += `產出時間: ${new Date().toLocaleString()}\n`;
@@ -1142,7 +1175,7 @@ function exportStats() {
 
   const allStats = {};
   let totalQty = 0, totalAmount = 0;
-  completed.forEach(o => {
+  exportOrders.forEach(o => {
     o.items.forEach(item => {
       const key = item.name + "|" + item.priceLabel;
       if (!allStats[key]) allStats[key] = { name: item.name, label: item.priceLabel, qty: 0, amount: 0 };
@@ -1160,7 +1193,7 @@ function exportStats() {
   text += `--------------------------------\n合計\t\t${totalQty}\t$${totalAmount}\n\n`;
 
   text += `【訂單明細】\n`;
-  completed.forEach((o, i) => {
+  exportOrders.forEach((o, i) => {
     text += `\n--- 訂單 #${i+1} (${o.date} ${o.time}) ---\n`;
     o.items.forEach(item => {
       text += `${item.name} (${item.priceLabel}) × ${item.quantity} = $${item.subtotal}\n`;
@@ -1211,6 +1244,14 @@ function renderAdmin() {
       </div>
     </div>
     <div class="adminSection">
+      <h3>📦 庫存管理</h3>
+      <div style="font-size:13px;color:#888;margin-bottom:10px">每個品項的庫存在上方編輯時設定，庫存不足時菜單會自動顯示。</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="bulkSetStock()" style="flex:1;padding:10px;border:1.5px solid var(--primary);border-radius:8px;background:var(--card);color:var(--primary);cursor:pointer;font-size:13px">批量設定庫存</button>
+        <button onclick="syncStockToFirebase()" style="flex:1;padding:10px;border:1.5px solid var(--accent);border-radius:8px;background:var(--card);color:var(--accent);cursor:pointer;font-size:13px">🔄 同步到 Firebase</button>
+      </div>
+    </div>
+    <div class="adminSection">
       <h3>🎨 外觀設定</h3>
       <div class="themeGrid" id="themeGrid"></div>
       <div class="colorEditGrid" id="colorEditGrid"></div>
@@ -1231,14 +1272,6 @@ function renderAdmin() {
         <label>電話</label>
         <input type="text" id="editPhone" value="${CONFIG.phone||''}" maxlength="20" style="flex:1">
         <button class="toggleSwitch ${CONFIG.showPhone?'on':''}" id="togglePhone" style="flex-shrink:0"></button>
-      </div>
-    </div>
-    <div class="adminSection">
-      <h3>📦 庫存管理</h3>
-      <div style="font-size:13px;color:#888;margin-bottom:10px">每個品項的庫存在上方編輯時設定，庫存不足 5 時會紅字顯示。</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="bulkSetStock()" style="flex:1;padding:10px;border:1.5px solid var(--primary);border-radius:8px;background:var(--card);color:var(--primary);cursor:pointer;font-size:13px">批量設定庫存</button>
-        <button onclick="syncStockToFirebase()" style="flex:1;padding:10px;border:1.5px solid var(--accent);border-radius:8px;background:var(--card);color:var(--accent);cursor:pointer;font-size:13px">🔄 同步到 Firebase</button>
       </div>
     </div>
     <div class="adminSection">
@@ -1457,13 +1490,14 @@ function addItemInline() {
 
   if (stockInput) {
     const val = stockInput.value.trim();
-    if (val !== "") {
-      const num = parseInt(val);
-      if (!isNaN(num) && num >= 0) {
-        STOCK[name] = { stock: num };
-        saveStockToFirebase();
-      }
+    const num = val !== "" ? parseInt(val) : 10;
+    if (!isNaN(num) && num >= 0) {
+      STOCK[name] = { stock: num };
+      saveStockToFirebase();
     }
+  } else {
+    STOCK[name] = { stock: 10 };
+    saveStockToFirebase();
   }
 
   nameInput.value = "";
@@ -1487,21 +1521,28 @@ async function saveEditItem(idx) {
   if (!name) { showToast("名稱不能為空"); return; }
   const cat = getSelectedCategory();
   if (!cat || !cat.items[idx]) return;
+  const oldName = cat.items[idx].name;
   cat.items[idx].name = name;
   cat.items[idx].unit = unit || "個";
   editingItemIdx = -1;
   saveCategories();
 
+  if (oldName !== name && STOCK[oldName] !== undefined) {
+    STOCK[name] = STOCK[oldName];
+    delete STOCK[oldName];
+  }
+
   const stockInput = document.getElementById("itemEditStock");
   if (stockInput) {
     const val = stockInput.value.trim();
-    if (val !== "") {
-      const num = parseInt(val);
-      if (!isNaN(num) && num >= 0) {
-        STOCK[name] = { stock: num };
-        await saveStockToFirebase();
-      }
+    const num = val !== "" ? parseInt(val) : (STOCK[name]?.stock ?? 10);
+    if (!isNaN(num) && num >= 0) {
+      STOCK[name] = { stock: num };
+      await saveStockToFirebase();
     }
+  } else if (STOCK[name] === undefined) {
+    STOCK[name] = { stock: 10 };
+    await saveStockToFirebase();
   }
 
   renderAdminItems();
@@ -1987,7 +2028,11 @@ let isCustomerMode = false;
 function showQR() {
   const base = window.location.origin + window.location.pathname;
   const url = base + "?customer";
-  document.getElementById("qrImage").src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
+  const img = document.getElementById("qrImage");
+  img.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(url)}`;
+  img.onerror = function() {
+    img.src = `https://chart.googleapis.com/chart?chs=220x220&cht=qr&chl=${encodeURIComponent(url)}`;
+  };
   document.getElementById("qrUrl").textContent = url;
   document.getElementById("qrModal").classList.add("open");
 }
@@ -1996,6 +2041,7 @@ function showQR() {
 async function init() {
   loadData();
   await loadStockFromFirebase();
+  await syncStockToFirebase();
   listenStock();
   const loaded = await loadShopFromFirebase();
   if (loaded) { saveCategories(); saveConfig(); }
