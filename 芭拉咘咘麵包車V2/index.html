@@ -1022,12 +1022,12 @@ function renderStats() {
   `;
 
   const now = new Date();
-  let filtered = ORDERS;
+  let filtered = ORDERS.filter(o => o.status === "completed");
   if (statsFilter === "week") {
     const w = getWeekNumber(now);
-    filtered = ORDERS.filter(o => o.week === w && o.year === now.getFullYear());
+    filtered = filtered.filter(o => o.week === w && o.year === now.getFullYear());
   } else if (statsFilter === "month") {
-    filtered = ORDERS.filter(o => o.month === now.getMonth()+1 && o.year === now.getFullYear());
+    filtered = filtered.filter(o => o.month === now.getMonth()+1 && o.year === now.getFullYear());
   }
 
   const stats = {};
@@ -1058,7 +1058,8 @@ function renderStats() {
 }
 
 function exportStats() {
-  if (!ORDERS.length) { showToast("無資料可匯出"); return; }
+  const completed = ORDERS.filter(o => o.status === "completed");
+  if (!completed.length) { showToast("無已結單資料可匯出"); return; }
   const sn = CONFIG.shopName || "芭拉咘咘麵包車";
   let text = `${sn} - 銷售報表\n`;
   text += `產出時間: ${new Date().toLocaleString()}\n`;
@@ -1066,7 +1067,7 @@ function exportStats() {
 
   const allStats = {};
   let totalQty = 0, totalAmount = 0;
-  ORDERS.forEach(o => {
+  completed.forEach(o => {
     o.items.forEach(item => {
       const key = item.name + "|" + item.priceLabel;
       if (!allStats[key]) allStats[key] = { name: item.name, label: item.priceLabel, qty: 0, amount: 0 };
@@ -1084,7 +1085,7 @@ function exportStats() {
   text += `--------------------------------\n合計\t\t${totalQty}\t$${totalAmount}\n\n`;
 
   text += `【訂單明細】\n`;
-  ORDERS.forEach((o, i) => {
+  completed.forEach((o, i) => {
     text += `\n--- 訂單 #${i+1} (${o.date} ${o.time}) ---\n`;
     o.items.forEach(item => {
       text += `${item.name} (${item.priceLabel}) × ${item.quantity} = $${item.subtotal}\n`;
