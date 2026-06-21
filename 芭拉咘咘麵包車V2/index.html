@@ -1923,7 +1923,8 @@ async function init() {
   loadData();
   await loadStockFromFirebase();
   isCustomerMode = new URLSearchParams(window.location.search).has("customer");
-  if (isCustomerMode) { isAdmin = false; saveAdmin(); }
+  isAdmin = false;
+  saveAdmin();
   applyTheme(CONFIG.colors);
   updateHeader();
   updateTabVisibility();
