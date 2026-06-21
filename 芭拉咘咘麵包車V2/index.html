@@ -583,6 +583,7 @@ async function loadStockFromFirebase() {
 }
 
 let stockUnsub = null;
+let ordersUnsub = null;
 
 function listenStock() {
   if (stockUnsub) stockUnsub();
@@ -595,6 +596,21 @@ function listenStock() {
     if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
     if (document.getElementById("view-admin").classList.contains("active")) renderAdminItems();
   }, err => console.error("庫存監聽失敗", err));
+}
+
+function listenOrders() {
+  if (ordersUnsub) ordersUnsub();
+  ordersUnsub = db.collection("shops").doc(SHOP_ID).onSnapshot(snap => {
+    if (snap.exists) {
+      const data = snap.data();
+      if (data.orders) {
+        ORDERS = data.orders;
+        localStorage.setItem("bala_orders", JSON.stringify(ORDERS));
+        const activeView = document.querySelector(".view.active");
+        if (activeView) renderView(activeView.id.replace("view-", ""));
+      }
+    }
+  }, err => console.error("訂單監聽失敗", err));
 }
 
 async function saveStockToFirebase() {
@@ -1984,6 +2000,7 @@ async function init() {
   const loaded = await loadShopFromFirebase();
   if (loaded) { saveCategories(); saveConfig(); }
   await loadOrdersFromFirebase();
+  listenOrders();
   isCustomerMode = new URLSearchParams(window.location.search).has("customer");
   isAdmin = false;
   saveAdmin();
