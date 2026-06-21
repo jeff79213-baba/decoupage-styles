@@ -582,6 +582,21 @@ async function loadStockFromFirebase() {
   }
 }
 
+let stockUnsub = null;
+
+function listenStock() {
+  if (stockUnsub) stockUnsub();
+  stockUnsub = db.collection("stock").doc(SHOP_ID).onSnapshot(snap => {
+    if (snap.exists) {
+      STOCK = snap.data().items || {};
+    } else {
+      STOCK = {};
+    }
+    if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
+    if (document.getElementById("view-admin").classList.contains("active")) renderAdminItems();
+  }, err => console.error("庫存監聽失敗", err));
+}
+
 async function saveStockToFirebase() {
   try {
     await db.collection("stock").doc(SHOP_ID).set({
@@ -1965,6 +1980,7 @@ function showQR() {
 async function init() {
   loadData();
   await loadStockFromFirebase();
+  listenStock();
   const loaded = await loadShopFromFirebase();
   if (loaded) { saveCategories(); saveConfig(); }
   await loadOrdersFromFirebase();
