@@ -655,9 +655,11 @@ async function saveStockToFirebase() {
       items: STOCK,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
+    return true;
   } catch (e) {
     console.error("儲存庫存失敗", e);
     showToast("庫存更新失敗，請檢查 Firebase 設定");
+    return false;
   }
 }
 
@@ -2565,7 +2567,7 @@ function showVoiceResult(result) {
   let hasItems = false;
   let newItemCount = 0;
 
-  result.items.forEach(item => {
+  result.items.forEach((item, idx) => {
     hasItems = true;
     const sysItem = itemMap[item.name];
     const isNew = !sysItem;
@@ -2583,7 +2585,7 @@ function showVoiceResult(result) {
     tableRows += `<tr>
       <td><span class="itemName">${item.name}${tag}</span></td>
       <td><span class="itemPrice">${priceDisplay} ${newPrice}</span></td>
-      <td class="itemStock"><input type="number" min="0" id="vr_${item.name}" value="${item.stock}"></td>
+      <td class="itemStock"><input type="number" min="0" id="vr_${idx}" value="${item.stock}"></td>
       <td><span class="${statusClass}">${statusText}</span></td>
     </tr>`;
   });
@@ -2619,25 +2621,28 @@ function showVoiceResult(result) {
   window._voiceResult = result;
 }
 
-function execVoiceSave() {
+async function execVoiceSave() {
   const result = window._voiceResult;
   if (!result) return;
 
   let changed = 0;
-  result.items.forEach(item => {
-    const input = document.getElementById("vr_" + item.name);
-    if (!input) return;
-    const val = input.value.trim();
-    if (val !== "") {
-      const num = parseInt(val);
-      if (!isNaN(num) && num >= 0) {
-        STOCK[item.name] = { stock: num };
-        changed++;
-      }
+  result.items.forEach((item, idx) => {
+    const input = document.getElementById("vr_" + idx);
+    let num;
+    if (input) {
+      const val = input.value.trim();
+      num = val !== "" ? parseInt(val) : item.stock;
+    } else {
+      num = item.stock;
+    }
+    if (!isNaN(num) && num >= 0) {
+      STOCK[item.name] = { stock: num };
+      changed++;
     }
   });
 
-  saveStockToFirebase();
+  const ok = await saveStockToFirebase();
+  if (!ok) return;
   document.getElementById("voiceModal").classList.remove("open");
   window._voiceResult = null;
 
