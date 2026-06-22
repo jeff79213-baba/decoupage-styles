@@ -444,23 +444,25 @@ header {
 .stockItemRow .siname:hover { color:var(--primary); }
 .stockItemRow .siunit { color:#bbb;font-size:11px;width:20px;flex-shrink:0;text-align:center; }
 .stockItemRow .siprice { color:#bbb;font-size:11px;white-space:nowrap;overflow:hidden;flex-shrink:0; }
+.stockItemRow .siqty { width:32px;padding:2px 3px;border:1px solid #ddd;border-radius:4px;font-size:11px;text-align:center;flex-shrink:0; }
+.stockItemRow .siqty:focus { border-color:var(--primary);outline:none; }
+.stockItemRow .sipriceinput { width:38px;padding:2px 3px;border:1px solid #ddd;border-radius:4px;font-size:11px;text-align:center;flex-shrink:0; }
+.stockItemRow .sipriceinput:focus { border-color:var(--primary);outline:none; }
+.stockItemRow .siunit { color:#bbb;font-size:11px;width:18px;flex-shrink:0;text-align:center; }
 .stockItemRow .siadd {
   border:1px dashed #ddd;border-radius:4px;background:none;cursor:pointer;
-  font-size:12px;color:#ccc;width:22px;height:22px;display:flex;
-  align-items:center;justify-content:center;flex-shrink:0;padding:0;
+  font-size:12px;color:#ccc;width:20px;height:20px;display:inline-flex;
+  align-items:center;justify-content:center;flex-shrink:0;padding:0;line-height:1;
 }
 .stockItemRow .siadd:hover { border-color:var(--primary);color:var(--primary); }
-.stockItemRow .sistock { width:48px;padding:3px 4px;border:1px solid #ddd;border-radius:5px;font-size:12px;text-align:center;flex-shrink:0; }
+.stockItemRow .sistock { width:44px;padding:3px 4px;border:1px solid #ddd;border-radius:5px;font-size:12px;text-align:center;flex-shrink:0; }
 .stockItemRow .sistock:focus { border-color:var(--primary);outline:none; }
 .stockItemRow .sidel { border:none;background:none;font-size:10px;color:#ddd;cursor:pointer;padding:2px;flex-shrink:0; }
 .stockItemRow .sidel:hover { color:#e74c3c; }
-.newPriceRow {
-  display:flex;align-items:center;gap:4px;padding:3px 4px 3px 60px;font-size:11px;background:#fafaf5;border-radius:4px;margin:1px 0;
+.stockItemRow .siMoveCat {
+  border:none;background:none;font-size:10px;color:#bbb;cursor:pointer;flex-shrink:0;padding:2px;max-width:32px;
+  -webkit-appearance:none;appearance:none;
 }
-.newPriceRow span { color:#999; }
-.newPriceRow input { width:45px;padding:2px 4px;border:1px solid #ddd;border-radius:4px;font-size:11px;text-align:center; }
-.newPriceRow .npbtn { padding:2px 8px;border:none;border-radius:4px;background:var(--primary);color:#fff;cursor:pointer;font-size:11px; }
-.newPriceRow .npbtn.cancel { background:var(--card);color:#999;border:1px solid #ddd; }
 .addItemBtn { display:block;width:100%;padding:5px;margin-top:3px;border:1px dashed #ddd;border-radius:5px;background:none;font-size:11px;color:#bbb;cursor:pointer;text-align:center; }
 .addItemBtn:hover { border-color:var(--primary);color:var(--primary); }
 .stockCatDel { font-size:10px;color:#ddd;cursor:pointer;border:none;background:none;padding:2px 4px;display:block;width:100%;text-align:center;margin-top:2px; }
@@ -1874,8 +1876,6 @@ function inlineUpdateStock(input) {
 // ============ 庫存設定面板 ============
 let _stockData = null;
 let _stockSelCat = 0;
-let _stockNewPrice = null;
-
 function showStockPanel(aiItems) {
   _stockData = [];
   CATEGORIES.forEach(cat => {
@@ -1922,7 +1922,6 @@ function renderStockPanel() {
   const existing = document.querySelector(".modalOverlay.open");
   if (existing) existing.remove();
   if (_stockSelCat >= _stockData.length) _stockSelCat = 0;
-  _stockNewPrice = null;
 
   const catBtns = _stockData.map((cat, ci) =>
     `<button class="catBtn ${ci === _stockSelCat ? 'active' : ''}" onclick="_stockSelCat=${ci};_stockNewPrice=null;renderStockPanel()">${escHtml(cat.name)}</button>`
@@ -1933,26 +1932,25 @@ function renderStockPanel() {
   let itemsHtml = "";
   const selCat = _stockData[_stockSelCat];
   if (selCat) {
+    const moveOpts = _stockData.map((c, i) => i !== _stockSelCat ? `<option value="${i}">${escHtml(c.name)}</option>` : "").join("");
     itemsHtml = selCat.items.map((item, ii) => {
-      const priceStr = item.prices.map(p => `${p.label}${item.unit}$${p.price}`).join(" ");
-      const showNew = _stockNewPrice && _stockNewPrice.ci === _stockSelCat && _stockNewPrice.ii === ii;
+      const priceInputs = item.prices.map((p, pi) =>
+        `<input class="siqty" value="${escHtml(p.label)}" onchange="_stockData[${_stockSelCat}].items[${ii}].prices[${pi}].label=this.value">
+         <input class="sipriceinput" value="${p.price}" onchange="_stockData[${_stockSelCat}].items[${ii}].prices[${pi}].price=parseInt(this.value)||0">`
+      ).join("");
       return `
         <div class="stockItemRow">
           <span class="siname" onclick="stockShowHistory(${_stockSelCat},${ii})">${escHtml(item.name)}</span>
           <span class="siunit">${escHtml(item.unit)}</span>
-          <span class="siprice">${escHtml(priceStr)}</span>
-          <button class="siadd" onclick="_stockNewPrice={ci:${_stockSelCat},ii:${ii}};renderStockPanel()">+</button>
+          ${priceInputs}
+          <button class="siadd" onclick="stockAddPriceTier(${_stockSelCat},${ii})">+</button>
           <input class="sistock" type="number" min="0" value="${item.stock}" onchange="_stockData[${_stockSelCat}].items[${ii}].stock=parseInt(this.value)||0">
+          <select class="siMoveCat" onchange="stockMoveItemToCat(${_stockSelCat},${ii},this.value);this.value=''">
+            <option value="">↕</option>
+            ${moveOpts}
+          </select>
           <button class="sidel" onclick="stockRemoveItem(${_stockSelCat},${ii})">✕</button>
-        </div>
-        ${showNew ? `
-        <div class="newPriceRow">
-          <span>數量</span><input id="npQty" placeholder="1"><span>${escHtml(item.unit)}</span>
-          <span>價格</span><input id="npPrice" placeholder="30">
-          <button class="npbtn" onclick="stockConfirmNewPrice(${_stockSelCat},${ii})">確定</button>
-          <button class="npbtn cancel" onclick="_stockNewPrice=null;renderStockPanel()">取消</button>
-        </div>` : ""}
-      `;
+        </div>`;
     }).join("");
     itemsHtml += `<button class="addItemBtn" onclick="stockShowHistory(${_stockSelCat},-1)">＋ 新增品項</button>`;
   }
@@ -2005,24 +2003,26 @@ function stockAddCategory() {
   renderStockPanel();
 }
 
-function stockConfirmNewPrice(ci, ii) {
-  const qty = document.getElementById("npQty")?.value.trim();
-  const price = document.getElementById("npPrice")?.value.trim();
-  if (!qty || !price) { showToast("請輸入數量和價格"); return; }
-  const qn = parseInt(qty), pn = parseInt(price);
-  if (isNaN(qn) || qn < 1 || isNaN(pn) || pn < 0) { showToast("請輸入有效數字"); return; }
-  _stockData[ci].items[ii].prices.push({ label: qn.toString(), price: pn });
-  _stockNewPrice = null;
+function stockAddPriceTier(ci, ii) {
+  _stockData[ci].items[ii].prices.push({ label: "1", price: 0 });
+  renderStockPanel();
+}
+
+function stockMoveItemToCat(fromCi, ii, toCi) {
+  const item = _stockData[fromCi].items.splice(ii, 1)[0];
+  _stockData[toCi].items.push(item);
+  _stockSelCat = parseInt(toCi);
   renderStockPanel();
 }
 
 function getHistoryItems() {
   const active = new Set();
   _stockData.forEach(cat => cat.items.forEach(item => active.add(item.name)));
+  const dismissed = JSON.parse(localStorage.getItem("bala_dismissed_history") || "[]");
   const all = new Set();
   Object.keys(STOCK).forEach(k => all.add(k));
   CATEGORIES.forEach(cat => cat.items.forEach(item => all.add(item.name)));
-  return [...all].filter(n => !active.has(n)).sort();
+  return [...all].filter(n => !active.has(n) && !dismissed.includes(n)).sort();
 }
 
 function stockShowHistory(ci, ii) {
@@ -2030,16 +2030,24 @@ function stockShowHistory(ci, ii) {
   const overlay = document.createElement("div");
   overlay.className = "historyOverlay";
   overlay.onclick = () => overlay.remove();
+  const itemName = ii >= 0 ? escHtml(_stockData[ci].items[ii].name) : "";
   overlay.innerHTML = `
     <div class="historyBox" onclick="event.stopPropagation()">
-      <h3>${ii >= 0 ? "替換品項" : "新增品項"}</h3>
+      <h3>${ii >= 0 ? "替換「" + itemName + "」" : "新增品項"}</h3>
       <div style="font-size:12px;color:#888;margin-bottom:8px">選擇歷史品項或輸入新名稱：</div>
-      ${hist.length ? hist.map(name => `<div class="histItem" onclick="stockPickHistory(${ci},${ii},'${escHtml(name)}')">${escHtml(name)}</div>`).join("") : '<div style="font-size:12px;color:#ccc;margin-bottom:8px">尚無歷史品項</div>'}
+      ${hist.length ? hist.map(name => `
+        <div style="display:flex;align-items:center;gap:4px;">
+          <div class="histItem" style="flex:1" onclick="stockPickHistory(${ci},${ii},'${escHtml(name)}')">${escHtml(name)}</div>
+          <button style="border:none;background:none;font-size:10px;color:#ddd;cursor:pointer;padding:4px" onclick="stockDelHistoryItem('${escHtml(name)}');event.stopPropagation()">✕</button>
+        </div>`).join("") : '<div style="font-size:12px;color:#ccc;margin-bottom:8px">尚無歷史品項</div>'}
       <div class="histNew">
         <input id="histNewName" placeholder="輸入新品項名稱">
         <button onclick="stockPickHistory(${ci},${ii},document.getElementById('histNewName').value.trim())">確定</button>
       </div>
-      <button style="margin-top:8px;padding:6px 14px;border:1px solid #ddd;border-radius:6px;background:var(--card);cursor:pointer;font-size:12px" onclick="this.closest('.historyOverlay').remove()">取消</button>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button style="flex:1;padding:6px;border:none;border-radius:6px;background:#e74c3c;color:#fff;cursor:pointer;font-size:12px" onclick="stockDelItem(${ci},${ii})">🗑 刪除此品項</button>
+        <button style="flex:1;padding:6px;border:1px solid #ddd;border-radius:6px;background:var(--card);cursor:pointer;font-size:12px" onclick="this.closest('.historyOverlay').remove()">取消</button>
+      </div>
     </div>
   `;
   document.body.appendChild(overlay);
@@ -2055,6 +2063,21 @@ function stockPickHistory(ci, ii, name) {
     _stockData[ci].items.push({ name, unit: "個", prices: [{ label: "1", price: 0 }], stock: 0 });
   }
   renderStockPanel();
+}
+
+function stockDelItem(ci, ii) {
+  if (ii < 0) return;
+  document.querySelector(".historyOverlay")?.remove();
+  _stockData[ci].items.splice(ii, 1);
+  renderStockPanel();
+}
+
+function stockDelHistoryItem(name) {
+  // Mark item as dismissed by adding to localStorage
+  let dismissed = JSON.parse(localStorage.getItem("bala_dismissed_history") || "[]");
+  if (!dismissed.includes(name)) dismissed.push(name);
+  localStorage.setItem("bala_dismissed_history", JSON.stringify(dismissed));
+  renderStockPanel(); // re-render will exclude dismissed items
 }
 
 function stockAISubmit() {
