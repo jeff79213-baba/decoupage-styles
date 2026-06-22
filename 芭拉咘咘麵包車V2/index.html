@@ -400,6 +400,7 @@ header {
     <div id="shopContact" style="display:none"></div>
   </div>
   <div class="headerBtns">
+    <button id="copyUrlBtn">🔗</button>
     <button id="qrBtn">QR</button>
   </div>
 </header>
@@ -437,7 +438,7 @@ header {
     <div class="loginForm">
       <div class="pwdWrap">
         <input type="password" id="loginPwd" placeholder="請輸入管理員密碼" autocomplete="off">
-        <button class="eyeBtn" id="pwdEye" type="button" tabindex="-1">👁️</button>
+        <button class="eyeBtn" id="pwdEye" type="button" tabindex="-1"></button>
       </div>
       <div class="loginError" id="loginError">密碼錯誤，請重試</div>
       <button id="loginBtn">登入</button>
@@ -476,6 +477,7 @@ header {
       <p id="confirmMsg">確定要執行此操作嗎？</p>
       <div class="confirmBtns">
         <button class="btnConfirmYes" id="confirmYes">確定</button>
+        <button class="btnConfirmYes" id="confirmAlt" style="display:none">替代</button>
         <button class="btnConfirmNo" id="confirmNo">取消</button>
       </div>
     </div>
@@ -515,27 +517,27 @@ const THEMES = {
 
 const DEFAULT_CATEGORIES = [
   { name:"麵包", items:[
-    { name:"菠蘿麵包", unit:"個", prices:[{ label:"單個", price:30 },{ label:"三個", price:80 }] },
-    { name:"蔥花麵包", unit:"個", prices:[{ label:"單個", price:28 }] },
-    { name:"紅豆麵包", unit:"個", prices:[{ label:"單個", price:30 }] },
-    { name:"克林姆麵包", unit:"個", prices:[{ label:"單個", price:30 }] }
+    { name:"菠蘿麵包", unit:"個", prices:[{ label:"1", price:30 },{ label:"3", price:80 }] },
+    { name:"蔥花麵包", unit:"個", prices:[{ label:"1", price:28 }] },
+    { name:"紅豆麵包", unit:"個", prices:[{ label:"1", price:30 }] },
+    { name:"克林姆麵包", unit:"個", prices:[{ label:"1", price:30 }] }
   ]},
   { name:"蛋糕", items:[
-    { name:"蜂蜜蛋糕", unit:"片", prices:[{ label:"片", price:45 },{ label:"條", price:180 }] },
-    { name:"輕乳酪蛋糕", unit:"片", prices:[{ label:"片", price:50 },{ label:"整個", price:250 }] }
+    { name:"蜂蜜蛋糕", unit:"片", prices:[{ label:"1", price:45 },{ label:"1", price:180 }] },
+    { name:"輕乳酪蛋糕", unit:"片", prices:[{ label:"1", price:50 },{ label:"1", price:250 }] }
   ]},
   { name:"吐司", items:[
-    { name:"白吐司", unit:"半條", prices:[{ label:"半條", price:40 },{ label:"整條", price:75 }] },
-    { name:"全麥吐司", unit:"半條", prices:[{ label:"半條", price:45 },{ label:"整條", price:80 }] }
+    { name:"白吐司", unit:"半條", prices:[{ label:"1", price:40 },{ label:"1", price:75 }] },
+    { name:"全麥吐司", unit:"半條", prices:[{ label:"1", price:45 },{ label:"1", price:80 }] }
   ]},
   { name:"季節限定", items:[
-    { name:"草莓麵包", unit:"個", prices:[{ label:"單個", price:45 }] }
+    { name:"草莓麵包", unit:"個", prices:[{ label:"1", price:45 }] }
   ]}
 ];
 
 const DEFAULT_CONFIG = {
   password:"0000", shopName:"芭拉咘咘麵包車",
-  address:"", phone:"", showAddress:false, showPhone:false,
+  address:"發財市一路發鄉賣光光路888號", phone:"1681681688", showAddress:false, showPhone:false,
   themeName:"甜蜜粉嫩", colors:{...THEMES["甜蜜粉嫩"]}
 };
 
@@ -548,6 +550,8 @@ let isAdmin = false;
 let currentCategory = 0;
 let itemModalState = null;
 let confirmCallback = null;
+let confirmAltCallback = null;
+let confirmNoCallback = null;
 let editingCatIdx = -1;
 let editingItemIdx = -1;
 let editingPriceIdx = -1;
@@ -647,7 +651,7 @@ async function saveShopToFirebase() {
       config: CONFIG,
       orders: ORDERS,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    }, { merge: true });
   } catch (e) {
     console.error("儲存商店資料失敗", e);
   }
@@ -779,6 +783,32 @@ function updateTabVisibility() {
 }
 
 // ============ MENU ============
+function getPendingQty(itemName, priceLabel) {
+  let total = 0;
+  for (const o of ORDERS) {
+    if (o.status !== "pending") continue;
+    for (const item of o.items) {
+      if (item.name === itemName && item.priceLabel === priceLabel) {
+        total += item.stockQty;
+      }
+    }
+  }
+  return total;
+}
+
+function getPendingTotal(itemName) {
+  let total = 0;
+  for (const o of ORDERS) {
+    if (o.status !== "pending") continue;
+    for (const item of o.items) {
+      if (item.name === itemName) {
+        total += item.stockQty;
+      }
+    }
+  }
+  return total;
+}
+
 function renderMenu() {
   const tabs = document.getElementById("categoryTabs");
   tabs.innerHTML = CATEGORIES.map((c, i) =>
@@ -794,8 +824,11 @@ function renderMenu() {
   grid.innerHTML = cat.items.map((item, idx) => {
     const u = item.unit || "個";
     const itemStock = STOCK[item.name]?.stock;
-    const stockText = (itemStock !== undefined && itemStock !== null)
-      ? (itemStock > 0 ? `<span style="font-size:11px;color:#888;margin-left:6px">剩 ${itemStock} ${u}</span>`
+    const pendingTotal = getPendingTotal(item.name);
+    const remaining = (itemStock !== undefined && itemStock !== null) ? itemStock - pendingTotal : null;
+    const stockText = (remaining !== null)
+      ? (remaining > 0
+          ? `<span style="font-size:11px;color:#888;margin-left:6px">庫存 ${itemStock} | 已訂 ${pendingTotal} | 剩 ${remaining} ${u}</span>`
           : `<span style="font-size:11px;color:#e74c3c;margin-left:6px">已售完</span>`)
       : '';
     return `<div class="itemCard" data-idx="${idx}">
@@ -807,8 +840,10 @@ function renderMenu() {
       <div class="itemPrices">
         ${item.prices.map((p, pi) => {
           const needPerUnit = getStockQty(p.label);
-          const isSoldOut = itemStock !== undefined && itemStock !== null && itemStock <= 0;
-          const isShort = !isSoldOut && itemStock !== undefined && itemStock !== null && itemStock > 0 && needPerUnit > itemStock;
+          const pendingPrice = getPendingQty(item.name, p.label);
+          const itemRemaining = (itemStock !== undefined && itemStock !== null) ? itemStock - pendingPrice : null;
+          const isSoldOut = itemRemaining !== null && itemRemaining <= 0;
+          const isShort = !isSoldOut && itemRemaining !== null && itemRemaining > 0 && needPerUnit > itemRemaining;
           let actionHtml;
           if (isSoldOut) {
             actionHtml = `<span style="font-size:11px;color:#e74c3c;font-weight:600">售完</span>`;
@@ -817,8 +852,9 @@ function renderMenu() {
           } else {
             actionHtml = `<button class="addCartBtn" data-idx="${idx}" data-price="${pi}" data-qty="1">+</button>`;
           }
+          const displayLabel = isNaN(parseInt(p.label)) ? p.label : `${p.label}${u}`;
           return `<div class="priceLine${pi < item.prices.length-1 ? ' withDivider' : ''}">
-            <span class="plLabel">${p.label}</span>
+            <span class="plLabel">${displayLabel}</span>
             <span class="plPrice">$${p.price}</span>
             ${actionHtml}
           </div>`;
@@ -851,13 +887,15 @@ function addToCart(catIdx, itemIdx, priceIdx, qty) {
   const item = CATEGORIES[catIdx].items[itemIdx];
   const price = item.prices[priceIdx];
   const itemStock = STOCK[item.name]?.stock;
-  if (itemStock !== undefined && itemStock !== null && itemStock <= 0) {
+  const pendingPrice = getPendingQty(item.name, price.label);
+  const remaining = (itemStock !== undefined && itemStock !== null) ? itemStock - pendingPrice : null;
+  if (remaining !== null && remaining <= 0) {
     showToast(`${item.name} 已售完`);
     return;
   }
   const needStock = qty * getStockQty(price.label);
-  if (itemStock !== undefined && itemStock !== null && itemStock !== -1 && needStock > itemStock) {
-    showToast(`${item.name} 庫存不足（剩 ${itemStock}${item.unit||"個"}，需要 ${needStock}${item.unit||"個"}）`);
+  if (remaining !== null && remaining !== -1 && needStock > remaining) {
+    showToast(`${item.name} 庫存不足（剩 ${remaining}${item.unit||"個"}，需要 ${needStock}${item.unit||"個"}）`);
     return;
   }
   const existing = CART.find(c =>
@@ -866,7 +904,7 @@ function addToCart(catIdx, itemIdx, priceIdx, qty) {
   if (existing) {
     const newQty = existing.qty + qty;
     const totalNeed = newQty * getStockQty(price.label);
-    if (itemStock !== undefined && itemStock !== null && itemStock !== -1 && totalNeed > itemStock) {
+    if (remaining !== null && remaining !== -1 && totalNeed > remaining) {
       showToast(`${item.name} 庫存不足（購物車已有 ${existing.qty}${item.unit||"個"}）`);
       return;
     }
@@ -922,7 +960,7 @@ function renderCart() {
     <span class="totalLabel">總計</span>
     <span class="totalPrice">$${total}</span>
   </div>`;
-  html += `<button class="btnCheckout" onclick="checkout()">結帳</button>`;
+  html += `<button class="btnCheckout" onclick="checkout()">送出</button>`;
   container.innerHTML = html;
 }
 
@@ -935,19 +973,25 @@ async function checkout() {
   for (const c of CART) {
     const needStock = c.qty * getStockQty(c.priceLabel);
     const s = STOCK[c.itemName]?.stock;
-    if (s !== undefined && s !== null && s !== -1 && needStock > s) {
-      insufficient.push({ name: c.itemName, stock: s, ordered: needStock });
+    const pendingPrice = getPendingQty(c.itemName, c.priceLabel);
+    const remaining = (s !== undefined && s !== null) ? s - pendingPrice : null;
+    if (remaining !== null && remaining !== -1 && needStock > remaining) {
+      insufficient.push({ name: c.itemName, stock: s, pending: pendingPrice, remaining, ordered: needStock });
     }
   }
 
   if (insufficient.length > 0) {
     const msg = insufficient.map(i =>
-      `「${i.name}」只剩 ${i.stock} 個，您需要 ${i.ordered} 個`
+      `「${i.name}」庫存 ${i.stock}，已訂 ${i.pending}，剩 ${i.remaining}，您需要 ${i.ordered} 個`
     ).join("\n");
     showToast("庫存不足！\n" + msg);
     return;
   }
 
+  await placeOrder();
+}
+
+async function placeOrder() {
   const now = new Date();
   const y = now.getFullYear();
   const mo = String(now.getMonth()+1).padStart(2,"0");
@@ -985,6 +1029,8 @@ async function checkout() {
 }
 
 function getStockQty(priceLabel) {
+  const num = parseInt(priceLabel);
+  if (!isNaN(num) && num > 0) return num;
   const cnMap = { '單':1,'一':1,'二':2,'兩':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10 };
   const first = priceLabel.charAt(0);
   return cnMap[first] || 1;
@@ -1095,12 +1141,37 @@ async function cancelOrder(index) {
       showToast("訂單已取消，庫存已加回");
     });
   } else {
-    showConfirm("確定取消此待取貨訂單？", () => {
+    document.getElementById("confirmMsg").textContent = `訂單 #${order.id}\n\n要將品項放回購物車重新選擇，還是直接取消？`;
+    document.getElementById("confirmYes").textContent = "取消訂單";
+    document.getElementById("confirmAlt").style.display = "";
+    document.getElementById("confirmAlt").textContent = "回購物車";
+    document.getElementById("confirmNo").textContent = "不取消";
+    confirmCallback = () => {
       ORDERS.splice(index, 1);
       saveOrders();
       renderOrders();
       showToast("訂單已取消");
-    });
+    };
+    confirmAltCallback = () => {
+      order.items.forEach(item => {
+        const existing = CART.find(c => c.itemName === item.name && c.priceLabel === item.priceLabel && c.unitPrice === item.unitPrice);
+        if (existing) {
+          existing.qty += item.quantity;
+        } else {
+          CART.push({ catIdx: -1, itemIdx: -1, priceIdx: -1, qty: item.quantity,
+            itemName: item.name, priceLabel: item.priceLabel, unitPrice: item.unitPrice });
+        }
+      });
+      saveCart();
+      ORDERS.splice(index, 1);
+      saveOrders();
+      renderOrders();
+      updateCartBadge();
+      switchTab("cart");
+      showToast("已將品項放回購物車");
+    };
+    confirmNoCallback = null;
+    document.getElementById("confirmModal").classList.add("open");
   }
 }
 
@@ -1235,9 +1306,19 @@ function renderAdmin() {
       <div id="adminItems"></div>
       <div class="inlineAddRow">
         <input type="text" id="newItemName" placeholder="新品項名稱..." maxlength="20" style="flex:2">
-        <input type="text" id="newItemLabel" placeholder="單個" value="單個" style="flex:1;min-width:60px">
-        <input type="number" id="newItemPrice" placeholder="0" value="0" style="width:70px">
-        <input type="number" id="newItemStock" placeholder="庫存" value="10" min="0" style="width:60px">
+        <select id="newItemUnit" style="padding:8px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;outline:none;width:60px">
+          <option value="個">個</option>
+          <option value="片">片</option>
+          <option value="條">條</option>
+          <option value="份">份</option>
+          <option value="包">包</option>
+          <option value="盒">盒</option>
+          <option value="罐">罐</option>
+          <option value="杯">杯</option>
+        </select>
+        <input type="number" id="newItemQty" placeholder="數量" value="1" min="1" style="width:50px">
+        <input type="number" id="newItemPrice" placeholder="價錢" value="" style="width:60px">
+        <input type="number" id="newItemStock" placeholder="庫存" value="" min="0" style="width:60px">
         <button onclick="addItemInline()">+ 新增</button>
         <button onclick="showImportModal()" style="padding:6px 12px;border:1px solid var(--primary);border-radius:6px;background:var(--card);color:var(--primary);cursor:pointer;font-size:12px">📥 匯入</button>
         <button onclick="batchReplaceUnit()" style="padding:6px 12px;border:1px solid var(--accent);border-radius:6px;background:var(--card);color:var(--accent);cursor:pointer;font-size:12px">📦 批量換單位</button>
@@ -1266,19 +1347,22 @@ function renderAdmin() {
       <div class="settingRow">
         <label>地址</label>
         <input type="text" id="editAddress" value="${CONFIG.address||''}" maxlength="50" style="flex:1">
-        <button class="toggleSwitch ${CONFIG.showAddress?'on':''}" id="toggleAddress" style="flex-shrink:0"></button>
+        <button onclick="toggleContact('showAddress')" style="padding:8px 14px;border:none;border-radius:8px;background:${CONFIG.showAddress?'var(--primary)':'#bbb'};color:#fff;cursor:pointer;font-size:13px;flex-shrink:0">${CONFIG.showAddress?'顯示':'不顯示'}</button>
       </div>
       <div class="settingRow">
         <label>電話</label>
         <input type="text" id="editPhone" value="${CONFIG.phone||''}" maxlength="20" style="flex:1">
-        <button class="toggleSwitch ${CONFIG.showPhone?'on':''}" id="togglePhone" style="flex-shrink:0"></button>
+        <button onclick="toggleContact('showPhone')" style="padding:8px 14px;border:none;border-radius:8px;background:${CONFIG.showPhone?'var(--primary)':'#bbb'};color:#fff;cursor:pointer;font-size:13px;flex-shrink:0">${CONFIG.showPhone?'顯示':'不顯示'}</button>
       </div>
     </div>
     <div class="adminSection">
       <h3>🔐 系統設定</h3>
       <div class="settingRow">
         <label>新密碼</label>
-        <input type="password" id="newPwdInput" placeholder="至少4位數">
+        <div class="pwdWrap" style="flex:1">
+          <input type="password" id="newPwdInput" placeholder="至少4位數">
+          <button class="eyeBtn" id="newPwdEye" type="button" tabindex="-1"></button>
+        </div>
         <button onclick="changePassword()" style="padding:8px 14px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;font-size:13px">修改</button>
       </div>
       <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
@@ -1295,6 +1379,20 @@ function renderAdmin() {
   renderAdminCatSelect();
   renderAdminItems();
   renderThemeSettings();
+  // Init admin password eye
+  const newEye = document.getElementById("newPwdEye");
+  if (newEye) {
+    if (!newEye._listenerAttached) {
+      newEye.addEventListener("click", () => {
+        const input = document.getElementById("newPwdInput");
+        const visible = input.type === "password";
+        input.type = visible ? "text" : "password";
+        setEye(newEye, visible);
+      });
+      newEye._listenerAttached = true;
+    }
+    setEye(newEye, false);
+  }
 }
 
 function renderAdminCategories() {
@@ -1343,14 +1441,18 @@ function renderAdminItems() {
     const pricesHtml = item.prices.map((p, pi) => {
       if (editingItemIdx === i && editingPriceIdx === pi) {
         return `<div class="adminPriceRow">
-          <input class="apInputLabel" id="peLabel_${i}_${pi}" value="${p.label}" style="flex:1">
+          <span style="color:#999;font-size:12px">數量</span>
+          <input class="apInputLabel" id="peQty_${i}_${pi}" value="${p.label}" type="number" min="1" style="width:50px">
+          <span style="font-size:13px;color:#888">${item.unit||"個"}</span>
+          <span style="color:#999;font-size:12px">金額</span>
           <input class="apInputAmount" id="peAmt_${i}_${pi}" value="${p.price}" type="number" style="width:70px">
           <button class="editBtn" onclick="saveEditPrice(${i},${pi})">✔️</button>
           <button class="delBtn" onclick="cancelEditPrice()">✕</button>
         </div>`;
       }
+      const displayLabel = isNaN(parseInt(p.label)) ? p.label : `${p.label}${item.unit||"個"}`;
       return `<div class="adminPriceRow">
-        <span class="aplLabel">${p.label}</span>
+        <span class="aplLabel" style="color:#888">${displayLabel}</span>
         <span class="aplAmount">$${p.price}</span>
         <button class="editBtn" onclick="startEditPrice(${i},${pi})">✏️</button>
         <button class="delBtn" onclick="deleteItemPrice(${i},${pi})">🗑️</button>
@@ -1377,16 +1479,20 @@ function renderAdminItems() {
       <div class="adminPrices" id="adminPrices${i}" style="display:${expandedPrices.has(i)?'block':'none'}">
         ${pricesHtml}
         <div class="adminPriceRow" style="border:none;gap:6px;margin-top:6px">
-          <input class="apInputLabel" id="apl${i}" placeholder="標籤" value="單個">
-          <input class="apInputAmount" id="apa${i}" placeholder="金額" type="number" value="0">
+          <span style="color:#999;font-size:12px">數量</span>
+          <input class="apInputLabel" id="aqty${i}" type="number" min="1" value="1" style="width:50px">
+          <span style="color:#999;font-size:12px">金額</span>
+          <input class="apInputAmount" id="apa${i}" placeholder="價錢" type="number" value="" style="width:70px">
           <button onclick="addItemPrice(${i})" style="padding:5px 12px;border:none;border-radius:6px;background:var(--primary);color:#fff;cursor:pointer;font-size:12px">+價位</button>
         </div>
       </div>`;
     }
+    const priceSummary = item.prices.map(p => `$${p.price}`).join("·");
     return `<div class="adminRow" draggable="true" data-idx="${i}">
       <span class="dragHandle">☰</span>
       <span class="adminRowName">${item.name}</span>
       <span class="adminRowUnit">[${item.unit||"個"}]</span>
+      <span style="color:#999;font-size:11px;flex-shrink:0">${priceSummary}</span>
       <input type="number" min="0" class="inlineStockInput" value="${currentStock ?? ''}" data-idx="${i}" placeholder="庫存" onchange="inlineUpdateStock(this)">
       <div class="adminRowActions">
         <button class="editBtn" onclick="startEditItem(${i})">✏️</button>
@@ -1397,8 +1503,10 @@ function renderAdminItems() {
     <div class="adminPrices" id="adminPrices${i}" style="display:${expandedPrices.has(i)?'block':'none'}">
       ${pricesHtml}
       <div class="adminPriceRow" style="border:none;gap:6px;margin-top:6px">
-        <input class="apInputLabel" id="apl${i}" placeholder="標籤" value="單個">
-        <input class="apInputAmount" id="apa${i}" placeholder="金額" type="number" value="0">
+        <span style="color:#999;font-size:12px">數量</span>
+        <input class="apInputLabel" id="aqty${i}" type="number" min="1" value="1" style="width:50px">
+        <span style="color:#999;font-size:12px">金額</span>
+        <input class="apInputAmount" id="apa${i}" placeholder="價錢" type="number" value="" style="width:70px">
         <button onclick="addItemPrice(${i})" style="padding:5px 12px;border:none;border-radius:6px;background:var(--primary);color:#fff;cursor:pointer;font-size:12px">+價位</button>
       </div>
     </div>`;
@@ -1476,32 +1584,35 @@ function addItemInline() {
   const cat = getSelectedCategory();
   if (!cat) { showToast("請先建立分類"); return; }
   const nameInput = document.getElementById("newItemName");
-  const labelInput = document.getElementById("newItemLabel");
+  const unitSelect = document.getElementById("newItemUnit");
+  const qtyInput = document.getElementById("newItemQty");
   const priceInput = document.getElementById("newItemPrice");
   const stockInput = document.getElementById("newItemStock");
   const name = nameInput.value.trim();
-  const label = labelInput.value.trim();
+  const unit = unitSelect ? unitSelect.value : "個";
+  const qty = qtyInput ? parseInt(qtyInput.value) : 1;
   const price = parseInt(priceInput.value);
   if (!name) { showToast("請輸入品項名稱"); return; }
-  if (!label) { showToast("請輸入價位標籤"); return; }
+  if (!qty || qty < 1) { showToast("請輸入有效數量"); return; }
   if (isNaN(price) || price < 0) { showToast("請輸入有效價格"); return; }
-  cat.items.push({ name, unit: "個", prices: [{ label, price }] });
+  cat.items.push({ name, unit, prices: [{ label: qty.toString(), price }] });
   saveCategories();
 
   if (stockInput) {
     const val = stockInput.value.trim();
-    const num = val !== "" ? parseInt(val) : 10;
+    const num = val !== "" ? parseInt(val) : 0;
     if (!isNaN(num) && num >= 0) {
       STOCK[name] = { stock: num };
       saveStockToFirebase();
     }
   } else {
-    STOCK[name] = { stock: 10 };
+    STOCK[name] = { stock: 0 };
     saveStockToFirebase();
   }
 
   nameInput.value = "";
-  priceInput.value = "0";
+  if (qtyInput) qtyInput.value = "1";
+  priceInput.value = "";
   if (stockInput) stockInput.value = "";
   renderAdminItems();
   if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
@@ -1581,11 +1692,12 @@ function addItemPrice(itemIdx) {
   const cat = getSelectedCategory();
   if (!cat || !cat.items[itemIdx]) return;
   const item = cat.items[itemIdx];
-  const label = document.getElementById("apl" + itemIdx)?.value.trim();
+  const qtyInput = document.getElementById("aqty" + itemIdx);
+  const qty = qtyInput ? parseInt(qtyInput.value) : 1;
   const price = parseInt(document.getElementById("apa" + itemIdx)?.value);
-  if (!label) { showToast("請輸入價位標籤"); return; }
+  if (!qty || qty < 1) { showToast("請輸入有效數量"); return; }
   if (isNaN(price) || price < 0) { showToast("請輸入有效價格"); return; }
-  item.prices.push({ label, price });
+  item.prices.push({ label: qty.toString(), price });
   saveCategories();
   renderAdminItems();
   if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
@@ -1600,13 +1712,13 @@ function startEditPrice(itemIdx, priceIdx) {
 }
 
 function saveEditPrice(itemIdx, priceIdx) {
-  const label = document.getElementById(`peLabel_${itemIdx}_${priceIdx}`)?.value.trim();
+  const qty = parseInt(document.getElementById(`peQty_${itemIdx}_${priceIdx}`)?.value);
   const amt = parseInt(document.getElementById(`peAmt_${itemIdx}_${priceIdx}`)?.value);
-  if (!label) { showToast("標籤不能為空"); return; }
+  if (!qty || qty < 1) { showToast("請輸入有效數量"); return; }
   if (isNaN(amt) || amt < 0) { showToast("請輸入有效價格"); return; }
   const cat = getSelectedCategory();
   if (!cat || !cat.items[itemIdx] || !cat.items[itemIdx].prices[priceIdx]) return;
-  cat.items[itemIdx].prices[priceIdx].label = label;
+  cat.items[itemIdx].prices[priceIdx].label = qty.toString();
   cat.items[itemIdx].prices[priceIdx].price = amt;
   editingItemIdx = -1;
   editingPriceIdx = -1;
@@ -1846,7 +1958,19 @@ function saveShopInfo() {
   CONFIG.phone = document.getElementById("editPhone").value.trim();
   saveConfig();
   updateHeader();
+  renderAdmin();
   showToast("店家資訊已更新");
+}
+
+function toggleContact(key) {
+  const addr = document.getElementById("editAddress");
+  const phone = document.getElementById("editPhone");
+  if (addr) CONFIG.address = addr.value.trim();
+  if (phone) CONFIG.phone = phone.value.trim();
+  CONFIG[key] = !CONFIG[key];
+  saveConfig();
+  updateHeader();
+  renderAdmin();
 }
 
 // ============ EXPORT / IMPORT ============
@@ -1884,14 +2008,14 @@ function execImport() {
       const unit = parts[parts.length - 2];
       const price = parseInt(parts[parts.length - 1]);
       if (name && !isNaN(price)) {
-        cat.items.push({ name, unit: unit || "個", prices: [{ label: unit || "單個", price }] });
+        cat.items.push({ name, unit: unit || "個", prices: [{ label: "1", price }] });
         count++;
       }
     } else if (parts.length >= 2) {
       const name = parts.slice(0, parts.length - 1).join("-");
       const price = parseInt(parts[parts.length - 1]);
       if (name && !isNaN(price)) {
-        cat.items.push({ name, unit: "個", prices: [{ label: "單個", price }] });
+        cat.items.push({ name, unit: "個", prices: [{ label: "1", price }] });
         count++;
       }
     }
@@ -1995,7 +2119,10 @@ function logout() {
 // ============ CONFIRM MODAL ============
 function showConfirm(msg, cb) {
   document.getElementById("confirmMsg").textContent = msg;
+  document.getElementById("confirmAlt").style.display = "none";
   confirmCallback = cb;
+  confirmAltCallback = null;
+  confirmNoCallback = null;
   document.getElementById("confirmModal").classList.add("open");
 }
 
@@ -2007,19 +2134,41 @@ function showLogin() {
   setTimeout(() => document.getElementById("loginPwd").focus(), 100);
 }
 
+let loginCooldownTimer = null;
+
 function attemptLogin() {
+  if (loginCooldownTimer) return;
+
   const pwd = document.getElementById("loginPwd").value;
+  const errEl = document.getElementById("loginError");
+  const loginBtn = document.getElementById("loginBtn");
+
   if (pwd === CONFIG.password) {
+    localStorage.removeItem("bala_loginFails");
     isAdmin = true;
     saveAdmin();
     document.getElementById("loginModal").classList.remove("open");
+    errEl.style.display = "none";
     updateTabVisibility();
     showToast("管理員已登入");
-  } else {
-    document.getElementById("loginError").style.display = "block";
-    document.getElementById("loginPwd").value = "";
-    document.getElementById("loginPwd").focus();
+    return;
   }
+
+  // Wrong password: increment per-browser fail count
+  const fails = (parseInt(localStorage.getItem("bala_loginFails") || "0", 10)) + 1;
+  localStorage.setItem("bala_loginFails", String(fails));
+  const delay = Math.pow(2, fails - 1); // 1, 2, 4, 8, 16...
+
+  errEl.textContent = `密碼錯誤，請 ${delay} 秒後再試`;
+  errEl.style.display = "block";
+  document.getElementById("loginPwd").value = "";
+  document.getElementById("loginPwd").focus();
+  loginBtn.disabled = true;
+
+  loginCooldownTimer = setTimeout(() => {
+    loginBtn.disabled = false;
+    loginCooldownTimer = null;
+  }, delay * 1000);
 }
 
 // ============ QR CODE ============
@@ -2037,7 +2186,28 @@ function showQR() {
   document.getElementById("qrModal").classList.add("open");
 }
 
+function copyPageUrl() {
+  const url = window.location.origin + window.location.pathname;
+  navigator.clipboard.writeText(url).then(() => {
+    showToast("網址已複製");
+  }).catch(() => {
+    showToast("複製失敗，請手動選取網址");
+  });
+}
+
 // ============ EVENT BINDING ============
+
+function eyeSVG(open) {
+  return open
+    ? `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="8" ry="5"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>`
+    : `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 12 Q12 6 21 12 M3 12 Q12 18 21 12"/><line x1="4" y1="4" x2="20" y2="20"/></svg>`;
+}
+
+function setEye(btn, visible) {
+  btn.innerHTML = eyeSVG(visible);
+  btn.style.color = visible ? "var(--primary)" : "#999";
+}
+
 async function init() {
   loadData();
   await loadStockFromFirebase();
@@ -2054,9 +2224,6 @@ async function init() {
   updateHeader();
   updateTabVisibility();
   switchTab("menu");
-  if (isCustomerMode) {
-    document.getElementById("qrBtn").style.display = "none";
-  }
 
   document.querySelectorAll("#tabBar button").forEach(btn => {
     btn.addEventListener("click", () => switchTab(btn.dataset.view));
@@ -2065,17 +2232,29 @@ async function init() {
   document.getElementById("shopTitle").addEventListener("click", () => { if (!isCustomerMode) showLogin(); });
   document.getElementById("loginBtn").addEventListener("click", attemptLogin);
   document.getElementById("loginPwd").addEventListener("keydown", e => { if (e.key === "Enter") attemptLogin(); });
-  document.getElementById("loginCancelBtn").addEventListener("click", () => document.getElementById("loginModal").classList.remove("open"));
+  function resetLoginState() {
+    localStorage.removeItem("bala_loginFails");
+    if (loginCooldownTimer) { clearTimeout(loginCooldownTimer); loginCooldownTimer = null; }
+    document.getElementById("loginBtn").disabled = false;
+    document.getElementById("loginError").style.display = "none";
+    document.getElementById("loginModal").classList.remove("open");
+  }
+  document.getElementById("loginCancelBtn").addEventListener("click", resetLoginState);
+  document.getElementById("loginModal").addEventListener("click", e => { if (e.target === e.currentTarget) resetLoginState(); });
 
-  // Password eye toggle
+  // Password eye toggles
   document.getElementById("pwdEye").addEventListener("click", () => {
     const input = document.getElementById("loginPwd");
-    const isPwd = input.type === "password";
-    input.type = isPwd ? "text" : "password";
-    document.getElementById("pwdEye").textContent = isPwd ? "👁️‍🗨️" : "👁️";
+    const visible = input.type === "password";
+    input.type = visible ? "text" : "password";
+    setEye(document.getElementById("pwdEye"), visible);
   });
 
+  // Init login eye state
+  setEye(document.getElementById("pwdEye"), false);
+
   document.getElementById("qrBtn").addEventListener("click", showQR);
+  document.getElementById("copyUrlBtn").addEventListener("click", copyPageUrl);
   document.getElementById("qrCloseBtn").addEventListener("click", () => document.getElementById("qrModal").classList.remove("open"));
 
   // Menu: category tabs
@@ -2122,17 +2301,30 @@ async function init() {
 
   // Close modals on overlay click
   document.querySelectorAll(".modalOverlay").forEach(m => {
-    m.addEventListener("click", e => { if (e.target === m) m.classList.remove("open"); });
+    m.addEventListener("click", e => {
+      if (e.target === m) {
+        m.classList.remove("open");
+        confirmCallback = null;
+        confirmAltCallback = null;
+        confirmNoCallback = null;
+      }
+    });
   });
 
   // Confirm modal
   document.getElementById("confirmYes").addEventListener("click", () => {
     document.getElementById("confirmModal").classList.remove("open");
-    if (confirmCallback) { confirmCallback(); confirmCallback = null; }
+    if (confirmCallback) { const cb = confirmCallback; confirmCallback = null; cb(); }
+  });
+  document.getElementById("confirmAlt").addEventListener("click", () => {
+    document.getElementById("confirmModal").classList.remove("open");
+    if (confirmAltCallback) { const cb = confirmAltCallback; confirmAltCallback = null; cb(); }
   });
   document.getElementById("confirmNo").addEventListener("click", () => {
     document.getElementById("confirmModal").classList.remove("open");
+    if (confirmNoCallback) { const cb = confirmNoCallback; confirmNoCallback = null; cb(); }
     confirmCallback = null;
+    confirmAltCallback = null;
   });
 
   // Import file handler
@@ -2145,18 +2337,6 @@ async function init() {
     if (e.target.id === "adminCatSelect") renderAdminItems();
     if (e.target.id === "editShopName" || e.target.id === "editAddress" || e.target.id === "editPhone") {
       // auto-save on change? no, user clicks save button
-    }
-  });
-
-  // Toggle switches for address/phone
-  document.addEventListener("click", e => {
-    const id = e.target.id;
-    if (id === "toggleAddress" || id === "togglePhone") {
-      const key = id === "toggleAddress" ? "showAddress" : "showPhone";
-      CONFIG[key] = !CONFIG[key];
-      e.target.classList.toggle("on", CONFIG[key]);
-      saveConfig();
-      updateHeader();
     }
   });
 
