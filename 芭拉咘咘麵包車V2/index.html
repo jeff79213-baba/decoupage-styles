@@ -422,6 +422,64 @@ header {
 }
 .voiceResultTable .statusYes { color: #27ae60; }
 .voiceResultTable .statusNo { color: #e74c3c; }
+
+/* 庫存設定面板 */
+.stockPanel { padding:4px 0; }
+.stockCat { margin-bottom:14px; }
+.stockCatHeader {
+  display:flex;align-items:center;gap:8px;margin-bottom:6px;
+  font-size:13px;font-weight:600;color:var(--primary);
+}
+.stockCatHeader .catDel { margin-left:auto;font-size:12px;color:#ccc;cursor:pointer;border:none;background:none;padding:2px 6px; }
+.stockCatHeader .catDel:hover { color:#e74c3c; }
+.stockItem {
+  background:var(--card);border:1px solid #f0e8e0;border-radius:8px;
+  padding:8px 10px;margin-bottom:4px;transition:opacity .2s;
+}
+.stockItem.dragging { opacity:.4; }
+.stockItem.dragOver { border-color:var(--primary);background:#FFF8F0; }
+.stockItemRow { display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap; }
+.stockItemRow .dragHandle { cursor:grab;font-size:14px;color:#bbb;user-select:none;flex-shrink:0; }
+.stockItemRow .itemName { flex:1;font-size:13px;font-weight:600;cursor:pointer;color:var(--text);min-width:0; }
+.stockItemRow .itemName:hover { color:var(--primary); }
+.stockItemRow .itemDel { font-size:12px;color:#ccc;cursor:pointer;border:none;background:none;padding:2px 4px;flex-shrink:0; }
+.stockItemRow .itemDel:hover { color:#e74c3c; }
+.stockItemRow .stockInput { width:55px;padding:4px 6px;border:1px solid #ddd;border-radius:6px;font-size:13px;text-align:center;flex-shrink:0; }
+.stockItemRow .stockLabel { font-size:12px;color:#888;flex-shrink:0; }
+.priceGroup { display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:12px;color:var(--text); }
+.priceGroup .priceItem { display:flex;align-items:center;gap:2px;background:#f9f5f0;border-radius:4px;padding:2px 6px; }
+.priceGroup .priceItem input { width:40px;padding:2px 4px;border:1px solid #ddd;border-radius:4px;font-size:12px;text-align:center; }
+.priceGroup .priceAdd { font-size:11px;color:var(--primary);cursor:pointer;border:1px dashed var(--primary);border-radius:4px;background:none;padding:2px 6px; }
+.stockAddBtn { display:block;width:100%;padding:6px;border:1px dashed #ddd;border-radius:6px;background:none;font-size:12px;color:#999;cursor:pointer;text-align:center;margin-top:4px; }
+.stockAddBtn:hover { border-color:var(--primary);color:var(--primary); }
+.stockCatAdd { display:block;width:100%;padding:8px;border:1.5px dashed var(--primary);border-radius:8px;background:none;font-size:13px;color:var(--primary);cursor:pointer;text-align:center;margin:6px 0; }
+.stockCatAdd:hover { background:#FFF8F0; }
+.stockFooter { position:sticky;bottom:0;background:var(--card);padding:10px 0 0;border-top:1px solid #eee;margin-top:8px; }
+.stockFooter .aiRow { display:flex;gap:6px;margin-bottom:8px; }
+.stockFooter .aiRow input { flex:1;padding:8px;border:1.5px solid #ddd;border-radius:8px;font-size:13px; }
+.stockFooter .aiRow button { padding:8px 14px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;font-size:13px;flex-shrink:0; }
+.stockFooter .actionRow { display:flex;gap:8px; }
+.stockFooter .actionRow button { flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:14px; }
+.stockFooter .actionRow .btnSave { border:none;background:var(--primary);color:#fff; }
+.stockFooter .actionRow .btnCancel { border:1px solid #ddd;background:var(--card);color:#888; }
+
+/* 歷史品項彈窗 */
+.historyOverlay {
+  position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:999;
+  display:flex;align-items:center;justify-content:center;
+}
+.historyBox {
+  background:#fff;border-radius:12px;padding:20px;max-width:360px;width:90%;max-height:70vh;overflow-y:auto;
+}
+.historyBox h3 { font-size:15px;margin-bottom:10px; }
+.historyBox .histItem {
+  padding:8px 10px;border:1px solid #f0e8e0;border-radius:6px;margin-bottom:4px;
+  font-size:13px;cursor:pointer;transition:background .15s;
+}
+.historyBox .histItem:hover { background:#FFF8F0;border-color:var(--primary); }
+.historyBox .histNew { display:flex;gap:6px;margin-top:10px; }
+.historyBox .histNew input { flex:1;padding:8px;border:1.5px solid #ddd;border-radius:6px;font-size:13px; }
+.historyBox .histNew button { padding:8px 12px;border:none;border-radius:6px;background:var(--primary);color:#fff;cursor:pointer;font-size:13px; }
 </style>
 </head>
 <body>
@@ -1359,10 +1417,10 @@ function renderAdmin() {
       </div>
     </div>
     <div class="adminSection">
-      <h3>📦 庫存管理</h3>
-      <div style="font-size:13px;color:#888;margin-bottom:10px">每個品項的庫存在上方編輯時設定，庫存不足時菜單會自動顯示。</div>
+      <h3>📦 庫存設定</h3>
+      <div style="font-size:13px;color:#888;margin-bottom:10px">設定當日庫存、價格、分類與品項，確認後自動更新菜單。</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="bulkSetStock()" style="flex:1;padding:10px;border:1.5px solid var(--primary);border-radius:8px;background:var(--card);color:var(--primary);cursor:pointer;font-size:13px">批量設定庫存</button>
+        <button onclick="showStockPanel()" style="flex:1;padding:10px;border:1.5px solid var(--primary);border-radius:8px;background:var(--card);color:var(--primary);cursor:pointer;font-size:13px">📋 庫存設定</button>
         <button onclick="syncStockToFirebase()" style="flex:1;padding:10px;border:1.5px solid var(--accent);border-radius:8px;background:var(--card);color:var(--accent);cursor:pointer;font-size:13px">🔄 同步到 Firebase</button>
         <button id="voiceBtn" onclick="startVoiceInput()">🤖 智能輸入</button>
       </div>
@@ -1802,58 +1860,297 @@ function inlineUpdateStock(input) {
   if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
 }
 
-// ============ STOCK BULK OPS ============
-function bulkSetStock() {
-  const items = [];
+// ============ 庫存設定面板 ============
+let _stockData = null;
+
+function showStockPanel(aiItems) {
+  _stockData = [];
   CATEGORIES.forEach(cat => {
+    const c = { name: cat.name, items: [] };
     cat.items.forEach(item => {
       const s = STOCK[item.name]?.stock;
-      items.push({ name: item.name, stock: s !== undefined && s !== null ? s : '' });
+      c.items.push({
+        name: item.name, unit: item.unit || "個",
+        prices: JSON.parse(JSON.stringify(item.prices)),
+        stock: s !== undefined && s !== null ? s : 0
+      });
     });
+    _stockData.push(c);
   });
-  if (!items.length) { showToast("沒有品項可設定"); return; }
-  let html = items.map((item, i) =>
-    `<div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
-      <span style="flex:1;font-size:13px">${item.name}</span>
-      <input type="number" min="0" id="bs_${i}" value="${item.stock}" style="width:70px;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:13px">
-    </div>`
-  ).join("");
-  const modal = document.createElement("div");
-  modal.className = "modalOverlay open";
-  modal.innerHTML = `<div class="modalBox" style="max-width:500px">
-    <h2>批量設定庫存</h2>
-    <div style="margin-bottom:10px;font-size:13px;color:#888">設定每個品項的庫存數量：</div>
-    <div style="max-height:400px;overflow-y:auto">${html}</div>
-    <div style="display:flex;gap:8px;margin-top:12px">
-      <button onclick="execBulkStock()" style="flex:1;padding:10px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;font-size:14px">儲存</button>
-      <button onclick="this.closest('.modalOverlay').remove()" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;background:var(--card);cursor:pointer;font-size:14px">取消</button>
-    </div>
-  </div>`;
-  document.body.appendChild(modal);
-  window._bulkStockItems = items;
+  if (aiItems) mergeAIItems(aiItems);
+  renderStockPanel();
 }
 
-function execBulkStock() {
-  const items = window._bulkStockItems || [];
-  let changed = 0;
-  items.forEach((item, i) => {
-    const input = document.getElementById("bs_" + i);
-    if (!input) return;
-    const val = input.value.trim();
-    if (val !== "") {
-      const num = parseInt(val);
-      if (!isNaN(num) && num >= 0) {
-        STOCK[item.name] = { stock: num };
-        changed++;
+function mergeAIItems(aiItems) {
+  aiItems.forEach(ai => {
+    for (const cat of _stockData) {
+      const found = cat.items.find(i => i.name === ai.name);
+      if (found) {
+        found.stock = ai.stock;
+        if (ai.price !== null && ai.price !== undefined) {
+          const p = found.prices.find(pp => pp.label === "1");
+          if (p) p.price = ai.price;
+          else found.prices.unshift({ label: "1", price: ai.price });
+        }
+        return;
       }
     }
+    let last = _stockData[_stockData.length - 1];
+    if (!last) { last = { name: "未分類", items: [] }; _stockData.push(last); }
+    last.items.push({
+      name: ai.name, unit: "個",
+      prices: ai.price !== null && ai.price !== undefined ? [{ label: "1", price: ai.price }] : [],
+      stock: ai.stock
+    });
   });
-  saveStockToFirebase();
+}
+
+function renderStockPanel() {
+  const existing = document.querySelector(".modalOverlay.open");
+  if (existing) existing.remove();
+
+  let html = "";
+  _stockData.forEach((cat, ci) => {
+    let itemsHtml = cat.items.map((item, ii) => `
+      <div class="stockItem" draggable="true" data-ci="${ci}" data-ii="${ii}">
+        <div class="stockItemRow">
+          <span class="dragHandle" data-ci="${ci}" data-ii="${ii}">↕</span>
+          <span class="itemName" onclick="stockShowHistory(${ci},${ii})">${escHtml(item.name)}</span>
+          <span class="stockLabel">庫存</span>
+          <input class="stockInput" type="number" min="0" value="${item.stock}" onchange="_stockData[${ci}].items[${ii}].stock=parseInt(this.value)||0">
+          <button class="itemDel" onclick="stockRemoveItem(${ci},${ii})">✕</button>
+        </div>
+        <div class="stockItemRow">
+          <div class="priceGroup">
+            ${item.prices.map((p, pi) => `
+              <span class="priceItem">
+                ${escHtml(p.label)}${escHtml(item.unit)}＄<input value="${p.price}" onchange="_stockData[${ci}].items[${ii}].prices[${pi}].price=parseInt(this.value)||0">
+              </span>
+            `).join("")}
+            <button class="priceAdd" onclick="stockAddPrice(${ci},${ii})">＋</button>
+          </div>
+        </div>
+      </div>
+    `).join("");
+
+    html += `
+      <div class="stockCat" data-ci="${ci}">
+        <div class="stockCatHeader">
+          <span>─ ${escHtml(cat.name)} ─</span>
+          <button class="catDel" onclick="stockRemoveCategory(${ci})">✕ 刪除此分類</button>
+        </div>
+        <div class="stockItems" data-ci="${ci}">${itemsHtml}</div>
+        <button class="stockAddBtn" onclick="stockShowHistory(${ci},-1)">＋ 新增品項到此分類</button>
+      </div>
+    `;
+  });
+
+  const modal = document.createElement("div");
+  modal.className = "modalOverlay open";
+  modal.style.overflow = "auto";
+  modal.innerHTML = `
+    <div class="modalBox" style="max-width:520px;margin:10px auto;max-height:95vh;display:flex;flex-direction:column;">
+      <div style="padding:0 0 6px;position:sticky;top:0;background:#fff;z-index:2;">
+        <h2 style="font-size:17px;">📋 庫存設定</h2>
+        <div style="font-size:12px;color:#888">點品項名稱可替換歷史品項，↕可拖曳移動到其他分類</div>
+      </div>
+      <div class="stockPanel" style="flex:1;overflow-y:auto;padding:4px 0 8px;">
+        ${html}
+        <button class="stockCatAdd" onclick="stockAddCategory()">＋ 新增分類</button>
+      </div>
+      <div class="stockFooter">
+        <div class="aiRow">
+          <input id="stockAIInput" placeholder="🤖 今天做了菠蘿麵包15個 奶油麵包20個…">
+          <button onclick="stockAISubmit()">送出</button>
+        </div>
+        <div class="actionRow">
+          <button class="btnSave" onclick="stockSave()">✔ 儲存</button>
+          <button class="btnCancel" onclick="this.closest('.modalOverlay.open').remove();_stockData=null">✕ 取消</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  setTimeout(() => document.getElementById("stockAIInput")?.focus(), 300);
+  initStockDragDrop();
+}
+
+function escHtml(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+function stockRemoveItem(ci, ii) {
+  _stockData[ci].items.splice(ii, 1);
+  renderStockPanel();
+}
+
+function stockRemoveCategory(ci) {
+  if (_stockData[ci].items.length) { showToast("請先清空此分類的品項再刪除"); return; }
+  _stockData.splice(ci, 1);
+  renderStockPanel();
+}
+
+function stockAddCategory() {
+  const name = prompt("請輸入新分類名稱：");
+  if (!name || !name.trim()) return;
+  _stockData.push({ name: name.trim(), items: [] });
+  renderStockPanel();
+}
+
+function stockAddPrice(ci, ii) {
+  _stockData[ci].items[ii].prices.push({ label: "1", price: 0 });
+  renderStockPanel();
+}
+
+function getHistoryItems() {
+  const active = new Set();
+  _stockData.forEach(cat => cat.items.forEach(item => active.add(item.name)));
+  const all = new Set();
+  Object.keys(STOCK).forEach(k => all.add(k));
+  CATEGORIES.forEach(cat => cat.items.forEach(item => all.add(item.name)));
+  return [...all].filter(n => !active.has(n)).sort();
+}
+
+function stockShowHistory(ci, ii) {
+  const hist = getHistoryItems();
+  const overlay = document.createElement("div");
+  overlay.className = "historyOverlay";
+  overlay.onclick = () => overlay.remove();
+  overlay.innerHTML = `
+    <div class="historyBox" onclick="event.stopPropagation()">
+      <h3>${ii >= 0 ? "替換品項" : "新增品項"}</h3>
+      <div style="font-size:12px;color:#888;margin-bottom:8px">選擇歷史品項或輸入新名稱：</div>
+      ${hist.length ? hist.map(name => `<div class="histItem" onclick="stockPickHistory(${ci},${ii},'${escHtml(name)}')">${escHtml(name)}</div>`).join("") : '<div style="font-size:12px;color:#ccc;margin-bottom:8px">尚無歷史品項</div>'}
+      <div class="histNew">
+        <input id="histNewName" placeholder="輸入新品項名稱">
+        <button onclick="stockPickHistory(${ci},${ii},document.getElementById('histNewName').value.trim())">確定</button>
+      </div>
+      <button style="margin-top:8px;padding:6px 14px;border:1px solid #ddd;border-radius:6px;background:var(--card);cursor:pointer;font-size:12px" onclick="this.closest('.historyOverlay').remove()">取消</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  setTimeout(() => document.getElementById("histNewName")?.focus(), 200);
+}
+
+function stockPickHistory(ci, ii, name) {
+  if (!name) { showToast("請輸入或選擇品項名稱"); return; }
+  document.querySelector(".historyOverlay")?.remove();
+  if (ii >= 0) {
+    _stockData[ci].items[ii].name = name;
+  } else {
+    _stockData[ci].items.push({ name, unit: "個", prices: [{ label: "1", price: 0 }], stock: 0 });
+  }
+  renderStockPanel();
+}
+
+function stockAISubmit() {
+  const inp = document.getElementById("stockAIInput");
+  if (!inp || !inp.value.trim()) { showToast("請輸入內容"); return; }
+  processVoiceText(inp.value.trim(), true);
+}
+
+function initStockDragDrop() {
+  let dragSrc = null;
+  document.querySelectorAll(".stockItem[draggable]").forEach(el => {
+    el.addEventListener("dragstart", e => {
+      dragSrc = { ci: parseInt(el.dataset.ci), ii: parseInt(el.dataset.ii) };
+      el.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.addEventListener("dragend", () => { el.classList.remove("dragging"); document.querySelectorAll(".stockItem").forEach(x => x.classList.remove("dragOver")); });
+    el.addEventListener("dragover", e => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; el.classList.add("dragOver"); });
+    el.addEventListener("dragleave", () => el.classList.remove("dragOver"));
+    el.addEventListener("drop", e => {
+      e.preventDefault(); el.classList.remove("dragOver");
+      if (!dragSrc) return;
+      const targetCi = parseInt(el.dataset.ci), targetIi = parseInt(el.dataset.ii);
+      if (dragSrc.ci === targetCi && dragSrc.ii === targetIi) return;
+      const item = _stockData[dragSrc.ci].items.splice(dragSrc.ii, 1)[0];
+      _stockData[targetCi].items.splice(targetIi, 0, item);
+      dragSrc = null;
+      renderStockPanel();
+    });
+  });
+
+  document.querySelectorAll(".stockItems").forEach(zone => {
+    zone.addEventListener("dragover", e => e.preventDefault());
+    zone.addEventListener("drop", e => {
+      e.preventDefault();
+      if (!dragSrc) return;
+      const targetCi = parseInt(zone.dataset.ci);
+      const item = _stockData[dragSrc.ci].items.splice(dragSrc.ii, 1)[0];
+      _stockData[targetCi].items.push(item);
+      dragSrc = null;
+      renderStockPanel();
+    });
+  });
+
+  // Touch DnD
+  let touchEl = null, touchClone = null, touchSrc = null;
+  document.querySelectorAll(".dragHandle").forEach(h => {
+    h.addEventListener("touchstart", e => {
+      const el = h.closest(".stockItem");
+      if (!el) return;
+      touchSrc = { ci: parseInt(el.dataset.ci), ii: parseInt(el.dataset.ii) };
+      touchEl = el; el.classList.add("dragging");
+      const rect = el.getBoundingClientRect();
+      touchClone = el.cloneNode(true);
+      touchClone.style.cssText = `position:fixed;width:${rect.width}px;opacity:.7;pointer-events:none;z-index:999;background:#fff;border:2px solid var(--primary);border-radius:8px;padding:8px;`;
+      document.body.appendChild(touchClone);
+      moveTouchClone(e);
+    }, { passive: true });
+  });
+  function moveTouchClone(e) {
+    if (!touchClone) return;
+    const t = e.touches[0];
+    touchClone.style.left = (t.clientX - 60) + "px";
+    touchClone.style.top = (t.clientY - 20) + "px";
+    document.querySelectorAll(".stockItems").forEach(z => {
+      const r = z.getBoundingClientRect();
+      z.style.background = (t.clientY >= r.top && t.clientY <= r.bottom) ? "rgba(196,132,59,.08)" : "";
+    });
+  }
+  document.addEventListener("touchmove", moveTouchClone, { passive: true });
+  document.addEventListener("touchend", e => {
+    if (!touchSrc || !touchEl) return;
+    const t = e.changedTouches[0];
+    let targetCi = -1;
+    document.querySelectorAll(".stockItems").forEach(z => {
+      const r = z.getBoundingClientRect();
+      if (t.clientY >= r.top && t.clientY <= r.bottom) targetCi = parseInt(z.dataset.ci);
+      z.style.background = "";
+    });
+    if (targetCi >= 0 && targetCi !== touchSrc.ci) {
+      const item = _stockData[touchSrc.ci].items.splice(touchSrc.ii, 1)[0];
+      _stockData[targetCi].items.push(item);
+      renderStockPanel();
+    }
+    touchEl.classList.remove("dragging");
+    if (touchClone) { touchClone.remove(); touchClone = null; }
+    touchEl = null; touchSrc = null;
+  }, { passive: true });
+}
+
+async function stockSave() {
+  const newCats = JSON.parse(JSON.stringify(_stockData));
+  newCats.forEach(cat => cat.items.forEach(item => delete item.stock));
+  CATEGORIES.length = 0;
+  newCats.forEach(c => CATEGORIES.push(c));
+  saveCategories();
+
+  _stockData.forEach(cat => cat.items.forEach(item => {
+    STOCK[item.name] = { stock: item.stock };
+  }));
+  const ok = await saveStockToFirebase();
+  if (!ok) return;
   document.querySelector(".modalOverlay.open")?.remove();
-  window._bulkStockItems = null;
+  _stockData = null;
   if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
   if (document.getElementById("view-admin").classList.contains("active")) renderAdminItems();
-  showToast(`已更新 ${changed} 個品項的庫存`);
+  showToast("庫存設定已儲存");
+}
+
+function saveCategories() {
+  localStorage.setItem("bala_categories", JSON.stringify(CATEGORIES));
+  db.collection("shops").doc(SHOP_ID).update({ categories: CATEGORIES }).catch(() => {});
 }
 
 async function syncStockToFirebase() {
@@ -2481,18 +2778,20 @@ function showTextInput() {
   }, 300);
 }
 
-async function processVoiceText(text) {
+async function processVoiceText(text, fromPanel) {
   if (!text) { showToast("請輸入或說出內容"); return; }
 
-  const modal = document.getElementById("voiceModal");
-  const content = document.getElementById("voiceModalContent");
-
-  content.innerHTML = `
-    <div style="text-align:center;padding:20px">
-      <div style="font-size:16px;margin-bottom:10px">🤔 AI 解析中...</div>
-      <div style="font-size:13px;color:#888">「${text}」</div>
-    </div>
-  `;
+  let modal;
+  if (!fromPanel) {
+    modal = document.getElementById("voiceModal");
+    const content = document.getElementById("voiceModalContent");
+    content.innerHTML = `
+      <div style="text-align:center;padding:20px">
+        <div style="font-size:16px;margin-bottom:10px">🤔 AI 解析中...</div>
+        <div style="font-size:13px;color:#888">「${text}」</div>
+      </div>
+    `;
+  }
 
   try {
     const response = await fetch(GROQ_API_URL, {
@@ -2540,115 +2839,18 @@ async function processVoiceText(text) {
       result = JSON.parse(resultText.replace(/```json\s*/g, "").replace(/```\s*/g, ""));
     } catch(e) {
       showToast("AI 解析失敗，請再試一次");
-      modal.classList.remove("open");
+      if (modal) modal.classList.remove("open");
       return;
     }
 
-    showVoiceResult(result);
+    if (modal) modal.classList.remove("open");
+    showStockPanel(result.items);
   } catch(e) {
     console.error("GROQ 呼叫失敗", e);
     showToast("AI 連線失敗，請檢查 API 金鑰");
-    modal.classList.remove("open");
+    const m = document.getElementById("voiceModal");
+    if (m) m.classList.remove("open");
   }
-}
-
-function showVoiceResult(result) {
-  const modal = document.getElementById("voiceModal");
-  const content = document.getElementById("voiceModalContent");
-
-  const itemMap = {};
-  CATEGORIES.forEach(cat => {
-    cat.items.forEach(item => {
-      itemMap[item.name] = item;
-    });
-  });
-
-  let tableRows = "";
-  let hasItems = false;
-  let newItemCount = 0;
-
-  result.items.forEach((item, idx) => {
-    hasItems = true;
-    const sysItem = itemMap[item.name];
-    const isNew = !sysItem;
-    if (isNew) newItemCount++;
-
-    const priceDisplay = sysItem
-      ? sysItem.prices.map(p => `${p.label}${sysItem.unit||"個"} $${p.price}`).join(" / ")
-      : "";
-    const newPrice = item.price !== null && item.price !== undefined
-      ? `（AI 辨識價格：$${item.price}）` : "";
-    const statusText = item.stock === 0 ? "沒做" : "有做";
-    const statusClass = item.stock === 0 ? "statusNo" : "statusYes";
-    const tag = isNew ? '<span style="font-size:11px;color:#C4843B;background:#FFF8F0;border-radius:4px;padding:2px 6px;margin-left:4px">🆕 新品項</span>' : "";
-
-    tableRows += `<tr>
-      <td><span class="itemName">${item.name}${tag}</span></td>
-      <td><span class="itemPrice">${priceDisplay} ${newPrice}</span></td>
-      <td class="itemStock"><input type="number" min="0" id="vr_${idx}" value="${item.stock}"></td>
-      <td><span class="${statusClass}">${statusText}</span></td>
-    </tr>`;
-  });
-
-  const newItemNote = newItemCount > 0
-    ? `<div style="font-size:12px;color:#C4843B;margin-top:4px">🆕 ${newItemCount} 個新品項將自動加入庫存</div>`
-    : "";
-
-  content.innerHTML = `
-    <h2>📋 確認庫存內容</h2>
-    <div style="font-size:13px;color:#888;margin-bottom:8px">
-      以下為 AI 辨識結果，請確認無誤後按「套用」
-    </div>
-    ${hasItems ? `
-    <table class="voiceResultTable">
-      <tr>
-        <th>品項</th>
-        <th>價格</th>
-        <th>庫存</th>
-        <th>狀態</th>
-      </tr>
-      ${tableRows}
-    </table>
-    ` : '<div style="text-align:center;padding:20px;color:#888">⚠️ 沒有辨識到任何品項</div>'}
-    ${newItemNote}
-    <div style="font-size:12px;color:#999;margin-top:6px">沒列到的品項保持原庫存不變</div>
-    <div style="display:flex;gap:8px;margin-top:14px">
-      <button onclick="execVoiceSave()" style="flex:1;padding:10px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;font-size:14px">✔ 套用</button>
-      <button onclick="document.getElementById('voiceModal').classList.remove('open')" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;background:var(--card);cursor:pointer;font-size:14px">✕ 取消</button>
-    </div>
-  `;
-
-  window._voiceResult = result;
-}
-
-async function execVoiceSave() {
-  const result = window._voiceResult;
-  if (!result) return;
-
-  let changed = 0;
-  result.items.forEach((item, idx) => {
-    const input = document.getElementById("vr_" + idx);
-    let num;
-    if (input) {
-      const val = input.value.trim();
-      num = val !== "" ? parseInt(val) : item.stock;
-    } else {
-      num = item.stock;
-    }
-    if (!isNaN(num) && num >= 0) {
-      STOCK[item.name] = { stock: num };
-      changed++;
-    }
-  });
-
-  const ok = await saveStockToFirebase();
-  if (!ok) return;
-  document.getElementById("voiceModal").classList.remove("open");
-  window._voiceResult = null;
-
-  if (document.getElementById("view-menu").classList.contains("active")) renderMenu();
-  if (document.getElementById("view-admin").classList.contains("active")) renderAdminItems();
-  showToast(`已更新 ${changed} 個品項的庫存`);
 }
 
 document.addEventListener("DOMContentLoaded", init);
