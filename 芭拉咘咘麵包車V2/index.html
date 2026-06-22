@@ -391,21 +391,13 @@ header {
 }
 .toast.show { opacity: 1; }
 
-/* 語音輸入按鈕 */
-.voiceBtn {
-  width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--primary);
-  background: var(--card); color: var(--primary); font-size: 20px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+/* 智能輸入按鈕 */
+#voiceBtn {
+  flex:1; padding:10px; border:1.5px solid var(--primary); border-radius:8px;
+  background:var(--card); color:var(--primary); cursor:pointer; font-size:13px;
   transition: all 0.3s;
 }
-.voiceBtn.listening {
-  background: #e74c3c; color: #fff; border-color: #e74c3c; animation: pulse 1s infinite;
-}
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-.voiceBtn:active { transform: scale(0.95); }
+#voiceBtn:active { transform: scale(0.95); }
 
 /* 語音範例提示 */
 .voiceHint {
@@ -1370,7 +1362,7 @@ function renderAdmin() {
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button onclick="bulkSetStock()" style="flex:1;padding:10px;border:1.5px solid var(--primary);border-radius:8px;background:var(--card);color:var(--primary);cursor:pointer;font-size:13px">批量設定庫存</button>
         <button onclick="syncStockToFirebase()" style="flex:1;padding:10px;border:1.5px solid var(--accent);border-radius:8px;background:var(--card);color:var(--accent);cursor:pointer;font-size:13px">🔄 同步到 Firebase</button>
-        <button class="voiceBtn" id="voiceBtn" onclick="startVoiceInput()" title="語音輸入庫存（長按5秒更換API金鑰）">🎤</button>
+        <button id="voiceBtn" onclick="startVoiceInput()">🤖 智能輸入</button>
       </div>
     </div>
     <div class="adminSection">
@@ -2395,7 +2387,7 @@ async function init() {
     renderStats();
   });
 
-  // 語音按鈕長按 5 秒更換 API Key
+  // 智能輸入長按 8 秒更換 API Key
   const voiceBtn = document.getElementById("voiceBtn");
   if (voiceBtn) {
     let pressTimer = null;
@@ -2403,7 +2395,7 @@ async function init() {
       pressTimer = setTimeout(() => {
         pressTimer = null;
         showGroqKeyInput();
-      }, 5000);
+      }, 8000);
     });
     voiceBtn.addEventListener("mouseup", () => { clearTimeout(pressTimer); });
     voiceBtn.addEventListener("mouseleave", () => { clearTimeout(pressTimer); });
@@ -2411,14 +2403,14 @@ async function init() {
       pressTimer = setTimeout(() => {
         pressTimer = null;
         showGroqKeyInput();
-      }, 5000);
+      }, 8000);
     });
     voiceBtn.addEventListener("touchend", () => { clearTimeout(pressTimer); });
     voiceBtn.addEventListener("touchcancel", () => { clearTimeout(pressTimer); });
   }
 }
 
-// ============ VOICE INPUT (GROQ) ============
+// ============ 智能輸入 (GROQ) ============
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "llama-3.3-70b-versatile";
 
@@ -2429,8 +2421,6 @@ function getGroqKey() {
 function saveGroqKey(key) {
   localStorage.setItem("bala_groq_key", key);
 }
-
-let voiceLongPressTimer = null;
 
 function showGroqKeyInput() {
   const modal = document.getElementById("voiceModal");
@@ -2446,7 +2436,7 @@ function showGroqKeyInput() {
       style="width:100%;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box"
       placeholder="gsk_...">
     <div style="display:flex;gap:8px;margin-top:14px">
-      <button onclick="saveGroqKey(document.getElementById('groqKeyInput').value.trim());document.getElementById('voiceModal').classList.remove('open');showToast('API 金鑰已儲存')"
+      <button onclick="saveGroqKey(document.getElementById('groqKeyInput').value.trim());showTextInput();showToast('API 金鑰已儲存')"
         style="flex:1;padding:10px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;font-size:14px">儲存</button>
       <button onclick="document.getElementById('voiceModal').classList.remove('open')"
         style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;background:var(--card);cursor:pointer;font-size:14px">取消</button>
@@ -2461,58 +2451,32 @@ async function startVoiceInput() {
     return;
   }
 
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    showToast("您的瀏覽器不支援語音辨識，請使用 Chrome");
-    return;
-  }
+  showTextInput();
+}
 
-  const btn = document.getElementById("voiceBtn");
-  btn.classList.add("listening");
-
-  const recognition = new SpeechRecognition();
-  recognition.lang = "zh-TW";
-  recognition.continuous = false;
-  recognition.interimResults = false;
-
-  recognition.onresult = async (event) => {
-    btn.classList.remove("listening");
-    const text = event.results[0][0].transcript;
-    await processVoiceText(text);
-  };
-
-  recognition.onerror = (event) => {
-    btn.classList.remove("listening");
-    showToast("語音辨識失敗：" + event.error);
-  };
-
-  recognition.onend = () => {
-    btn.classList.remove("listening");
-  };
-
+function showTextInput() {
   const modal = document.getElementById("voiceModal");
   const content = document.getElementById("voiceModalContent");
   content.innerHTML = `
-    <div style="text-align:center;padding:20px">
-      <div style="font-size:48px;margin-bottom:10px">🎤</div>
-      <div style="font-size:16px;font-weight:600;margin-bottom:8px">正在聆聽...</div>
+    <div style="padding:20px">
+      <div style="font-size:18px;font-weight:700;margin-bottom:6px">🤖 智能輸入</div>
       <div class="voiceHint">
-        <strong>💡 試試這樣說：</strong><br>
-        「菠蘿20個、蔥花15個，紅豆今天沒做」<br>
-        可以同時說價格：「菠蘿1個30、做了20個」<br>
-        沒提到的品項維持原庫存
+        💡 例如：<br>
+        「今天做了菠蘿麵包15個 奶油麵包20個 大蒜麵包5個」
       </div>
-      <div style="font-size:13px;color:#888">也可以直接打字：</div>
       <div style="display:flex;gap:8px;margin-top:8px">
-        <input id="voiceTextInput" style="flex:1;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:14px" placeholder="例如：菠蘿20 蔥花15">
+        <input id="voiceTextInput" style="flex:1;padding:10px;border:1.5px solid #ddd;border-radius:8px;font-size:14px;box-sizing:border-box" placeholder="今天做了菠蘿麵包15個 奶油麵包20個 大蒜麵包5個">
         <button onclick="processVoiceText(document.getElementById('voiceTextInput').value.trim())" style="padding:10px 16px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;font-size:14px">送出</button>
       </div>
+      <div style="margin-top:10px;font-size:12px;color:#999">📱 可用手機鍵盤的麥克風圖示直接說話轉文字</div>
       <button onclick="document.getElementById('voiceModal').classList.remove('open')" style="margin-top:12px;padding:8px 20px;border:1px solid #ddd;border-radius:8px;background:var(--card);cursor:pointer;font-size:13px">取消</button>
     </div>
   `;
   modal.classList.add("open");
-
-  recognition.start();
+  setTimeout(() => {
+    const inp = document.getElementById("voiceTextInput");
+    if (inp) inp.focus();
+  }, 300);
 }
 
 async function processVoiceText(text) {
@@ -2528,16 +2492,6 @@ async function processVoiceText(text) {
     </div>
   `;
 
-  const itemList = [];
-  CATEGORIES.forEach(cat => {
-    cat.items.forEach(item => {
-      const priceStr = item.prices.map(p =>
-        `${p.label}${item.unit||"個"}$${p.price}`
-      ).join("、");
-      itemList.push({ name: item.name, unit: item.unit||"個", prices: priceStr });
-    });
-  });
-
   try {
     const response = await fetch(GROQ_API_URL, {
       method: "POST",
@@ -2550,26 +2504,24 @@ async function processVoiceText(text) {
         messages: [
           {
             role: "system",
-            content: `你是一個庫存管理助手。使用者的店家品項如下：
-${JSON.stringify(itemList, null, 2)}
-
-使用者的輸入是今天的烘焙數量，請解析並回傳 JSON（不要其他文字）：
+            content: `你是一個烘焙品項庫存管理助手。請解析使用者的輸入，回傳 JSON（不要其他文字）：
 {
   "items": [
     {
-      "name": "品項完整名稱（必須與上述清單完全一致）",
-      "stock": 數量（數字，如果說「沒做」就是0）,
+      "name": "品項名稱（從輸入中提取）",
+      "stock": 數量（數字，如果說「沒做」「沒有」就是0）,
       "price": 如果提到價格就放數字，沒提到就 null
     }
   ],
-  "unmatched": ["無法對應到品項的文字"]
+  "unmatched": ["無法解析的文字"]
 }
 
 規則：
-1. name 必須與上述品項清單完全一致，不可簡稱或改名
+1. 品項名稱直接用使用者說的名稱，不要改寫
 2. 如果使用者說「沒做」、「沒有」、「不用」等，stock 設為 0
 3. 沒提到的品項不要放進 items 裡
-4. 一個品項如果有多個價格，使用者提到的價格可能是其中一個；如果價格跟系統不同，以使用者說的為準`
+4. 價格有用戶說的就用，沒說就 null
+5. 數量預設單位為「個」，除非有明確說不同單位`
           },
           { role: "user", content: text }
         ],
@@ -2611,41 +2563,40 @@ function showVoiceResult(result) {
 
   let tableRows = "";
   let hasItems = false;
+  let newItemCount = 0;
 
   result.items.forEach(item => {
-    const sysItem = itemMap[item.name];
-    if (!sysItem) return;
     hasItems = true;
-    const priceDisplay = sysItem.prices.map(p =>
-      `${p.label}${sysItem.unit||"個"} $${p.price}`
-    ).join(" / ");
+    const sysItem = itemMap[item.name];
+    const isNew = !sysItem;
+    if (isNew) newItemCount++;
+
+    const priceDisplay = sysItem
+      ? sysItem.prices.map(p => `${p.label}${sysItem.unit||"個"} $${p.price}`).join(" / ")
+      : "";
     const newPrice = item.price !== null && item.price !== undefined
       ? `（AI 辨識價格：$${item.price}）` : "";
     const statusText = item.stock === 0 ? "沒做" : "有做";
     const statusClass = item.stock === 0 ? "statusNo" : "statusYes";
-    const stockValue = item.stock;
+    const tag = isNew ? '<span style="font-size:11px;color:#C4843B;background:#FFF8F0;border-radius:4px;padding:2px 6px;margin-left:4px">🆕 新品項</span>' : "";
 
     tableRows += `<tr>
-      <td><span class="itemName">${item.name}</span></td>
+      <td><span class="itemName">${item.name}${tag}</span></td>
       <td><span class="itemPrice">${priceDisplay} ${newPrice}</span></td>
-      <td class="itemStock"><input type="number" min="0" id="vr_${item.name}" value="${stockValue}"></td>
+      <td class="itemStock"><input type="number" min="0" id="vr_${item.name}" value="${item.stock}"></td>
       <td><span class="${statusClass}">${statusText}</span></td>
     </tr>`;
   });
 
-  let skippedRows = "";
-  result.items.forEach(item => {
-    if (!itemMap[item.name]) {
-      skippedRows += `<div style="font-size:12px;color:#e74c3c;margin:2px 0">⚠️ 找不到「${item.name}」</div>`;
-    }
-  });
+  const newItemNote = newItemCount > 0
+    ? `<div style="font-size:12px;color:#C4843B;margin-top:4px">🆕 ${newItemCount} 個新品項將自動加入庫存</div>`
+    : "";
 
   content.innerHTML = `
     <h2>📋 確認庫存內容</h2>
     <div style="font-size:13px;color:#888;margin-bottom:8px">
       以下為 AI 辨識結果，請確認無誤後按「套用」
     </div>
-    ${skippedRows}
     ${hasItems ? `
     <table class="voiceResultTable">
       <tr>
@@ -2657,6 +2608,7 @@ function showVoiceResult(result) {
       ${tableRows}
     </table>
     ` : '<div style="text-align:center;padding:20px;color:#888">⚠️ 沒有辨識到任何品項</div>'}
+    ${newItemNote}
     <div style="font-size:12px;color:#999;margin-top:6px">沒列到的品項保持原庫存不變</div>
     <div style="display:flex;gap:8px;margin-top:14px">
       <button onclick="execVoiceSave()" style="flex:1;padding:10px;border:none;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;font-size:14px">✔ 套用</button>
@@ -2697,7 +2649,7 @@ function execVoiceSave() {
 document.addEventListener("DOMContentLoaded", init);
 </script>
 
-<!-- 語音輸入 Modal -->
+<!-- 智能輸入 Modal -->
 <div class="modalOverlay" id="voiceModal">
   <div class="modalBox" style="max-width:500px">
     <div id="voiceModalContent"></div>
