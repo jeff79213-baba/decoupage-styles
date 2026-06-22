@@ -444,10 +444,20 @@ header {
 .stockItemRow .siname:hover { color:var(--primary); }
 .stockItemRow .siunit { color:#bbb;font-size:11px;width:20px;flex-shrink:0;text-align:center; }
 .stockItemRow .siprice { color:#bbb;font-size:11px;white-space:nowrap;overflow:hidden;flex-shrink:0; }
-.stockItemRow .siqty { width:32px;padding:2px 3px;border:1px solid #ddd;border-radius:4px;font-size:11px;text-align:center;flex-shrink:0; }
-.stockItemRow .siqty:focus { border-color:var(--primary);outline:none; }
-.stockItemRow .sipriceinput { width:38px;padding:2px 3px;border:1px solid #ddd;border-radius:4px;font-size:11px;text-align:center;flex-shrink:0; }
-.stockItemRow .sipriceinput:focus { border-color:var(--primary);outline:none; }
+.stockItemRow .siqty {
+  width:30px;padding:2px 2px;border:1px solid transparent;border-radius:3px;
+  font-size:11px;text-align:center;flex-shrink:0;color:#bbb;background:transparent;cursor:pointer;
+}
+.stockItemRow .siqty:hover { border-color:#eee;background:#fafafa; }
+.stockItemRow .siqty:focus { border-color:var(--primary);color:var(--text);background:#fff;outline:none; }
+.stockItemRow .sipriceinput {
+  width:36px;padding:2px 2px;border:1px solid transparent;border-radius:3px;
+  font-size:11px;text-align:center;flex-shrink:0;color:#bbb;background:transparent;cursor:pointer;
+}
+.stockItemRow .sipriceinput:hover { border-color:#eee;background:#fafafa; }
+.stockItemRow .sipriceinput:focus { border-color:var(--primary);color:var(--text);background:#fff;outline:none; }
+.stockItemRow .sipricedel { border:none;background:none;font-size:9px;color:#ddd;cursor:pointer;padding:0 2px;flex-shrink:0;line-height:1; }
+.stockItemRow .sipricedel:hover { color:#e74c3c; }
 .stockItemRow .siunit { color:#bbb;font-size:11px;width:18px;flex-shrink:0;text-align:center; }
 .stockItemRow .siadd {
   border:1px dashed #ddd;border-radius:4px;background:none;cursor:pointer;
@@ -1935,8 +1945,9 @@ function renderStockPanel() {
     const moveOpts = _stockData.map((c, i) => i !== _stockSelCat ? `<option value="${i}">${escHtml(c.name)}</option>` : "").join("");
     itemsHtml = selCat.items.map((item, ii) => {
       const priceInputs = item.prices.map((p, pi) =>
-        `<input class="siqty" value="${escHtml(p.label)}" onchange="_stockData[${_stockSelCat}].items[${ii}].prices[${pi}].label=this.value">
-         <input class="sipriceinput" value="${p.price}" onchange="_stockData[${_stockSelCat}].items[${ii}].prices[${pi}].price=parseInt(this.value)||0">`
+        `<input class="siqty" value="${escHtml(p.label)}" onchange="_stockData[${_stockSelCat}].items[${ii}].prices[${pi}].label=this.value" title="點擊編輯數量">
+         <input class="sipriceinput" value="${p.price}" onchange="_stockData[${_stockSelCat}].items[${ii}].prices[${pi}].price=parseInt(this.value)||0" title="點擊編輯價格">
+         <button class="sipricedel" onclick="stockDelPriceTier(${_stockSelCat},${ii},${pi})" title="刪除這組價格">✕</button>`
       ).join("");
       return `
         <div class="stockItemRow">
@@ -1958,7 +1969,7 @@ function renderStockPanel() {
   const modal = document.createElement("div");
   modal.className = "modalOverlay open";
   modal.innerHTML = `
-    <div class="modalBox" style="max-width:520px;margin:10px auto;max-height:95vh;display:flex;flex-direction:column;">
+    <div class="modalBox" style="max-width:620px;margin:10px auto;max-height:95vh;display:flex;flex-direction:column;">
       <div style="padding:0 0 6px;flex-shrink:0;">
         <h2 style="font-size:17px;">📋 庫存設定</h2>
         <div style="font-size:12px;color:#888">點品項名稱可替換歷史品項</div>
@@ -2005,6 +2016,12 @@ function stockAddCategory() {
 
 function stockAddPriceTier(ci, ii) {
   _stockData[ci].items[ii].prices.push({ label: "1", price: 0 });
+  renderStockPanel();
+}
+
+function stockDelPriceTier(ci, ii, pi) {
+  if (_stockData[ci].items[ii].prices.length <= 1) { showToast("至少需保留一個價位"); return; }
+  _stockData[ci].items[ii].prices.splice(pi, 1);
   renderStockPanel();
 }
 
