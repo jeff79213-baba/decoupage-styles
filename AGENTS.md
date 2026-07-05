@@ -1,6 +1,48 @@
-# Firebase 專案管理
+# 專案管理與部署規則
 
-這個專案連接了 Firebase Firestore（專案: opencode-sk），可透過以下工具操作：
+## 📌 核心規則：一鍵「上傳部署」
+
+當我對使用者說「**上傳部署**」時，自動執行以下完整流程：
+
+### 第一步：判斷當前專案
+定位到 `C:\Users\TW-10\Documents\firebase雲端資料夾\對應專案\`
+（根據對話中編輯的檔案路徑自動判斷）
+
+### 第二步：安全檢查
+- 自動建立 `.gitignore`（`.env`、金鑰檔、`node_modules`）
+- 掃描檔名與程式碼中是否有寫死的機密資訊（key、secret、password、token 等）
+- ⚠️ 發現可疑 → 暫停並詢問您是否可上傳
+
+### 第三步：GitHub 推送（三種狀況）
+| 狀況 | 動作 |
+|------|------|
+| 無 `.git`（全新） | `git init` → 中文名轉英文 slug → `gh repo create --public` → push |
+| 有 `.git` 無 remote | `gh repo create --public` → push |
+| 已有 remote | `git add / commit / push` |
+
+### 第四步：啟用 GitHub Pages（新 repo 限定）
+- 若為第三狀況之「全新 repo」，自動啟用 GitHub Pages：
+  ```
+  gh api repos/jeff79213-baba/{repo}/pages -X POST --input <json>
+  ```
+- 若為既有 repo 已推送，跳過此步驟
+
+### 第五步：Firebase Hosting 部署
+- 檢查目錄下是否有 `firebase.json`
+- 有 → `firebase deploy --only hosting`
+- 無 → 跳過
+
+### 第六步：建立網址文件
+在專案根目錄建立 `網址.txt`，包含 GitHub URL ＋ GitHub Pages URL ＋ Firebase URL（如有）
+
+---
+
+## 舊專案（共用 repo）維持現狀
+- 蝶谷巴特風格小幫手、鍵盤彈鋼琴 → 仍共用 `decoupage-styles` repo
+- 芭拉咘咘麵包車V2 → 獨立 `balabubu-bakery` repo（已正確）
+- 未來新專案一律獨立 repo
+
+---
 
 ## 工具腳本（在 _tools/ 目錄下）
 
@@ -9,7 +51,6 @@
 node _tools\upload.js             # 上傳當前目錄
 node _tools\upload.js 專案資料夾   # 上傳指定資料夾
 ```
-這會將檔案上傳到 Firestore 路徑：`projects/{專案名}/files/{檔案路徑}`
 
 ### 刪除 Firebase 資料
 ```powershell
@@ -19,12 +60,7 @@ node _tools\delete.js delete 專案名            # 刪除整個專案
 node _tools\delete.js delete 專案名/檔案路徑   # 刪除單一檔案
 ```
 
-### 直接在 Firestore 建立專案
-```powershell
-node _tools\create-project.js 專案名稱
-```
-
-### 查詢 Firebase 資料（給 Telegram Bot 用）
+### 查詢 Firebase 資料
 ```powershell
 node _tools\query.js list              # 列出所有專案
 node _tools\query.js files 專案名       # 列出專案檔案
