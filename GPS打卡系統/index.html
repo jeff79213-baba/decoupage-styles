@@ -289,6 +289,7 @@ tr:hover td{background:#f8fafc}
       <div class="location-bar" id="locationBar">
         <div class="dot dot-gray" id="locationDot"></div>
         <span id="locationText">正在取得位置...</span>
+        <button type="button" onclick="retryLocation()" style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--primary);cursor:pointer;flex-shrink:0">重試</button>
       </div>
     </div>
 
@@ -545,9 +546,11 @@ async function doRegister() {
     employees.push({name, id, pw, role, createdAt: Date.now()});
     await db.collection(COLLECTION).doc("employees").set({list: employees});
     errEl.classList.add("hidden");
-    document.getElementById("loginSuccess").textContent = "註冊成功！請登入";
-    document.getElementById("loginSuccess").classList.remove("hidden");
     showLogin();
+    setTimeout(() => {
+      document.getElementById("loginSuccess").textContent = "註冊成功！請登入";
+      document.getElementById("loginSuccess").classList.remove("hidden");
+    }, 100);
   } catch(e) {
     errEl.textContent = "註冊失敗：" + e.message; errEl.classList.remove("hidden");
   }
@@ -618,26 +621,41 @@ function enterApp() {
 }
 
 // ============ LOCATION ============
+let geoWatchId = null;
+
 function initLocation() {
   if (!("geolocation" in navigator)) {
     document.getElementById("locationText").textContent = "您的瀏覽器不支援定位功能";
     document.getElementById("locationDot").className = "dot dot-red";
     return;
   }
-  navigator.geolocation.watchPosition(pos => {
+  startGeoWatch();
+}
+
+function startGeoWatch() {
+  if (geoWatchId !== null) navigator.geolocation.clearWatch(geoWatchId);
+  document.getElementById("locationText").textContent = "正在取得位置...";
+  document.getElementById("locationDot").className = "dot dot-gray";
+  geoWatchId = navigator.geolocation.watchPosition(pos => {
     currentLocation = {lat: pos.coords.latitude, lng: pos.coords.longitude};
     updateLocationUI();
   }, err => {
     let msg = "";
     switch(err.code) {
-      case 1: msg = "定位權限被拒絕，請至瀏覽器設定開啟定位權限"; break;
-      case 2: msg = "無法取得位置資訊，請確認GPS已開啟且在室外"; break;
-      case 3: msg = "定位逾時，請稍後再試或確認網路連線"; break;
+      case 1: msg = "定位權限被拒絕，請至手機「設定>隱私權>定位服務」開啟，並允許瀏覽器存取"; break;
+      case 2: msg = "無法取得位置，請確認已開啟GPS且在室外或窗邊"; break;
+      case 3: msg = "定位逾時，請確認網路連線正常後按「重試」"; break;
       default: msg = "無法取得定位：" + err.message;
     }
     document.getElementById("locationText").textContent = msg;
     document.getElementById("locationDot").className = "dot dot-red";
-  }, {enableHighAccuracy:true, timeout:15000, maximumAge:0});
+  }, {enableHighAccuracy:true, timeout:20000, maximumAge:0});
+}
+
+function retryLocation() {
+  currentLocation = null;
+  startGeoWatch();
+  showToast("🔄 重新嘗試定位中...", 1500);
 }
 
 function updateLocationUI() {
