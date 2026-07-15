@@ -1,0 +1,12 @@
+GPS 打卡系統 - 網址
+==================
+
+Firebase Hosting：
+https://opencode-sk.web.app
+
+GitHub Pages：
+https://jeff79213-baba.github.io/decoupage-styles/GPS打卡系統/
+
+管理員登入：
+  帳號：管理員
+  密碼：admin123
