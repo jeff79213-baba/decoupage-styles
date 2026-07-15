@@ -41,6 +41,33 @@
 
 ---
 
+## 📌 UI 規範：密碼欄位顯示開關
+所有 `type="password"` 的輸入欄位，**必須附帶顯示/隱藏密碼的切換按鈕**。
+
+### 標準做法
+```html
+<div class="pw-wrap" style="position:relative;display:flex;align-items:center">
+  <input type="password" id="xxx" style="padding-right:40px">
+  <button type="button" onclick="togglePw('xxx',this)"
+    style="position:absolute;right:8px;background:none;border:none;cursor:pointer;font-size:16px">🙈</button>
+</div>
+```
+```js
+function togglePw(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  const show = inp.type === "password";
+  inp.type = show ? "text" : "password";
+  btn.textContent = show ? "👁️" : "🙈";
+}
+```
+
+### 規則
+- 按鈕放在輸入框右側，使用 eye emoji（👁️/🙈），不需花俏設計
+- 不需外部套件，純 CSS + JS 即可
+- 每個專案第一次建立密碼欄位時自動帶入此段程式碼
+
+---
+
 ## 舊專案（共用 repo）維持現狀
 - 蝶谷巴特風格小幫手、鍵盤彈鋼琴 → 仍共用 `decoupage-styles` repo
 - 芭拉咘咘麵包車V2 → 獨立 `balabubu-bakery` repo（已正確）
@@ -93,3 +120,98 @@ projects (collection)
 
 ## Firebase 金鑰
 服務帳戶金鑰在 firebase雲端資料夾 根目錄下的 `opencode-sk-*.json` 檔案。
+
+---
+
+## 🐍 Python 文件處理工具
+
+### 環境位置
+主目錄 `.venv`：`C:\Users\TW-10\Documents\firebase雲端資料夾\.venv`
+
+### 在子專案使用
+子專案資料夾內沒有自己的 `.venv`，需呼叫主目錄的 Python：
+
+```powershell
+# 使用主目錄的 Python 執行腳本
+C:\Users\TW-10\Documents\firebase雲端資料夾\.venv\Scripts\python.exe your_script.py
+
+# 或相對路徑（從子專案向上找）
+..\..\.venv\Scripts\python.exe your_script.py
+```
+
+### 已安裝的核心套件（10/10）
+| 套件 | 用途 |
+|------|------|
+| python-docx | Word 文件讀寫 |
+| openpyxl | Excel 讀寫 |
+| python-pptx | PowerPoint 生成 |
+| pypdf | PDF 合併、拆分 |
+| PyMuPDF (fitz) | PDF 抽文字、轉圖片 |
+| reportlab | 生成 PDF |
+| pillow | 圖片處理 |
+| matplotlib | 統計圖表 |
+| qrcode | QR Code 生成 |
+| markitdown | 文件轉 Markdown（含 pdf,docx,pptx,xlsx） |
+
+### 使用範例
+```python
+# 在子專案中使用（假設從子專案執行）
+import sys
+sys.path.insert(0, r"C:\Users\TW-10\Documents\firebase雲端資料夾\.venv\Lib\site-packages")
+
+# 或直接用完整路徑的 python 執行即可
+from docx import Document
+import fitz  # PyMuPDF
+```
+
+---
+
+## 📚 考卷變教材工作流程
+
+### 觸發指令
+當使用者說「**把這份考卷變成教材**」或放入新的考卷 PDF 時自動執行。
+
+### 產出規則
+- **分類好的內容 → TXT 檔案**（每個類別一份）
+- **統整在一起 → HTML 檔案**（互動式學習清單）
+
+### 資料夾結構
+```
+AI應用規劃師-考卷變教材/
+├── 工作流程手冊.txt
+├── 學習清單.html
+└── {考試名稱}_{科目}/
+    ├── {類別一}.txt
+    ├── {類別二}.txt
+    └── ...
+```
+
+### 處理步驟
+1. 用 PyMuPDF 讀取 PDF 全部內容（UTF-8 編碼）
+2. 逐題分析，依知識領域分類（7~10 大類）
+3. 建立新資料夾，命名格式：`{考試名稱}_{科目}`
+4. 每個類別產生 TXT：說明 → 考試陷阱 → 考題重點 → 精選考題
+5. 產生統整 HTML 學習清單
+6. 更新工作流程手冊
+
+### TXT 格式規範
+```
+═══════════════════════════════
+  類別名稱
+  考試名稱｜科目名稱
+  題號範圍 ｜ 共 N 題
+═══════════════════════════════
+
+【說明】...
+【考試陷阱】...
+【考題重點】...
+
+═══════════════════════════════
+精選考題
+═══════════════════════════════
+
+【第N題】標題
+題目：...
+答案：(X)
+解析：...
+```
