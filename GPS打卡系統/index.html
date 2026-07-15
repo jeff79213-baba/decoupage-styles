@@ -781,10 +781,12 @@ async function renderMyHistoryMini() {
   const now = new Date();
   const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   try {
-    const snap = await db.collection(COLLECTION).doc("records").collection(currentUser.id)
-      .where("dateKey",">=", ym+"-01").where("dateKey","<=", ym+"-31").orderBy("dateKey","desc").get();
+    const snap = await db.collection(COLLECTION).doc("records").collection(currentUser.id).get();
     const records = [];
-    snap.forEach(doc => records.push(doc.data()));
+    snap.forEach(doc => {
+      const r = doc.data();
+      if (r.date && r.date.startsWith(ym)) records.push(r);
+    });
 
     const grouped = {};
     records.forEach(r => {
@@ -839,10 +841,12 @@ async function loadHistory() {
   if (!currentUser) return;
   const ym = document.getElementById("historyMonth").value;
   try {
-    const snap = await db.collection(COLLECTION).doc("records").collection(currentUser.id)
-      .where("dateKey",">=", ym+"-01").where("dateKey","<=", ym+"-31").orderBy("dateKey","desc").get();
+    const snap = await db.collection(COLLECTION).doc("records").collection(currentUser.id).get();
     const records = [];
-    snap.forEach(doc => records.push(doc.data()));
+    snap.forEach(doc => {
+      const r = doc.data();
+      if (r.date && r.date.startsWith(ym)) records.push(r);
+    });
 
     const grouped = {};
     records.forEach(r => {
@@ -900,9 +904,11 @@ async function loadAdminData() {
     const targetEmployees = empFilter === "all" ? employees : employees.filter(e => e.id === empFilter);
 
     for (const emp of targetEmployees) {
-      const snap = await db.collection(COLLECTION).doc("records").collection(emp.id)
-        .where("dateKey",">=", ym+"-01").where("dateKey","<=", ym+"-31").get();
-      snap.forEach(doc => allRecords.push(doc.data()));
+      const snap = await db.collection(COLLECTION).doc("records").collection(emp.id).get();
+      snap.forEach(doc => {
+        const r = doc.data();
+        if (r.date && r.date.startsWith(ym)) allRecords.push(r);
+      });
     }
 
     allRecords.sort((a,b) => b.timestamp - a.timestamp);
