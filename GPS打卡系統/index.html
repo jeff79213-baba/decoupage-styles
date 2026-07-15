@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GPS 打卡系統</title>
+<style>
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --primary-light: #dbeafe;
+  --success: #16a34a;
+  --success-light: #dcfce7;
+  --danger: #dc2626;
+  --danger-light: #fee2e2;
+  --warning: #f59e0b;
+  --warning-light: #fef3c7;
+  --bg: #f1f5f9;
+  --card: #ffffff;
+  --text: #1e293b;
+  --text-light: #64748b;
+  --border: #e2e8f0;
+  --shadow: 0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05);
+  --radius: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  background: var(--bg); color: var(--text); font-size: 15px;
+  min-height: 100vh; overflow-x: hidden;
+}
+input,button,select,textarea{font-family:inherit;font-size:inherit}
+.hidden{display:none!important}
+.page{display:none;min-height:100vh;padding-bottom:80px}
+.page.active{display:block}
+
+/* Header */
+.header{background:linear-gradient(135deg,var(--primary),#7c3aed);color:#fff;padding:16px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-lg)}
+.header h1{font-size:20px;font-weight:700;display:flex;align-items:center;gap:8px}
+.header .sub{font-size:13px;opacity:.85;margin-top:2px}
+.header-btn{background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;float:right;margin-top:-28px}
+
+/* Bottom Nav */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.nav-btn{flex:1;padding:10px 0;text-align:center;background:none;border:none;color:var(--text-light);cursor:pointer;font-size:11px;transition:.2s}
+.nav-btn.active{color:var(--primary)}
+.nav-btn .icon{font-size:22px;display:block;margin-bottom:2px}
+
+/* Cards */
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin:12px 16px;padding:16px}
+
+/* Clock Display */
+.clock-display{text-align:center;padding:20px 0}
+.clock-time{font-size:42px;font-weight:700;color:var(--primary);font-variant-numeric:tabular-nums}
+.clock-date{font-size:14px;color:var(--text-light);margin-top:4px}
+.clock-status{margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600}
+.status-in{background:var(--success-light);color:var(--success)}
+.status-out{background:var(--text-light);color:#fff}
+.status-none{background:var(--warning-light);color:var(--warning)}
+
+/* Punch Buttons */
+.punch-area{text-align:center;padding:10px 0}
+.punch-btn{width:160px;height:160px;border-radius:50%;border:none;font-size:20px;font-weight:700;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.punch-btn::after{content:'';position:absolute;top:50%;left:50%;width:0;height:0;background:rgba(255,255,255,.3);border-radius:50%;transform:translate(-50%,-50%);transition:width .3s,height .3s}
+.punch-btn:active::after{width:200px;height:200px}
+.btn-clockin{background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;box-shadow:0 4px 14px rgba(22,163,74,.4)}
+.btn-clockout{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;box-shadow:0 4px 14px rgba(220,38,38,.4)}
+.punch-btn:disabled{opacity:.5;cursor:not-allowed}
+.punch-btn .label{font-size:28px;margin-bottom:4px}
+.punch-btn .hint{font-size:12px;opacity:.8;font-weight:400}
+
+/* Today Record */
+.today-card{display:flex;gap:12px;margin-top:12px}
+.today-item{flex:1;text-align:center;padding:12px;border-radius:10px;background:var(--bg)}
+.today-item .time{font-size:18px;font-weight:700;margin-top:4px}
+.today-item .lbl{font-size:12px;color:var(--text-light)}
+
+/* Location Info */
+.location-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg);border-radius:10px;margin-top:12px;font-size:13px;color:var(--text-light)}
+.location-bar .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-green{background:#16a34a}
+.dot-red{background:#dc2626}
+.dot-gray{background:#94a3b8}
+
+/* History */
+.history-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.history-header h3{font-size:16px;font-weight:700}
+.history-row{display:flex;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+.history-row:last-child{border-bottom:none}
+.history-date{width:80px;font-size:13px;color:var(--text-light);flex-shrink:0}
+.history-times{flex:1}
+.history-times .tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600;margin-right:6px}
+.tag-in{background:var(--success-light);color:var(--success)}
+.tag-out{background:#ede9fe;color:#7c3aed}
+.tag-late{background:var(--danger-light);color:var(--danger)}
+.history-hours{font-weight:700;color:var(--primary);font-size:14px;width:60px;text-align:right;flex-shrink:0}
+
+/* Filter Bar */
+.filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.filter-bar select,.filter-bar input{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#fff;flex:1;min-width:100px}
+
+/* Table */
+.table-wrap{overflow-x:auto;margin:0 -16px;padding:0 16px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--bg);padding:10px 8px;text-align:left;font-weight:600;white-space:nowrap;position:sticky;top:0}
+td{padding:10px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
+tr:hover td{background:#f8fafc}
+
+/* Admin Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
+.stat-box{text-align:center;padding:16px 8px;border-radius:var(--radius);background:var(--bg)}
+.stat-box .num{font-size:24px;font-weight:700}
+.stat-box .lbl{font-size:12px;color:var(--text-light);margin-top:4px}
+.stat-blue .num{color:var(--primary)}
+.stat-green .num{color:var(--success)}
+.stat-red .num{color:var(--danger)}
+.stat-orange .num{color:var(--warning)}
+
+/* Buttons */
+.btn{padding:10px 20px;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:.2s;font-size:14px}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-success{background:var(--success);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+
+/* Login */
+.login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#2563eb,#7c3aed)}
+.login-box{background:#fff;border-radius:16px;padding:32px 24px;width:100%;max-width:360px;box-shadow:0 20px 40px rgba(0,0,0,.15)}
+.login-logo{text-align:center;margin-bottom:24px}
+.login-logo .icon{font-size:48px}
+.login-logo h2{font-size:20px;margin-top:8px}
+.login-logo p{font-size:13px;color:var(--text-light)}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text-light)}
+.form-group input,.form-group select{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:15px;transition:.2s}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light)}
+.login-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--primary),#7c3aed);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px}
+.login-btn:disabled{opacity:.5;cursor:not-allowed}
+.login-link{text-align:center;margin-top:16px;font-size:13px;color:var(--text-light)}
+.login-link a{color:var(--primary);text-decoration:none;font-weight:600;cursor:pointer}
+.error-msg{background:var(--danger-light);color:var(--danger);padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;text-align:center}
+.success-msg{background:var(--success-light);color:var(--success);padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;text-align:center}
+
+/* Password Toggle */
+.pw-wrap{position:relative;display:flex;align-items:center}
+.pw-wrap input{width:100%;padding-right:42px}
+.pw-toggle{position:absolute;right:10px;background:none;border:none;cursor:pointer;font-size:18px;padding:4px;color:var(--text-light);line-height:1}
+
+/* Modal */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:400px;max-height:80vh;overflow-y:auto}
+.modal h3{margin-bottom:16px;font-size:18px}
+.modal-close{float:right;background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-light)}
+
+/* Settings row */
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+.setting-row:last-child{border-bottom:none}
+.setting-label{font-size:14px;font-weight:500}
+.setting-label small{display:block;font-size:12px;color:var(--text-light);font-weight:400;margin-top:2px}
+.setting-value{font-size:14px;color:var(--primary);font-weight:600}
+
+/* Range circle on map */
+.range-info{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:13px;color:var(--text-light)}
+
+/* Loading */
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--text-light)}
+.spinner{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Tab */
+.tab-bar{display:flex;background:#fff;border-bottom:1px solid var(--border);margin:0 16px;border-radius:var(--radius) var(--radius) 0 0;overflow:hidden}
+.tab-btn{flex:1;padding:12px;text-align:center;background:none;border:none;font-size:13px;font-weight:600;color:var(--text-light);cursor:pointer;transition:.2s;border-bottom:3px solid transparent}
+.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary);background:var(--primary-light)}
+
+/* Responsive */
+@media(max-width:400px){
+  .clock-time{font-size:34px}
+  .punch-btn{width:140px;height:140px}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ========== Login Page ========== -->
+<div id="loginPage" class="login-page">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="icon">📍</div>
+      <h2>GPS 打卡系統</h2>
+      <p>輸入帳號密碼登入打卡</p>
+    </div>
+    <div id="loginError" class="error-msg hidden"></div>
+    <div id="loginSuccess" class="success-msg hidden"></div>
+
+    <div id="loginForm">
+      <div class="form-group">
+        <label>帳號</label>
+        <input type="text" id="loginId" placeholder="請輸入帳號" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>密碼</label>
+        <div class="pw-wrap">
+          <input type="password" id="loginPw" placeholder="請輸入密碼" autocomplete="current-password">
+          <button type="button" class="pw-toggle" onclick="togglePw('loginPw',this)">🙈</button>
+        </div>
+      </div>
+      <button class="login-btn" onclick="doLogin()">登入</button>
+      <div class="login-link">還沒有帳號？<a onclick="showRegister()">註冊新帳號</a></div>
+    </div>
+
+    <div id="registerForm" class="hidden">
+      <div class="form-group">
+        <label>員工姓名</label>
+        <input type="text" id="regName" placeholder="例：王小明">
+      </div>
+      <div class="form-group">
+        <label>帳號</label>
+        <input type="text" id="regId" placeholder="例：A001">
+      </div>
+      <div class="form-group">
+        <label>密碼</label>
+        <div class="pw-wrap">
+          <input type="password" id="regPw" placeholder="設定密碼">
+          <button type="button" class="pw-toggle" onclick="togglePw('regPw',this)">🙈</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>確認密碼</label>
+        <div class="pw-wrap">
+          <input type="password" id="regPw2" placeholder="再輸入一次密碼">
+          <button type="button" class="pw-toggle" onclick="togglePw('regPw2',this)">🙈</button>
+        </div>
+      </div>
+      <button class="login-btn" onclick="doRegister()">註冊</button>
+      <div class="login-link">已有帳號？<a onclick="showLogin()">返回登入</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== Main App ========== -->
+<div id="mainApp" class="hidden">
+
+  <!-- Page: 打卡 -->
+  <div id="pageClock" class="page active">
+    <div class="header">
+      <h1>📍 GPS 打卡</h1>
+      <div class="sub" id="welcomeMsg">歡迎回來</div>
+    </div>
+
+    <div class="card">
+      <div class="clock-display">
+        <div class="clock-time" id="liveClock">--:--:--</div>
+        <div class="clock-date" id="liveDate">----年--月--日</div>
+        <div id="todayStatus" class="clock-status status-none">尚未打卡</div>
+      </div>
+
+      <div class="punch-area">
+        <button class="punch-btn btn-clockin" id="btnClockIn" onclick="doPunch('clockin')">
+          <div class="label">上班打卡</div>
+          <div class="hint">點擊完成簽到</div>
+        </button>
+        <button class="punch-btn btn-clockout hidden" id="btnClockOut" onclick="doPunch('clockout')">
+          <div class="label">下班打卡</div>
+          <div class="hint">點擊完成簽退</div>
+        </button>
+      </div>
+
+      <div class="today-card">
+        <div class="today-item">
+          <div class="lbl">上班時間</div>
+          <div class="time" id="todayIn">--:--</div>
+        </div>
+        <div class="today-item">
+          <div class="lbl">下班時間</div>
+          <div class="time" id="todayOut">--:--</div>
+        </div>
+        <div class="today-item">
+          <div class="lbl">今日工時</div>
+          <div class="time" id="todayHours">--:--</div>
+        </div>
+      </div>
+
+      <div class="location-bar" id="locationBar">
+        <div class="dot dot-gray" id="locationDot"></div>
+        <span id="locationText">正在取得位置...</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:15px;margin-bottom:12px">📋 我的本月紀錄</h3>
+      <div id="myHistoryMini"><div class="loading"><div class="spinner"></div>載入中...</div></div>
+    </div>
+  </div>
+
+  <!-- Page: 歷史紀錄 -->
+  <div id="pageHistory" class="page">
+    <div class="header">
+      <h1>📋 歷史紀錄</h1>
+      <div class="sub">查看過去的打卡紀錄</div>
+    </div>
+
+    <div class="card">
+      <div class="filter-bar">
+        <select id="historyMonth" onchange="loadHistory()"></select>
+      </div>
+      <div id="historyList"><div class="loading"><div class="spinner"></div>載入中...</div></div>
+      <div class="btn-group" style="justify-content:flex-end">
+        <button class="btn btn-primary btn-sm" onclick="exportMyCSV()">📥 匯出 Excel</button>
+        <button class="btn btn-outline btn-sm" onclick="exportMyJSON()">📄 匯出 JSON</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page: 管理後台 -->
+  <div id="pageAdmin" class="page">
+    <div class="header">
+      <h1>⚙️ 管理後台</h1>
+      <div class="sub">員工出勤管理</div>
+    </div>
+
+    <div class="card">
+      <div class="stats-grid" id="adminStats">
+        <div class="stat-box stat-blue"><div class="num" id="statTotal">0</div><div class="lbl">本月出勤人次</div></div>
+        <div class="stat-box stat-green"><div class="num" id="statOnTime">0</div><div class="lbl">準時上班</div></div>
+        <div class="stat-box stat-red"><div class="num" id="statLate">0</div><div class="lbl">遲到</div></div>
+        <div class="stat-box stat-orange"><div class="num" id="statOvertime">0</div><div class="lbl">加班時數</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="filter-bar">
+        <select id="adminMonth" onchange="loadAdminData()"></select>
+        <select id="adminEmployee" onchange="loadAdminData()">
+          <option value="all">全部員工</option>
+        </select>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>員工</th>
+              <th>日期</th>
+              <th>上班</th>
+              <th>下班</th>
+              <th>工時</th>
+              <th>狀態</th>
+              <th>位置</th>
+            </tr>
+          </thead>
+          <tbody id="adminTableBody">
+            <tr><td colspan="7" class="loading"><div class="spinner"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn btn-primary btn-sm" onclick="exportAdminCSV()">📥 全部匯出 Excel</button>
+        <button class="btn btn-outline btn-sm" onclick="exportAdminJSON()">📄 全部匯出 JSON</button>
+        <button class="btn btn-outline btn-sm" onclick="openSettings()">⚙️ 系統設定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page: 個人設定 -->
+  <div id="pageProfile" class="page">
+    <div class="header">
+      <h1>👤 個人設定</h1>
+      <div class="sub">帳號與打卡範圍設定</div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:15px;margin-bottom:12px">帳號資訊</h3>
+      <div class="setting-row">
+        <div class="setting-label">員工姓名<small id="profileRole">一般員工</small></div>
+        <div class="setting-value" id="profileName">--</div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">員工帳號</div>
+        <div class="setting-value" id="profileId">--</div>
+      </div>
+    </div>
+
+    <div class="card" id="adminSettingsCard">
+      <h3 style="font-size:15px;margin-bottom:12px">打卡範圍設定 <span style="font-size:12px;color:var(--text-light);font-weight:400">(管理員)</span></h3>
+      <div class="setting-row">
+        <div class="setting-label">公司定位<small>設定打卡中心點</small></div>
+        <div class="setting-value" id="companyLocation">未設定</div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">打卡範圍<small>允許打卡的半徑距離</small></div>
+        <div class="setting-value" id="companyRange">500 公尺</div>
+      </div>
+      <div class="form-group">
+        <label>設定公司位置（點擊取得目前位置）</label>
+        <button class="btn btn-primary btn-sm" onclick="setCompanyLocation()" style="width:100%">📍 取得目前位置作為公司</button>
+      </div>
+      <div class="form-group">
+        <label>打卡範圍（公尺）</label>
+        <input type="number" id="inputRange" value="500" min="50" max="10000" step="50">
+        <button class="btn btn-success btn-sm" onclick="saveCompanyRange()" style="width:100%;margin-top:8px">💾 儲存範圍</button>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">上班時間</div>
+        <div class="setting-value"><input type="time" id="workStart" value="09:00" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:14px;width:100px"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">下班時間</div>
+        <div class="setting-value"><input type="time" id="workEnd" value="18:00" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:14px;width:100px"></div>
+      </div>
+      <button class="btn btn-success btn-sm" onclick="saveWorkHours()" style="width:100%;margin-top:4px">💾 儲存上下班時間</button>
+    </div>
+
+    <div class="card">
+      <button class="btn btn-danger" onclick="doLogout()" style="width:100%">🚪 登出</button>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <button class="nav-btn active" onclick="switchPage('Clock')">
+      <span class="icon">📍</span>打卡
+    </button>
+    <button class="nav-btn" onclick="switchPage('History')">
+      <span class="icon">📋</span>紀錄
+    </button>
+    <button class="nav-btn hidden" id="navAdmin" onclick="switchPage('Admin')">
+      <span class="icon">⚙️</span>管理
+    </button>
+    <button class="nav-btn" onclick="switchPage('Profile')">
+      <span class="icon">👤</span>設定
+    </button>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal-overlay hidden" onclick="closeSettings(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeSettings()">&times;</button>
+    <h3>⚙️ 系統設定</h3>
+    <div class="setting-row">
+      <div class="setting-label">系統名稱</div>
+      <div class="setting-value"><input type="text" id="sysName" value="GPS 打卡系統" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:14px;width:140px"></div>
+    </div>
+    <button class="btn btn-success btn-sm" onclick="saveSysName()" style="width:100%;margin-top:12px">💾 儲存</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" style="position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;z-index:999;display:none;box-shadow:0 4px 12px rgba(0,0,0,.3)"></div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ============ FIREBASE ============
+const firebaseConfig = {
+  apiKey: "AIzaSyD3quPJCOUoUH_Um5UceWXYuUXfRpJEuyo",
+  authDomain: "opencode-sk.firebaseapp.com",
+  projectId: "opencode-sk",
+  storageBucket: "opencode-sk.firebasestorage.app",
+  messagingSenderId: "741268730945",
+  appId: "1:741268730945:web:503cf0dfab0e9100b042c0"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const COLLECTION = "gps_attendance";
+
+// ============ STATE ============
+let currentUser = null;
+let currentLocation = null;
+let todayRecords = [];
+let allAdminData = [];
+let settings = {
+  companyName: "打卡中心",
+  companyLat: null,
+  companyLng: null,
+  range: 500,
+  workStart: "09:00",
+  workEnd: "18:00"
+};
+
+// ============ CLOCK ============
+function updateClock() {
+  const now = new Date();
+  document.getElementById("liveClock").textContent = now.toLocaleTimeString("zh-TW", {hour12:false});
+  document.getElementById("liveDate").textContent = now.toLocaleDateString("zh-TW", {year:"numeric",month:"numeric",day:"numeric",weekday:"long"});
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ============ AUTH ============
+function togglePw(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  const show = inp.type === "password";
+  inp.type = show ? "text" : "password";
+  btn.textContent = show ? "👁️" : "🙈";
+}
+function showLogin() {
+  document.getElementById("loginForm").classList.remove("hidden");
+  document.getElementById("registerForm").classList.add("hidden");
+  document.getElementById("loginError").classList.add("hidden");
+  document.getElementById("loginSuccess").classList.add("hidden");
+}
+function showRegister() {
+  document.getElementById("loginForm").classList.add("hidden");
+  document.getElementById("registerForm").classList.remove("hidden");
+  document.getElementById("loginError").classList.add("hidden");
+  document.getElementById("loginSuccess").classList.add("hidden");
+}
+
+async function doRegister() {
+  const name = document.getElementById("regName").value.trim();
+  const id = document.getElementById("regId").value.trim().toUpperCase();
+  const pw = document.getElementById("regPw").value;
+  const pw2 = document.getElementById("regPw2").value;
+  const errEl = document.getElementById("loginError");
+
+  if (!name || !id || !pw) { errEl.textContent = "請填寫所有欄位"; errEl.classList.remove("hidden"); return; }
+  if (pw !== pw2) { errEl.textContent = "兩次密碼不一致"; errEl.classList.remove("hidden"); return; }
+  if (pw.length < 4) { errEl.textContent = "密碼至少4個字元"; errEl.classList.remove("hidden"); return; }
+
+  const ADMIN_ACCOUNTS = ["管理員"];
+  const role = ADMIN_ACCOUNTS.includes(id) ? "admin" : "employee";
+
+  if (ADMIN_ACCOUNTS.includes(id)) {
+    errEl.textContent = "此帳號不可註冊"; errEl.classList.remove("hidden"); return;
+  }
+
+  try {
+    const doc = await db.collection(COLLECTION).doc("employees").get();
+    const employees = doc.exists ? doc.data().list : [];
+    if (employees.find(e => e.id === id)) {
+      errEl.textContent = "此帳號已被註冊"; errEl.classList.remove("hidden"); return;
+    }
+    employees.push({name, id, pw, role, createdAt: Date.now()});
+    await db.collection(COLLECTION).doc("employees").set({list: employees});
+    errEl.classList.add("hidden");
+    document.getElementById("loginSuccess").textContent = "註冊成功！請登入";
+    document.getElementById("loginSuccess").classList.remove("hidden");
+    showLogin();
+  } catch(e) {
+    errEl.textContent = "註冊失敗：" + e.message; errEl.classList.remove("hidden");
+  }
+}
+
+async function doLogin() {
+  const id = document.getElementById("loginId").value.trim().toUpperCase();
+  const pw = document.getElementById("loginPw").value;
+  const errEl = document.getElementById("loginError");
+  if (!id || !pw) { errEl.textContent = "請輸入帳號密碼"; errEl.classList.remove("hidden"); return; }
+
+  const ADMIN_ACCOUNT = {id:"管理員", pw:"admin123", name:"系統管理員", role:"admin"};
+
+  try {
+    if (id === ADMIN_ACCOUNT.id && pw === ADMIN_ACCOUNT.pw) {
+      currentUser = ADMIN_ACCOUNT;
+      localStorage.setItem("gps_user", JSON.stringify(ADMIN_ACCOUNT));
+      errEl.classList.add("hidden");
+      enterApp();
+      return;
+    }
+
+    const doc = await db.collection(COLLECTION).doc("employees").get();
+    const employees = doc.exists ? doc.data().list : [];
+    const emp = employees.find(e => e.id === id && e.pw === pw);
+    if (!emp) { errEl.textContent = "帳號或密碼錯誤"; errEl.classList.remove("hidden"); return; }
+
+    currentUser = emp;
+    localStorage.setItem("gps_user", JSON.stringify(emp));
+    errEl.classList.add("hidden");
+    enterApp();
+  } catch(e) {
+    errEl.textContent = "登入失敗：" + e.message; errEl.classList.remove("hidden");
+  }
+}
+
+function doLogout() {
+  currentUser = null;
+  localStorage.removeItem("gps_user");
+  document.getElementById("mainApp").classList.add("hidden");
+  document.getElementById("loginPage").style.display = "flex";
+  document.getElementById("loginId").value = "";
+  document.getElementById("loginPw").value = "";
+}
+
+function enterApp() {
+  document.getElementById("loginPage").style.display = "none";
+  document.getElementById("mainApp").classList.remove("hidden");
+  document.getElementById("welcomeMsg").textContent = `歡迎回來，${currentUser.name}`;
+  document.getElementById("profileName").textContent = currentUser.name;
+  document.getElementById("profileId").textContent = currentUser.id;
+  document.getElementById("profileRole").textContent = currentUser.role === "admin" ? "管理員" : "一般員工";
+
+  if (currentUser.role === "admin") {
+    document.getElementById("navAdmin").classList.remove("hidden");
+    document.getElementById("adminSettingsCard").classList.remove("hidden");
+  } else {
+    document.getElementById("navAdmin").classList.add("hidden");
+    document.getElementById("adminSettingsCard").classList.add("hidden");
+  }
+
+  loadSettings();
+  loadTodayRecords();
+  loadHistory();
+  initLocation();
+  populateMonthSelects();
+  if (currentUser.role === "admin") loadAdminData();
+}
+
+// ============ LOCATION ============
+function initLocation() {
+  if (!("geolocation" in navigator)) {
+    document.getElementById("locationText").textContent = "您的瀏覽器不支援定位功能";
+    document.getElementById("locationDot").className = "dot dot-red";
+    return;
+  }
+  navigator.geolocation.watchPosition(pos => {
+    currentLocation = {lat: pos.coords.latitude, lng: pos.coords.longitude};
+    updateLocationUI();
+  }, err => {
+    let msg = "";
+    switch(err.code) {
+      case 1: msg = "定位權限被拒絕，請至瀏覽器設定開啟定位權限"; break;
+      case 2: msg = "無法取得位置資訊，請確認GPS已開啟且在室外"; break;
+      case 3: msg = "定位逾時，請稍後再試或確認網路連線"; break;
+      default: msg = "無法取得定位：" + err.message;
+    }
+    document.getElementById("locationText").textContent = msg;
+    document.getElementById("locationDot").className = "dot dot-red";
+  }, {enableHighAccuracy:true, timeout:15000, maximumAge:0});
+}
+
+function updateLocationUI() {
+  if (!currentLocation) return;
+  const inRange = checkInRange(currentLocation.lat, currentLocation.lng);
+  const dot = document.getElementById("locationDot");
+  const text = document.getElementById("locationText");
+  if (settings.companyLat && settings.companyLng) {
+    const dist = getDistance(currentLocation.lat, currentLocation.lng, settings.companyLat, settings.companyLng);
+    dot.className = inRange ? "dot dot-green" : "dot dot-red";
+    text.textContent = inRange ? `在打卡範圍內（距公司 ${Math.round(dist)}m）` : `不在打卡範圍內（距公司 ${Math.round(dist)}m）`;
+  } else {
+    dot.className = "dot dot-gray";
+    text.textContent = "管理員尚未設定打卡範圍，目前不限地點";
+  }
+}
+
+function checkInRange(lat, lng) {
+  if (!settings.companyLat || !settings.companyLng) return true;
+  const dist = getDistance(lat, lng, settings.companyLat, settings.companyLng);
+  return dist <= settings.range;
+}
+
+function getDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// ============ PUNCH ============
+async function doPunch(type) {
+  if (!currentLocation && settings.companyLat) {
+    showToast("⚠️ 無法取得定位，請確認已開啟GPS", 3000);
+    return;
+  }
+  if (settings.companyLat && settings.companyLng && !checkInRange(currentLocation.lat, currentLocation.lng)) {
+    showToast("⚠️ 不在打卡範圍內，無法打卡", 3000);
+    return;
+  }
+
+  const btn = type === "clockin" ? document.getElementById("btnClockIn") : document.getElementById("btnClockOut");
+  btn.disabled = true;
+
+  const now = new Date();
+  const record = {
+    employeeId: currentUser.id,
+    employeeName: currentUser.name,
+    type: type,
+    timestamp: now.getTime(),
+    date: now.toISOString().slice(0,10),
+    time: now.toLocaleTimeString("zh-TW", {hour12:false, hour:"2-digit", minute:"2-digit", second:"2-digit"}),
+    location: currentLocation ? {lat: currentLocation.lat, lng: currentLocation.lng} : null,
+    dateKey: now.toISOString().slice(0,10)
+  };
+
+  try {
+    await db.collection(COLLECTION).doc("records").collection(currentUser.id).add(record);
+    showToast(type === "clockin" ? "✅ 上班打卡成功！" : "✅ 下班打卡成功！", 3000);
+    loadTodayRecords();
+  } catch(e) {
+    showToast("❌ 打卡失敗：" + e.message, 3000);
+    btn.disabled = false;
+  }
+}
+
+// ============ TODAY RECORDS ============
+async function loadTodayRecords() {
+  if (!currentUser) return;
+  const today = new Date().toISOString().slice(0,10);
+  try {
+    const snap = await db.collection(COLLECTION).doc("records").collection(currentUser.id)
+      .where("dateKey","==",today).orderBy("timestamp","asc").get();
+    todayRecords = [];
+    snap.forEach(doc => todayRecords.push(doc.data()));
+    renderTodayUI();
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function renderTodayUI() {
+  const clockIn = todayRecords.find(r => r.type === "clockin");
+  const clockOut = todayRecords.find(r => r.type === "clockout");
+
+  document.getElementById("todayIn").textContent = clockIn ? clockIn.time.slice(0,5) : "--:--";
+  document.getElementById("todayOut").textContent = clockOut ? clockOut.time.slice(0,5) : "--:--";
+
+  if (clockIn && clockOut) {
+    const diff = clockOut.timestamp - clockIn.timestamp;
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    document.getElementById("todayHours").textContent = `${h}h${m}m`;
+  } else {
+    document.getElementById("todayHours").textContent = "--:--";
+  }
+
+  const statusEl = document.getElementById("todayStatus");
+  if (clockIn && clockOut) {
+    statusEl.textContent = "今日已完成打卡";
+    statusEl.className = "clock-status status-out";
+    document.getElementById("btnClockIn").classList.add("hidden");
+    document.getElementById("btnClockOut").classList.add("hidden");
+  } else if (clockIn) {
+    statusEl.textContent = "已打卡上班";
+    statusEl.className = "clock-status status-in";
+    document.getElementById("btnClockIn").classList.add("hidden");
+    document.getElementById("btnClockOut").classList.remove("hidden");
+  } else {
+    statusEl.textContent = "尚未打卡";
+    statusEl.className = "clock-status status-none";
+    document.getElementById("btnClockIn").classList.remove("hidden");
+    document.getElementById("btnClockOut").classList.add("hidden");
+  }
+
+  renderMyHistoryMini();
+}
+
+// ============ MY HISTORY MINI ============
+async function renderMyHistoryMini() {
+  if (!currentUser) return;
+  const now = new Date();
+  const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  try {
+    const snap = await db.collection(COLLECTION).doc("records").collection(currentUser.id)
+      .where("dateKey",">=", ym+"-01").where("dateKey","<=", ym+"-31").orderBy("dateKey","desc").get();
+    const records = [];
+    snap.forEach(doc => records.push(doc.data()));
+
+    const grouped = {};
+    records.forEach(r => {
+      if (!grouped[r.date]) grouped[r.date] = {};
+      grouped[r.date][r.type] = r;
+    });
+
+    let html = "";
+    const dates = Object.keys(grouped).sort().reverse().slice(0,10);
+    if (dates.length === 0) { html = '<div style="text-align:center;color:var(--text-light);padding:16px;font-size:13px">本月尚無打卡紀錄</div>'; }
+    dates.forEach(d => {
+      const g = grouped[d];
+      const inTime = g.clockin ? g.clockin.time.slice(0,5) : "--:--";
+      const outTime = g.clockout ? g.clockout.time.slice(0,5) : "--:--";
+      const isLate = g.clockin && g.clockin.time.slice(0,5) > settings.workStart;
+      let hrs = "--";
+      if (g.clockin && g.clockout) {
+        const diff = g.clockout.timestamp - g.clockin.timestamp;
+        hrs = Math.floor(diff/3600000) + "h" + Math.floor((diff%3600000)/60000) + "m";
+      }
+      html += `<div class="history-row">
+        <div class="history-date">${d.slice(5)}</div>
+        <div class="history-times">
+          <span class="tag tag-in">${inTime}</span>
+          <span class="tag tag-out">${outTime}</span>
+          ${isLate ? '<span class="tag tag-late">遲到</span>' : ''}
+        </div>
+        <div class="history-hours">${hrs}</div>
+      </div>`;
+    });
+    document.getElementById("myHistoryMini").innerHTML = html;
+  } catch(e) {
+    document.getElementById("myHistoryMini").innerHTML = '<div style="color:var(--danger);padding:12px">載入失敗</div>';
+  }
+}
+
+// ============ HISTORY PAGE ============
+function populateMonthSelects() {
+  const now = new Date();
+  let html = "";
+  for (let i=0; i<12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    const val = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    const label = `${d.getFullYear()} 年 ${d.getMonth()+1} 月`;
+    html += `<option value="${val}" ${i===0?'selected':''}>${label}</option>`;
+  }
+  document.getElementById("historyMonth").innerHTML = html;
+  document.getElementById("adminMonth").innerHTML = html;
+}
+
+async function loadHistory() {
+  if (!currentUser) return;
+  const ym = document.getElementById("historyMonth").value;
+  try {
+    const snap = await db.collection(COLLECTION).doc("records").collection(currentUser.id)
+      .where("dateKey",">=", ym+"-01").where("dateKey","<=", ym+"-31").orderBy("dateKey","desc").get();
+    const records = [];
+    snap.forEach(doc => records.push(doc.data()));
+
+    const grouped = {};
+    records.forEach(r => {
+      if (!grouped[r.date]) grouped[r.date] = {};
+      grouped[r.date][r.type] = r;
+    });
+
+    let html = "";
+    const dates = Object.keys(grouped).sort().reverse();
+    if (dates.length === 0) { html = '<div style="text-align:center;color:var(--text-light);padding:24px">此月尚無打卡紀錄</div>'; }
+    dates.forEach(d => {
+      const g = grouped[d];
+      const inTime = g.clockin ? g.clockin.time.slice(0,5) : "--:--";
+      const outTime = g.clockout ? g.clockout.time.slice(0,5) : "--:--";
+      const isLate = g.clockin && g.clockin.time.slice(0,5) > settings.workStart;
+      let hrs = "--";
+      if (g.clockin && g.clockout) {
+        const diff = g.clockout.timestamp - g.clockin.timestamp;
+        hrs = Math.floor(diff/3600000) + "h" + Math.floor((diff%3600000)/60000) + "m";
+      }
+      html += `<div class="history-row">
+        <div class="history-date">${d}</div>
+        <div class="history-times">
+          <span class="tag tag-in">上班 ${inTime}</span>
+          <span class="tag tag-out">下班 ${outTime}</span>
+          ${isLate ? '<span class="tag tag-late">遲到</span>' : ''}
+        </div>
+        <div class="history-hours">${hrs}</div>
+      </div>`;
+    });
+    document.getElementById("historyList").innerHTML = html;
+  } catch(e) {
+    document.getElementById("historyList").innerHTML = '<div style="color:var(--danger);padding:12px">載入失敗</div>';
+  }
+}
+
+// ============ ADMIN ============
+async function loadAdminData() {
+  if (!currentUser || currentUser.role !== "admin") return;
+  const ym = document.getElementById("adminMonth").value;
+  const empFilter = document.getElementById("adminEmployee").value;
+
+  try {
+    const empDoc = await db.collection(COLLECTION).doc("employees").get();
+    const employees = empDoc.exists ? empDoc.data().list : [];
+
+    const empSelect = document.getElementById("adminEmployee");
+    const currentVal = empSelect.value;
+    empSelect.innerHTML = '<option value="all">全部員工</option>';
+    employees.forEach(e => {
+      empSelect.innerHTML += `<option value="${e.id}" ${e.id===currentVal?'selected':''}>${e.name}（${e.id}）</option>`;
+    });
+
+    let allRecords = [];
+    const targetEmployees = empFilter === "all" ? employees : employees.filter(e => e.id === empFilter);
+
+    for (const emp of targetEmployees) {
+      const snap = await db.collection(COLLECTION).doc("records").collection(emp.id)
+        .where("dateKey",">=", ym+"-01").where("dateKey","<=", ym+"-31").get();
+      snap.forEach(doc => allRecords.push(doc.data()));
+    }
+
+    allRecords.sort((a,b) => b.timestamp - a.timestamp);
+    allAdminData = allRecords;
+
+    let totalLate = 0, totalOvertime = 0;
+    let html = "";
+    allRecords.forEach(r => {
+      const isLate = r.type === "clockin" && r.time.slice(0,5) > settings.workStart;
+      if (isLate) totalLate++;
+      html += `<tr>
+        <td><strong>${r.employeeName}</strong><br><small style="color:var(--text-light)">${r.employeeId}</small></td>
+        <td>${r.date}</td>
+        <td>${r.type === 'clockin' ? r.time.slice(0,5) : '-'}</td>
+        <td>${r.type === 'clockout' ? r.time.slice(0,5) : '-'}</td>
+        <td>${r.type === 'clockout' ? '-' : '-'}</td>
+        <td>${isLate ? '<span class="tag tag-late">遲到</span>' : (r.type==='clockin'?'<span class="tag tag-in">準時</span>':'<span class="tag tag-out">下班</span>')}</td>
+        <td>${r.location ? '已記錄' : '無'}</td>
+      </tr>`;
+    });
+
+    document.getElementById("adminTableBody").innerHTML = html || '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-light)">此月尚無紀錄</td></tr>';
+    document.getElementById("statTotal").textContent = allRecords.length;
+    document.getElementById("statLate").textContent = totalLate;
+    document.getElementById("statOnTime").textContent = Math.max(0, Math.floor(allRecords.length/2) - totalLate);
+    document.getElementById("statOvertime").textContent = totalOvertime + "h";
+  } catch(e) {
+    console.error(e);
+    document.getElementById("adminTableBody").innerHTML = '<tr><td colspan="7" style="color:var(--danger)">載入失敗</td></tr>';
+  }
+}
+
+// ============ SETTINGS ============
+async function loadSettings() {
+  try {
+    const doc = await db.collection(COLLECTION).doc("settings").get();
+    if (doc.exists) {
+      settings = {...settings, ...doc.data()};
+      document.getElementById("inputRange").value = settings.range;
+      document.getElementById("workStart").value = settings.workStart;
+      document.getElementById("workEnd").value = settings.workEnd;
+      if (settings.companyLat && settings.companyLng) {
+        document.getElementById("companyLocation").textContent = `${settings.companyLat.toFixed(5)}, ${settings.companyLng.toFixed(5)}`;
+      }
+      document.getElementById("companyRange").textContent = settings.range + " 公尺";
+    }
+  } catch(e) { console.error(e); }
+}
+
+async function setCompanyLocation() {
+  if (!currentLocation) { showToast("⚠️ 無法定位", 2000); return; }
+  settings.companyLat = currentLocation.lat;
+  settings.companyLng = currentLocation.lng;
+  await db.collection(COLLECTION).doc("settings").set(settings);
+  document.getElementById("companyLocation").textContent = `${currentLocation.lat.toFixed(5)}, ${currentLocation.lng.toFixed(5)}`;
+  updateLocationUI();
+  showToast("✅ 公司位置已設定", 2000);
+}
+
+async function saveCompanyRange() {
+  settings.range = parseInt(document.getElementById("inputRange").value) || 500;
+  await db.collection(COLLECTION).doc("settings").set(settings);
+  document.getElementById("companyRange").textContent = settings.range + " 公尺";
+  updateLocationUI();
+  showToast("✅ 打卡範圍已更新", 2000);
+}
+
+async function saveWorkHours() {
+  settings.workStart = document.getElementById("workStart").value;
+  settings.workEnd = document.getElementById("workEnd").value;
+  await db.collection(COLLECTION).doc("settings").set(settings);
+  showToast("✅ 上下班時間已更新", 2000);
+}
+
+async function saveSysName() {
+  const name = document.getElementById("sysName").value.trim();
+  if (name) {
+    document.title = name;
+    showToast("✅ 系統名稱已更新", 2000);
+    closeSettings();
+  }
+}
+
+// ============ EXPORT ============
+function exportMyCSV() { exportCSV(allAdminData.length ? allAdminData : todayRecords, "我的打卡紀錄"); }
+function exportMyJSON() { exportJSON(allAdminData.length ? allAdminData : todayRecords, "我的打卡紀錄"); }
+function exportAdminCSV() { exportCSV(allAdminData, "全部打卡紀錄"); }
+function exportAdminJSON() { exportJSON(allAdminData, "全部打卡紀錄"); }
+
+function exportCSV(data, filename) {
+  if (!data || data.length === 0) { showToast("⚠️ 沒有資料可匯出", 2000); return; }
+  let csv = "\uFEFF員工姓名,員工帳號,日期,時間,類型,緯度,經度\n";
+  data.forEach(r => {
+    csv += `${r.employeeName},${r.employeeId},${r.date},${r.time},${r.type==='clockin'?'上班':'下班'},${r.location?r.location.lat:''},${r.location?r.location.lng:''}\n`;
+  });
+  downloadFile(csv, filename + ".csv", "text/csv;charset=utf-8");
+}
+
+function exportJSON(data, filename) {
+  if (!data || data.length === 0) { showToast("⚠️ 沒有資料可匯出", 2000); return; }
+  const json = JSON.stringify(data, null, 2);
+  downloadFile(json, filename + ".json", "application/json");
+}
+
+function downloadFile(content, filename, type) {
+  const blob = new Blob([content], {type});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+  showToast("✅ 已下載 " + filename, 2000);
+}
+
+// ============ UI ============
+function switchPage(name) {
+  document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+  document.getElementById("page"+name).classList.add("active");
+  document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+  event.currentTarget.classList.add("active");
+  if (name === "Admin" && currentUser.role === "admin") loadAdminData();
+  if (name === "History") loadHistory();
+}
+
+function openSettings() { document.getElementById("settingsModal").classList.remove("hidden"); }
+function closeSettings(e) {
+  if (!e || e.target === document.getElementById("settingsModal")) {
+    document.getElementById("settingsModal").classList.add("hidden");
+  }
+}
+
+function showToast(msg, duration) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.style.display = "block";
+  setTimeout(() => t.style.display = "none", duration || 2000);
+}
+
+// ============ INIT ============
+window.addEventListener("load", () => {
+  const saved = localStorage.getItem("gps_user");
+  if (saved) {
+    try { currentUser = JSON.parse(saved); enterApp(); } catch(e) { showLogin(); }
+  }
+});
+
+// Enter key login
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    if (!document.getElementById("loginForm").classList.contains("hidden")) doLogin();
+    else if (!document.getElementById("registerForm").classList.contains("hidden")) doRegister();
+  }
+});
+</script>
+</body>
+</html>
