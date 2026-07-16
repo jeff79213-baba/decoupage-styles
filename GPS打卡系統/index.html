@@ -6,116 +6,117 @@
 <title>GPS 打卡系統</title>
 <style>
 :root {
-  --primary: #2563eb;
-  --primary-dark: #1d4ed8;
-  --primary-light: #dbeafe;
-  --success: #16a34a;
-  --success-light: #dcfce7;
+  --primary: #4f46e5;
+  --primary-dark: #4338ca;
+  --primary-light: #e0e7ff;
+  --success: #059669;
+  --success-light: #d1fae5;
   --danger: #dc2626;
   --danger-light: #fee2e2;
-  --warning: #f59e0b;
+  --warning: #d97706;
   --warning-light: #fef3c7;
-  --bg: #f1f5f9;
+  --info: #0284c7;
+  --info-light: #e0f2fe;
+  --bg: #f8fafc;
   --card: #ffffff;
   --text: #1e293b;
   --text-light: #64748b;
   --border: #e2e8f0;
-  --shadow: 0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05);
+  --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -2px rgba(0,0,0,.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.08), 0 4px 6px -4px rgba(0,0,0,.04);
   --radius: 12px;
+  --radius-lg: 16px;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: -apple-system, 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
-  background: var(--bg); color: var(--text); font-size: 15px;
-  min-height: 100vh; overflow-x: hidden;
-}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh;overflow-x:hidden}
 input,button,select,textarea{font-family:inherit;font-size:inherit}
 .hidden{display:none!important}
-.page{display:none;min-height:100vh;padding-bottom:80px}
+.page{display:none;min-height:100vh;padding-bottom:72px}
 .page.active{display:block}
 
 /* Header */
-.header{background:linear-gradient(135deg,var(--primary),#7c3aed);color:#fff;padding:16px;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-lg)}
-.header h1{font-size:20px;font-weight:700;display:flex;align-items:center;gap:8px}
-.header .sub{font-size:13px;opacity:.85;margin-top:2px}
-.header-btn{background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;float:right;margin-top:-28px}
+.header{background:#fff;padding:16px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.header-top{display:flex;justify-content:space-between;align-items:center}
+.header h1{font-size:18px;font-weight:700;color:var(--text)}
+.header .sub{font-size:13px;color:var(--text-light);margin-top:2px}
+.header-btn{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:4px}
 
 /* Bottom Nav */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
-.nav-btn{flex:1;padding:10px 0;text-align:center;background:none;border:none;color:var(--text-light);cursor:pointer;font-size:11px;transition:.2s}
+.nav-btn{flex:1;padding:8px 0;text-align:center;background:none;border:none;color:var(--text-light);cursor:pointer;font-size:11px;transition:.2s}
 .nav-btn.active{color:var(--primary)}
-.nav-btn .icon{font-size:22px;display:block;margin-bottom:2px}
+.nav-btn .icon{font-size:20px;display:block;margin-bottom:2px}
 
 /* Cards */
 .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin:12px 16px;padding:16px}
+.card-title{font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
 
-/* Clock Display */
-.clock-display{text-align:center;padding:20px 0}
-.clock-time{font-size:42px;font-weight:700;color:var(--primary);font-variant-numeric:tabular-nums}
-.clock-date{font-size:14px;color:var(--text-light);margin-top:4px}
-.clock-status{margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600}
-.status-in{background:var(--success-light);color:var(--success)}
-.status-out{background:var(--text-light);color:#fff}
-.status-none{background:var(--warning-light);color:var(--warning)}
-
-/* Punch Buttons */
-.punch-area{text-align:center;padding:10px 0}
-.punch-btn{width:160px;height:160px;border-radius:50%;border:none;font-size:20px;font-weight:700;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
-.punch-btn::after{content:'';position:absolute;top:50%;left:50%;width:0;height:0;background:rgba(255,255,255,.3);border-radius:50%;transform:translate(-50%,-50%);transition:width .3s,height .3s}
-.punch-btn:active::after{width:200px;height:200px}
-.btn-clockin{background:linear-gradient(135deg,#16a34a,#22c55e);color:#fff;box-shadow:0 4px 14px rgba(22,163,74,.4)}
-.btn-clockout{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;box-shadow:0 4px 14px rgba(220,38,38,.4)}
-.punch-btn:disabled{opacity:.5;cursor:not-allowed}
-.punch-btn .label{font-size:28px;margin-bottom:4px}
-.punch-btn .hint{font-size:12px;opacity:.8;font-weight:400}
-
-/* Today Record */
-.today-card{display:flex;gap:12px;margin-top:12px}
-.today-item{flex:1;text-align:center;padding:12px;border-radius:10px;background:var(--bg)}
-.today-item .time{font-size:18px;font-weight:700;margin-top:4px}
-.today-item .lbl{font-size:12px;color:var(--text-light)}
-
-/* Location Info */
-.location-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg);border-radius:10px;margin-top:12px;font-size:13px;color:var(--text-light)}
-.location-bar .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.dot-green{background:#16a34a}
-.dot-red{background:#dc2626}
-.dot-gray{background:#94a3b8}
-
-/* History */
-.history-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.history-header h3{font-size:16px;font-weight:700}
-.history-row{display:flex;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
-.history-row:last-child{border-bottom:none}
-.history-date{width:80px;font-size:13px;color:var(--text-light);flex-shrink:0}
-.history-times{flex:1}
-.history-times .tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600;margin-right:6px}
-.tag-in{background:var(--success-light);color:var(--success)}
-.tag-out{background:#ede9fe;color:#7c3aed}
-.tag-late{background:var(--danger-light);color:var(--danger)}
-.history-hours{font-weight:700;color:var(--primary);font-size:14px;width:60px;text-align:right;flex-shrink:0}
-
-/* Filter Bar */
-.filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
-.filter-bar select,.filter-bar input{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#fff;flex:1;min-width:100px}
-
-/* Table */
-.table-wrap{overflow-x:auto;margin:0 -16px;padding:0 16px}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{background:var(--bg);padding:10px 8px;text-align:left;font-weight:600;white-space:nowrap;position:sticky;top:0}
-td{padding:10px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
-tr:hover td{background:#f8fafc}
-
-/* Admin Stats */
-.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
-.stat-box{text-align:center;padding:16px 8px;border-radius:var(--radius);background:var(--bg)}
-.stat-box .num{font-size:24px;font-weight:700}
-.stat-box .lbl{font-size:12px;color:var(--text-light);margin-top:4px}
+/* Stats Grid */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 16px}
+.stat-box{text-align:center;padding:12px 4px;border-radius:var(--radius);background:var(--card);box-shadow:var(--shadow)}
+.stat-box .num{font-size:22px;font-weight:700}
+.stat-box .lbl{font-size:11px;color:var(--text-light);margin-top:2px}
 .stat-blue .num{color:var(--primary)}
 .stat-green .num{color:var(--success)}
 .stat-red .num{color:var(--danger)}
 .stat-orange .num{color:var(--warning)}
+
+/* Clock */
+.clock-area{text-align:center;padding:16px 0 8px}
+.clock-time{font-size:38px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:1px}
+.clock-date{font-size:13px;color:var(--text-light);margin-top:4px}
+.clock-status{margin-top:8px;display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:13px;font-weight:600}
+.status-in{background:var(--success-light);color:var(--success)}
+.status-out{background:#f1f5f9;color:var(--text-light)}
+.status-none{background:var(--warning-light);color:var(--warning)}
+
+/* Punch Button */
+.punch-area{text-align:center;padding:12px 0}
+.punch-btn{width:150px;height:150px;border-radius:50%;border:none;font-size:18px;font-weight:700;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.punch-btn::after{content:'';position:absolute;top:50%;left:50%;width:0;height:0;background:rgba(255,255,255,.3);border-radius:50%;transform:translate(-50%,-50%);transition:width .3s,height .3s}
+.punch-btn:active::after{width:200px;height:200px}
+.btn-clockin{background:linear-gradient(135deg,#059669,#10b981);color:#fff;box-shadow:0 4px 14px rgba(5,150,105,.35)}
+.btn-clockout{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;box-shadow:0 4px 14px rgba(220,38,38,.35)}
+.punch-btn:disabled{opacity:.5;cursor:not-allowed}
+.punch-btn .label{font-size:24px;margin-bottom:2px}
+.punch-btn .hint{font-size:11px;opacity:.8;font-weight:400}
+
+/* Today Card */
+.today-card{display:flex;gap:8px;margin-top:8px}
+.today-item{flex:1;text-align:center;padding:10px 4px;border-radius:10px;background:var(--bg)}
+.today-item .time{font-size:16px;font-weight:700;margin-top:4px}
+.today-item .lbl{font-size:11px;color:var(--text-light)}
+
+/* Location */
+.location-bar{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--bg);border-radius:10px;margin-top:8px;font-size:12px;color:var(--text-light)}
+.location-bar .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-green{background:#059669}
+.dot-red{background:#dc2626}
+.dot-gray{background:#94a3b8}
+
+/* History */
+.history-row{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.history-row:last-child{border-bottom:none}
+.history-date{width:70px;color:var(--text-light);flex-shrink:0}
+.history-times{flex:1}
+.history-times .tag{display:inline-block;padding:2px 6px;border-radius:4px;font-size:11px;font-weight:600;margin-right:4px}
+.tag-in{background:var(--success-light);color:var(--success)}
+.tag-out{background:#ede9fe;color:#7c3aed}
+.tag-late{background:var(--danger-light);color:var(--danger)}
+.tag-absent{background:#f1f5f9;color:var(--text-light)}
+.history-hours{font-weight:700;color:var(--primary);font-size:13px;width:56px;text-align:right;flex-shrink:0}
+
+/* Filter */
+.filter-bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.filter-bar select,.filter-bar input{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:#fff;flex:1;min-width:80px}
+
+/* Table */
+.table-wrap{overflow-x:auto;margin:0 -16px;padding:0 16px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--bg);padding:8px;text-align:left;font-weight:600;white-space:nowrap;position:sticky;top:0}
+td{padding:8px;border-bottom:1px solid var(--border);white-space:nowrap}
+tr:hover td{background:#f8fafc}
 
 /* Buttons */
 .btn{padding:10px 20px;border:none;border-radius:8px;font-weight:600;cursor:pointer;transition:.2s;font-size:14px}
@@ -128,76 +129,91 @@ tr:hover td{background:#f8fafc}
 .btn-group{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
 
 /* Login */
-.login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#2563eb,#7c3aed)}
-.login-box{background:#fff;border-radius:16px;padding:32px 24px;width:100%;max-width:360px;box-shadow:0 20px 40px rgba(0,0,0,.15)}
+.login-page{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;background:linear-gradient(135deg,#4f46e5,#7c3aed)}
+.login-box{background:#fff;border-radius:var(--radius-lg);padding:32px 24px;width:100%;max-width:360px;box-shadow:0 20px 40px rgba(0,0,0,.15)}
 .login-logo{text-align:center;margin-bottom:24px}
-.login-logo .icon{font-size:48px}
+.login-logo .icon{font-size:44px}
 .login-logo h2{font-size:20px;margin-top:8px}
 .login-logo p{font-size:13px;color:var(--text-light)}
-.form-group{margin-bottom:16px}
+.form-group{margin-bottom:14px}
 .form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:var(--text-light)}
-.form-group input,.form-group select{width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:15px;transition:.2s}
+.form-group input,.form-group select{width:100%;padding:11px;border:1px solid var(--border);border-radius:8px;font-size:14px;transition:.2s}
 .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light)}
-.login-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--primary),#7c3aed);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px}
+.login-btn{width:100%;padding:13px;background:linear-gradient(135deg,var(--primary),#7c3aed);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px}
 .login-btn:disabled{opacity:.5;cursor:not-allowed}
 .login-link{text-align:center;margin-top:16px;font-size:13px;color:var(--text-light)}
 .login-link a{color:var(--primary);text-decoration:none;font-weight:600;cursor:pointer}
-.error-msg{background:var(--danger-light);color:var(--danger);padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;text-align:center}
-.success-msg{background:var(--success-light);color:var(--success);padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;text-align:center}
+.error-msg{background:var(--danger-light);color:var(--danger);padding:10px;border-radius:8px;font-size:13px;margin-bottom:12px;text-align:center}
+.success-msg{background:var(--success-light);color:var(--success);padding:10px;border-radius:8px;font-size:13px;margin-bottom:12px;text-align:center}
 
 /* Password Toggle */
-.pw-wrap{display:flex;gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:.2s}
+.pw-wrap{display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:.2s}
 .pw-wrap:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light)}
-.pw-wrap input{flex:1;border:none;border-radius:0;padding:12px;font-size:15px;outline:none;min-width:0}
+.pw-wrap input{flex:1;border:none;border-radius:0;padding:11px;font-size:14px;outline:none;min-width:0}
 .pw-toggle{flex-shrink:0;width:44px;background:#f8fafc;border:none;border-left:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center}
 
 /* Modal */
 .modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
-.modal{background:#fff;border-radius:16px;padding:24px;width:100%;max-width:400px;max-height:80vh;overflow-y:auto}
-.modal h3{margin-bottom:16px;font-size:18px}
+.modal{background:#fff;border-radius:var(--radius-lg);padding:24px;width:100%;max-width:400px;max-height:80vh;overflow-y:auto}
+.modal h3{margin-bottom:16px;font-size:17px}
 .modal-close{float:right;background:none;border:none;font-size:24px;cursor:pointer;color:var(--text-light)}
 
-/* Settings row */
-.setting-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)}
+/* Settings */
+.setting-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
 .setting-row:last-child{border-bottom:none}
-.setting-label{font-size:14px;font-weight:500}
-.setting-label small{display:block;font-size:12px;color:var(--text-light);font-weight:400;margin-top:2px}
-.setting-value{font-size:14px;color:var(--primary);font-weight:600}
+.setting-label{font-size:13px;font-weight:500}
+.setting-label small{display:block;font-size:11px;color:var(--text-light);font-weight:400;margin-top:2px}
+.setting-value{font-size:13px;color:var(--primary);font-weight:600}
 
-/* Range circle on map */
-.range-info{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:13px;color:var(--text-light)}
+/* Calendar */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.cal-head{font-size:11px;font-weight:600;color:var(--text-light);padding:4px 0}
+.cal-day{padding:6px 2px;font-size:12px;border-radius:6px;cursor:default;position:relative}
+.cal-day.today{font-weight:700;color:var(--primary)}
+.cal-day.has-record::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--success)}
+.cal-day.late::after{background:var(--danger)}
+.cal-day.absent{color:var(--danger)}
+.cal-day.weekend{color:var(--text-light)}
+.cal-day.empty{visibility:hidden}
 
-/* Loading */
-.loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--text-light)}
-.spinner{width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite;margin-right:8px}
-@keyframes spin{to{transform:rotate(360deg)}}
+/* Holiday tag */
+.holiday-tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:600;margin-left:4px}
+.holiday-rest{background:var(--info-light);color:var(--info)}
 
 /* Tab */
 .tab-bar{display:flex;background:#fff;border-bottom:1px solid var(--border);margin:0 16px;border-radius:var(--radius) var(--radius) 0 0;overflow:hidden}
-.tab-btn{flex:1;padding:12px;text-align:center;background:none;border:none;font-size:13px;font-weight:600;color:var(--text-light);cursor:pointer;transition:.2s;border-bottom:3px solid transparent}
+.tab-btn{flex:1;padding:10px;text-align:center;background:none;border:none;font-size:13px;font-weight:600;color:var(--text-light);cursor:pointer;transition:.2s;border-bottom:2px solid transparent}
 .tab-btn.active{color:var(--primary);border-bottom-color:var(--primary);background:var(--primary-light)}
+
+/* Loading */
+.loading{display:flex;align-items:center;justify-content:center;padding:32px;color:var(--text-light)}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .6s linear infinite;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* Responsive */
 @media(max-width:400px){
-  .clock-time{font-size:34px}
-  .punch-btn{width:140px;height:140px}
+  .clock-time{font-size:32px}
+  .punch-btn{width:130px;height:130px}
   .stats-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(min-width:768px){
+  .stats-grid{grid-template-columns:repeat(4,1fr)}
+  .main-content{max-width:600px;margin:0 auto}
 }
 </style>
 </head>
 <body>
 
-<!-- ========== Login Page ========== -->
+<!-- ========== Login ========== -->
 <div id="loginPage" class="login-page">
   <div class="login-box">
     <div class="login-logo">
       <div class="icon">📍</div>
-      <h2>GPS 打卡系統</h2>
+      <h2 id="loginTitle">GPS 打卡系統</h2>
       <p>輸入帳號密碼登入打卡</p>
     </div>
     <div id="loginError" class="error-msg hidden"></div>
     <div id="loginSuccess" class="success-msg hidden"></div>
-
     <div id="loginForm">
       <div class="form-group">
         <label>帳號</label>
@@ -211,34 +227,6 @@ tr:hover td{background:#f8fafc}
         </div>
       </div>
       <button class="login-btn" onclick="doLogin()">登入</button>
-      <div class="login-link">還沒有帳號？<a onclick="showRegister()">註冊新帳號</a></div>
-    </div>
-
-    <div id="registerForm" class="hidden">
-      <div class="form-group">
-        <label>員工姓名</label>
-        <input type="text" id="regName" placeholder="例：王小明">
-      </div>
-      <div class="form-group">
-        <label>帳號</label>
-        <input type="text" id="regId" placeholder="例：A001">
-      </div>
-      <div class="form-group">
-        <label>密碼</label>
-        <div class="pw-wrap">
-          <input type="password" id="regPw" placeholder="設定密碼">
-          <button type="button" class="pw-toggle" onclick="togglePw('regPw',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>確認密碼</label>
-        <div class="pw-wrap">
-          <input type="password" id="regPw2" placeholder="再輸入一次密碼">
-          <button type="button" class="pw-toggle" onclick="togglePw('regPw2',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
-        </div>
-      </div>
-      <button class="login-btn" onclick="doRegister()">註冊</button>
-      <div class="login-link">已有帳號？<a onclick="showLogin()">返回登入</a></div>
     </div>
   </div>
 </div>
@@ -249,12 +237,23 @@ tr:hover td{background:#f8fafc}
   <!-- Page: 打卡 -->
   <div id="pageClock" class="page active">
     <div class="header">
-      <h1>📍 GPS 打卡</h1>
-      <div class="sub" id="welcomeMsg">歡迎回來</div>
+      <div class="header-top">
+        <div>
+          <h1 id="headerTitle">GPS 打卡</h1>
+          <div class="sub" id="welcomeMsg">歡迎回來</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-grid" id="todayStats">
+      <div class="stat-box stat-green"><div class="num" id="statPresent">-</div><div class="lbl">今日狀態</div></div>
+      <div class="stat-box stat-blue"><div class="num" id="statWorkHrs">--</div><div class="lbl">今日工時</div></div>
+      <div class="stat-box stat-red"><div class="num" id="statLate">-</div><div class="lbl">本月遲到</div></div>
+      <div class="stat-box stat-orange"><div class="num" id="statOvertime">--</div><div class="lbl">本月加班</div></div>
     </div>
 
     <div class="card">
-      <div class="clock-display">
+      <div class="clock-area">
         <div class="clock-time" id="liveClock">--:--:--</div>
         <div class="clock-date" id="liveDate">----年--月--日</div>
         <div id="todayStatus" class="clock-status status-none">尚未打卡</div>
@@ -273,15 +272,15 @@ tr:hover td{background:#f8fafc}
 
       <div class="today-card">
         <div class="today-item">
-          <div class="lbl">上班時間</div>
+          <div class="lbl">上班</div>
           <div class="time" id="todayIn">--:--</div>
         </div>
         <div class="today-item">
-          <div class="lbl">下班時間</div>
+          <div class="lbl">下班</div>
           <div class="time" id="todayOut">--:--</div>
         </div>
         <div class="today-item">
-          <div class="lbl">今日工時</div>
+          <div class="lbl">工時</div>
           <div class="time" id="todayHours">--:--</div>
         </div>
       </div>
@@ -289,12 +288,12 @@ tr:hover td{background:#f8fafc}
       <div class="location-bar" id="locationBar">
         <div class="dot dot-gray" id="locationDot"></div>
         <span id="locationText">正在取得位置...</span>
-        <button type="button" onclick="retryLocation()" style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--primary);cursor:pointer;flex-shrink:0">重試</button>
+        <button type="button" onclick="retryLocation()" style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--primary);cursor:pointer;flex-shrink:0">重試</button>
       </div>
     </div>
 
     <div class="card">
-      <h3 style="font-size:15px;margin-bottom:12px">📋 我的本月紀錄</h3>
+      <div class="card-title">📋 我的本月紀錄</div>
       <div id="myHistoryMini"><div class="loading"><div class="spinner"></div>載入中...</div></div>
     </div>
   </div>
@@ -302,8 +301,13 @@ tr:hover td{background:#f8fafc}
   <!-- Page: 歷史紀錄 -->
   <div id="pageHistory" class="page">
     <div class="header">
-      <h1>📋 歷史紀錄</h1>
-      <div class="sub">查看過去的打卡紀錄</div>
+      <div class="header-top">
+        <div>
+          <h1>📋 歷史紀錄</h1>
+          <div class="sub">查看過去的打卡紀錄</div>
+        </div>
+        <button class="header-btn" onclick="exportMyCSV()">📥 匯出</button>
+      </div>
     </div>
 
     <div class="card">
@@ -311,9 +315,30 @@ tr:hover td{background:#f8fafc}
         <select id="historyMonth" onchange="loadHistory()"></select>
       </div>
       <div id="historyList"><div class="loading"><div class="spinner"></div>載入中...</div></div>
-      <div class="btn-group" style="justify-content:flex-end">
-        <button class="btn btn-primary btn-sm" onclick="exportMyCSV()">📥 匯出 Excel</button>
-        <button class="btn btn-outline btn-sm" onclick="exportMyJSON()">📄 匯出 JSON</button>
+    </div>
+  </div>
+
+  <!-- Page: 月曆 -->
+  <div id="pageCalendar" class="page">
+    <div class="header">
+      <div class="header-top">
+        <div>
+          <h1>📅 月曆檢視</h1>
+          <div class="sub">出勤月曆一目瞭然</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="filter-bar">
+        <select id="calMonth" onchange="loadCalendar()"></select>
+      </div>
+      <div class="cal-grid" id="calHead">
+        <div class="cal-head">日</div><div class="cal-head">一</div><div class="cal-head">二</div>
+        <div class="cal-head">三</div><div class="cal-head">四</div><div class="cal-head">五</div><div class="cal-head">六</div>
+      </div>
+      <div class="cal-grid" id="calBody"></div>
+      <div style="margin-top:12px;font-size:11px;color:var(--text-light);display:flex;gap:12px;flex-wrap:wrap">
+        <span>🟢 準時</span><span>🔴 遲到</span><span>⚫ 缺勤</span><span>🔵 休息日</span>
       </div>
     </div>
   </div>
@@ -321,63 +346,75 @@ tr:hover td{background:#f8fafc}
   <!-- Page: 管理後台 -->
   <div id="pageAdmin" class="page">
     <div class="header">
-      <h1>⚙️ 管理後台</h1>
-      <div class="sub">員工出勤管理</div>
-    </div>
-
-    <div class="card">
-      <div class="stats-grid" id="adminStats">
-        <div class="stat-box stat-blue"><div class="num" id="statTotal">0</div><div class="lbl">本月出勤人次</div></div>
-        <div class="stat-box stat-green"><div class="num" id="statOnTime">0</div><div class="lbl">準時上班</div></div>
-        <div class="stat-box stat-red"><div class="num" id="statLate">0</div><div class="lbl">遲到</div></div>
-        <div class="stat-box stat-orange"><div class="num" id="statOvertime">0</div><div class="lbl">加班時數</div></div>
+      <div class="header-top">
+        <div>
+          <h1>⚙️ 管理後台</h1>
+          <div class="sub">員工出勤管理</div>
+        </div>
       </div>
     </div>
 
+    <div class="stats-grid" id="adminStatsGrid">
+      <div class="stat-box stat-blue"><div class="num" id="statTotal">0</div><div class="lbl">本月出勤</div></div>
+      <div class="stat-box stat-green"><div class="num" id="statOnTime">0</div><div class="lbl">準時</div></div>
+      <div class="stat-box stat-red"><div class="num" id="statLate2">0</div><div class="lbl">遲到</div></div>
+      <div class="stat-box stat-orange"><div class="num" id="statOvertime2">0</div><div class="lbl">加班(時)</div></div>
+    </div>
+
     <div class="card">
+      <div class="card-title">📋 出勤紀錄</div>
       <div class="filter-bar">
         <select id="adminMonth" onchange="loadAdminData()"></select>
         <select id="adminEmployee" onchange="loadAdminData()">
           <option value="all">全部員工</option>
         </select>
       </div>
-
       <div class="table-wrap">
         <table>
-          <thead>
-            <tr>
-              <th>員工</th>
-              <th>日期</th>
-              <th>上班</th>
-              <th>下班</th>
-              <th>工時</th>
-              <th>狀態</th>
-              <th>位置</th>
-            </tr>
-          </thead>
-          <tbody id="adminTableBody">
-            <tr><td colspan="7" class="loading"><div class="spinner"></div></td></tr>
-          </tbody>
+          <thead><tr><th>員工</th><th>日期</th><th>上班</th><th>下班</th><th>工時</th><th>狀態</th></tr></thead>
+          <tbody id="adminTableBody"><tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr></tbody>
         </table>
       </div>
-
-      <div class="btn-group">
-        <button class="btn btn-primary btn-sm" onclick="exportAdminCSV()">📥 全部匯出 Excel</button>
-        <button class="btn btn-outline btn-sm" onclick="exportAdminJSON()">📄 全部匯出 JSON</button>
-        <button class="btn btn-outline btn-sm" onclick="openSettings()">⚙️ 系統設定</button>
+      <div class="btn-group" style="justify-content:flex-end">
+        <button class="btn btn-primary btn-sm" onclick="exportAdminCSV()">📥 匯出 Excel</button>
+        <button class="btn btn-outline btn-sm" onclick="exportAdminJSON()">📄 匯出 JSON</button>
       </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">👤 新增員工</div>
+      <div id="addEmpError" class="error-msg hidden"></div>
+      <div id="addEmpSuccess" class="success-msg hidden"></div>
+      <div class="form-group">
+        <label>員工姓名</label>
+        <input type="text" id="addEmpName" placeholder="例：王小明">
+      </div>
+      <div class="form-group">
+        <label>初始密碼</label>
+        <div class="pw-wrap">
+          <input type="password" id="addEmpPw" placeholder="員工首次登入後需更改">
+          <button type="button" class="pw-toggle" onclick="togglePw('addEmpPw',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <button class="btn btn-success" onclick="adminAddEmployee()" style="width:100%">➕ 新增員工</button>
+      <div class="card-title" style="margin-top:16px">📋 員工列表</div>
+      <div id="employeeList"><div class="loading"><div class="spinner"></div>載入中...</div></div>
     </div>
   </div>
 
   <!-- Page: 個人設定 -->
   <div id="pageProfile" class="page">
     <div class="header">
-      <h1>👤 個人設定</h1>
-      <div class="sub">帳號與打卡範圍設定</div>
+      <div class="header-top">
+        <div>
+          <h1>👤 個人設定</h1>
+          <div class="sub">帳號與系統設定</div>
+        </div>
+      </div>
     </div>
 
     <div class="card">
-      <h3 style="font-size:15px;margin-bottom:12px">帳號資訊</h3>
+      <div class="card-title">帳號資訊</div>
       <div class="setting-row">
         <div class="setting-label">員工姓名<small id="profileRole">一般員工</small></div>
         <div class="setting-value" id="profileName">--</div>
@@ -389,9 +426,9 @@ tr:hover td{background:#f8fafc}
     </div>
 
     <div class="card" id="adminSettingsCard">
-      <h3 style="font-size:15px;margin-bottom:12px">打卡範圍設定 <span style="font-size:12px;color:var(--text-light);font-weight:400">(管理員)</span></h3>
+      <div class="card-title">🏢 打卡範圍設定 <span style="font-size:11px;color:var(--text-light);font-weight:400">(管理員)</span></div>
       <div class="setting-row">
-        <div class="setting-label">公司定位<small>設定打卡中心點</small></div>
+        <div class="setting-label">公司定位<small>打卡中心點</small></div>
         <div class="setting-value" id="companyLocation">未設定</div>
       </div>
       <div class="setting-row">
@@ -399,23 +436,75 @@ tr:hover td{background:#f8fafc}
         <div class="setting-value" id="companyRange">500 公尺</div>
       </div>
       <div class="form-group">
-        <label>設定公司位置（點擊取得目前位置）</label>
+        <label>設定公司位置（在公司內操作）</label>
         <button class="btn btn-primary btn-sm" onclick="setCompanyLocation()" style="width:100%">📍 取得目前位置作為公司</button>
       </div>
       <div class="form-group">
         <label>打卡範圍（公尺）</label>
         <input type="number" id="inputRange" value="500" min="50" max="10000" step="50">
-        <button class="btn btn-success btn-sm" onclick="saveCompanyRange()" style="width:100%;margin-top:8px">💾 儲存範圍</button>
+        <button class="btn btn-success btn-sm" onclick="saveCompanyRange()" style="width:100%;margin-top:6px">💾 儲存範圍</button>
       </div>
+
+      <div class="card-title" style="margin-top:16px">⏰ 上下班時間</div>
       <div class="setting-row">
         <div class="setting-label">上班時間</div>
-        <div class="setting-value"><input type="time" id="workStart" value="09:00" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:14px;width:100px"></div>
+        <div class="setting-value"><input type="time" id="workStart" value="09:00" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px;width:90px"></div>
       </div>
       <div class="setting-row">
         <div class="setting-label">下班時間</div>
-        <div class="setting-value"><input type="time" id="workEnd" value="18:00" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:14px;width:100px"></div>
+        <div class="setting-value"><input type="time" id="workEnd" value="18:00" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px;width:90px"></div>
       </div>
       <button class="btn btn-success btn-sm" onclick="saveWorkHours()" style="width:100%;margin-top:4px">💾 儲存上下班時間</button>
+
+      <div class="card-title" style="margin-top:16px">📅 休息日設定</div>
+      <div style="font-size:12px;color:var(--text-light);margin-bottom:8px">勾選公司固定休息日（這些天不需打卡）</div>
+      <div id="restDaySettings"></div>
+      <button class="btn btn-success btn-sm" onclick="saveRestDays()" style="width:100%;margin-top:8px">💾 儲存休息日</button>
+
+      <div class="card-title" style="margin-top:16px">🔢 員工編號規則</div>
+      <div class="setting-row">
+        <div class="setting-label">編號前綴<small>例：A、B、EMP</small></div>
+        <div class="setting-value"><input type="text" id="idPrefix" value="A" maxlength="5" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px;width:70px;text-transform:uppercase"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">起始編號</div>
+        <div class="setting-value"><input type="number" id="idStartNum" value="1" min="1" max="9999" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px;width:70px"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">編號位數<small>補零用</small></div>
+        <div class="setting-value"><input type="number" id="idDigits" value="3" min="1" max="6" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px;width:70px"></div>
+      </div>
+      <div class="setting-row">
+        <div class="setting-label">預覽</div>
+        <div class="setting-value" id="idPreview" style="font-size:15px">A001</div>
+      </div>
+      <button class="btn btn-success btn-sm" onclick="saveIdRule()" style="width:100%;margin-top:4px">💾 儲存編號規則</button>
+
+      <div class="card-title" style="margin-top:16px">🔒 修改管理員密碼</div>
+      <div class="form-group">
+        <label>目前密碼</label>
+        <div class="pw-wrap">
+          <input type="password" id="adminOldPw" placeholder="輸入目前密碼">
+          <button type="button" class="pw-toggle" onclick="togglePw('adminOldPw',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>新密碼</label>
+        <div class="pw-wrap">
+          <input type="password" id="adminNewPw" placeholder="至少4個字元">
+          <button type="button" class="pw-toggle" onclick="togglePw('adminNewPw',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>確認新密碼</label>
+        <div class="pw-wrap">
+          <input type="password" id="adminNewPw2" placeholder="再輸入一次">
+          <button type="button" class="pw-toggle" onclick="togglePw('adminNewPw2',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+      </div>
+      <div id="adminPwError" class="error-msg hidden"></div>
+      <div id="adminPwSuccess" class="success-msg hidden"></div>
+      <button class="btn btn-primary btn-sm" onclick="changeAdminPassword()" style="width:100%">🔒 修改密碼</button>
     </div>
 
     <div class="card">
@@ -425,36 +514,50 @@ tr:hover td{background:#f8fafc}
 
   <!-- Bottom Nav -->
   <div class="bottom-nav">
-    <button class="nav-btn active" onclick="switchPage('Clock')">
+    <button class="nav-btn active" onclick="switchPage('Clock',this)">
       <span class="icon">📍</span>打卡
     </button>
-    <button class="nav-btn" onclick="switchPage('History')">
+    <button class="nav-btn" onclick="switchPage('History',this)">
       <span class="icon">📋</span>紀錄
     </button>
-    <button class="nav-btn hidden" id="navAdmin" onclick="switchPage('Admin')">
+    <button class="nav-btn" onclick="switchPage('Calendar',this)">
+      <span class="icon">📅</span>月曆
+    </button>
+    <button class="nav-btn hidden" id="navAdmin" onclick="switchPage('Admin',this)">
       <span class="icon">⚙️</span>管理
     </button>
-    <button class="nav-btn" onclick="switchPage('Profile')">
+    <button class="nav-btn" onclick="switchPage('Profile',this)">
       <span class="icon">👤</span>設定
     </button>
   </div>
 </div>
 
-<!-- Settings Modal -->
-<div id="settingsModal" class="modal-overlay hidden" onclick="closeSettings(event)">
+<!-- Force Password Change Modal -->
+<div id="pwChangeModal" class="modal-overlay" style="display:none">
   <div class="modal" onclick="event.stopPropagation()">
-    <button class="modal-close" onclick="closeSettings()">&times;</button>
-    <h3>⚙️ 系統設定</h3>
-    <div class="setting-row">
-      <div class="setting-label">系統名稱</div>
-      <div class="setting-value"><input type="text" id="sysName" value="GPS 打卡系統" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:14px;width:140px"></div>
+    <h3>🔒 首次登入，請更改密碼</h3>
+    <p style="font-size:13px;color:var(--text-light);margin-bottom:16px">為確保帳號安全，請設定新密碼後再使用系統。</p>
+    <div id="pwChangeError" class="error-msg hidden"></div>
+    <div class="form-group">
+      <label>新密碼</label>
+      <div class="pw-wrap">
+        <input type="password" id="newPw" placeholder="至少4個字元">
+        <button type="button" class="pw-toggle" onclick="togglePw('newPw',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
     </div>
-    <button class="btn btn-success btn-sm" onclick="saveSysName()" style="width:100%;margin-top:12px">💾 儲存</button>
+    <div class="form-group">
+      <label>確認新密碼</label>
+      <div class="pw-wrap">
+        <input type="password" id="newPw2" placeholder="再輸入一次">
+        <button type="button" class="pw-toggle" onclick="togglePw('newPw2',this)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      </div>
+    </div>
+    <button class="login-btn" onclick="doChangePassword()">確認更改密碼</button>
   </div>
 </div>
 
 <!-- Toast -->
-<div id="toast" style="position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;z-index:999;display:none;box-shadow:0 4px 12px rgba(0,0,0,.3)"></div>
+<div id="toast" style="position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:999;display:none;box-shadow:0 4px 12px rgba(0,0,0,.3)"></div>
 
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -475,6 +578,7 @@ const db = firebase.firestore();
 const COLLECTION = "gps_attendance";
 
 // ============ STATE ============
+const STORAGE_KEY = "gps_user_" + COLLECTION;
 let currentUser = null;
 let currentLocation = null;
 let todayRecords = [];
@@ -485,7 +589,12 @@ let settings = {
   companyLng: null,
   range: 500,
   workStart: "09:00",
-  workEnd: "18:00"
+  workEnd: "18:00",
+  idPrefix: "A",
+  idStartNum: 1,
+  idDigits: 3,
+  restDays: [0, 6],
+  adminPw: "admin123"
 };
 
 // ============ CLOCK ============
@@ -506,55 +615,6 @@ function togglePw(inputId, btn) {
     ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
     : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 }
-function showLogin() {
-  document.getElementById("loginForm").classList.remove("hidden");
-  document.getElementById("registerForm").classList.add("hidden");
-  document.getElementById("loginError").classList.add("hidden");
-  document.getElementById("loginSuccess").classList.add("hidden");
-}
-function showRegister() {
-  document.getElementById("loginForm").classList.add("hidden");
-  document.getElementById("registerForm").classList.remove("hidden");
-  document.getElementById("loginError").classList.add("hidden");
-  document.getElementById("loginSuccess").classList.add("hidden");
-}
-
-async function doRegister() {
-  const name = document.getElementById("regName").value.trim();
-  const id = document.getElementById("regId").value.trim().toUpperCase();
-  const pw = document.getElementById("regPw").value;
-  const pw2 = document.getElementById("regPw2").value;
-  const errEl = document.getElementById("loginError");
-
-  if (!name || !id || !pw) { errEl.textContent = "請填寫所有欄位"; errEl.classList.remove("hidden"); return; }
-  if (pw !== pw2) { errEl.textContent = "兩次密碼不一致"; errEl.classList.remove("hidden"); return; }
-  if (pw.length < 4) { errEl.textContent = "密碼至少4個字元"; errEl.classList.remove("hidden"); return; }
-
-  const ADMIN_ACCOUNTS = ["管理員"];
-  const role = ADMIN_ACCOUNTS.includes(id) ? "admin" : "employee";
-
-  if (ADMIN_ACCOUNTS.includes(id)) {
-    errEl.textContent = "此帳號不可註冊"; errEl.classList.remove("hidden"); return;
-  }
-
-  try {
-    const doc = await db.collection(COLLECTION).doc("employees").get();
-    const employees = doc.exists ? doc.data().list : [];
-    if (employees.find(e => e.id === id)) {
-      errEl.textContent = "此帳號已被註冊"; errEl.classList.remove("hidden"); return;
-    }
-    employees.push({name, id, pw, role, createdAt: Date.now()});
-    await db.collection(COLLECTION).doc("employees").set({list: employees});
-    errEl.classList.add("hidden");
-    showLogin();
-    setTimeout(() => {
-      document.getElementById("loginSuccess").textContent = "註冊成功！請登入";
-      document.getElementById("loginSuccess").classList.remove("hidden");
-    }, 100);
-  } catch(e) {
-    errEl.textContent = "註冊失敗：" + e.message; errEl.classList.remove("hidden");
-  }
-}
 
 async function doLogin() {
   const id = document.getElementById("loginId").value.trim().toUpperCase();
@@ -562,12 +622,10 @@ async function doLogin() {
   const errEl = document.getElementById("loginError");
   if (!id || !pw) { errEl.textContent = "請輸入帳號密碼"; errEl.classList.remove("hidden"); return; }
 
-  const ADMIN_ACCOUNT = {id:"管理員", pw:"admin123", name:"系統管理員", role:"admin"};
-
   try {
-    if (id === ADMIN_ACCOUNT.id && pw === ADMIN_ACCOUNT.pw) {
-      currentUser = ADMIN_ACCOUNT;
-      localStorage.setItem("gps_user", JSON.stringify(ADMIN_ACCOUNT));
+    if (id === "管理員" && pw === settings.adminPw) {
+      currentUser = {id:"管理員", name:"系統管理員", role:"admin"};
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentUser));
       errEl.classList.add("hidden");
       enterApp();
       return;
@@ -579,7 +637,7 @@ async function doLogin() {
     if (!emp) { errEl.textContent = "帳號或密碼錯誤"; errEl.classList.remove("hidden"); return; }
 
     currentUser = emp;
-    localStorage.setItem("gps_user", JSON.stringify(emp));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(emp));
     errEl.classList.add("hidden");
     enterApp();
   } catch(e) {
@@ -589,7 +647,7 @@ async function doLogin() {
 
 function doLogout() {
   currentUser = null;
-  localStorage.removeItem("gps_user");
+  localStorage.removeItem(STORAGE_KEY);
   document.getElementById("mainApp").classList.add("hidden");
   document.getElementById("loginPage").style.display = "flex";
   document.getElementById("loginId").value = "";
@@ -614,10 +672,17 @@ function enterApp() {
 
   loadSettings();
   loadTodayRecords();
+  renderMyHistoryMini();
   loadHistory();
   initLocation();
   populateMonthSelects();
-  if (currentUser.role === "admin") loadAdminData();
+  buildRestDayUI();
+  loadTodayStats();
+  if (currentUser.role === "admin") { loadAdminData(); loadEmployeeList(); }
+
+  if (currentUser.forcePasswordChange && currentUser.role !== "admin") {
+    document.getElementById("pwChangeModal").style.display = "flex";
+  }
 }
 
 // ============ LOCATION ============
@@ -642,9 +707,9 @@ function startGeoWatch() {
   }, err => {
     let msg = "";
     switch(err.code) {
-      case 1: msg = "定位權限被拒絕，請至手機「設定>隱私權>定位服務」開啟，並允許瀏覽器存取"; break;
-      case 2: msg = "無法取得位置，請確認已開啟GPS且在室外或窗邊"; break;
-      case 3: msg = "定位逾時，請確認網路連線正常後按「重試」"; break;
+      case 1: msg = "定位權限被拒絕，請至手機設定開啟定位權限"; break;
+      case 2: msg = "無法取得位置，請確認已開啟GPS"; break;
+      case 3: msg = "定位逾時，請按重試"; break;
       default: msg = "無法取得定位：" + err.message;
     }
     document.getElementById("locationText").textContent = msg;
@@ -655,7 +720,7 @@ function startGeoWatch() {
 function retryLocation() {
   currentLocation = null;
   startGeoWatch();
-  showToast("🔄 重新嘗試定位中...", 1500);
+  showToast("🔄 重新定位中...", 1500);
 }
 
 function updateLocationUI() {
@@ -675,8 +740,7 @@ function updateLocationUI() {
 
 function checkInRange(lat, lng) {
   if (!settings.companyLat || !settings.companyLng) return true;
-  const dist = getDistance(lat, lng, settings.companyLat, settings.companyLng);
-  return dist <= settings.range;
+  return getDistance(lat, lng, settings.companyLat, settings.companyLng) <= settings.range;
 }
 
 function getDistance(lat1, lng1, lat2, lng2) {
@@ -733,9 +797,7 @@ async function loadTodayRecords() {
     todayRecords = [];
     snap.forEach(doc => todayRecords.push(doc.data()));
     renderTodayUI();
-  } catch(e) {
-    console.error(e);
-  }
+  } catch(e) { console.error(e); }
 }
 
 function renderTodayUI() {
@@ -775,6 +837,39 @@ function renderTodayUI() {
   renderMyHistoryMini();
 }
 
+// ============ TODAY STATS ============
+async function loadTodayStats() {
+  if (!currentUser) return;
+  const now = new Date();
+  const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+  document.getElementById("statPresent").textContent = todayRecords.length > 0 ? "✓" : "-";
+
+  if (todayRecords.length > 0) {
+    const clockIn = todayRecords.find(r => r.type === "clockin");
+    const clockOut = todayRecords.find(r => r.type === "clockout");
+    if (clockIn && clockOut) {
+      const diff = clockOut.timestamp - clockIn.timestamp;
+      document.getElementById("statWorkHrs").textContent = (diff/3600000).toFixed(1);
+    } else {
+      document.getElementById("statWorkHrs").textContent = "進行中";
+    }
+  }
+
+  try {
+    const snap = await db.collection(COLLECTION).doc("records").collection(currentUser.id).get();
+    let lateCount = 0, overtimeHrs = 0;
+    snap.forEach(doc => {
+      const r = doc.data();
+      if (r.date && r.date.startsWith(ym)) {
+        if (r.type === "clockin" && r.time.slice(0,5) > settings.workStart) lateCount++;
+      }
+    });
+    document.getElementById("statLate").textContent = lateCount > 0 ? lateCount : "0";
+    document.getElementById("statOvertime").textContent = overtimeHrs > 0 ? overtimeHrs + "h" : "0";
+  } catch(e) { console.error(e); }
+}
+
 // ============ MY HISTORY MINI ============
 async function renderMyHistoryMini() {
   if (!currentUser) return;
@@ -783,20 +878,14 @@ async function renderMyHistoryMini() {
   try {
     const snap = await db.collection(COLLECTION).doc("records").collection(currentUser.id).get();
     const records = [];
-    snap.forEach(doc => {
-      const r = doc.data();
-      if (r.date && r.date.startsWith(ym)) records.push(r);
-    });
+    snap.forEach(doc => { const r = doc.data(); if (r.date && r.date.startsWith(ym)) records.push(r); });
 
     const grouped = {};
-    records.forEach(r => {
-      if (!grouped[r.date]) grouped[r.date] = {};
-      grouped[r.date][r.type] = r;
-    });
+    records.forEach(r => { if (!grouped[r.date]) grouped[r.date] = {}; grouped[r.date][r.type] = r; });
 
     let html = "";
     const dates = Object.keys(grouped).sort().reverse().slice(0,10);
-    if (dates.length === 0) { html = '<div style="text-align:center;color:var(--text-light);padding:16px;font-size:13px">本月尚無打卡紀錄</div>'; }
+    if (dates.length === 0) html = '<div style="text-align:center;color:var(--text-light);padding:16px;font-size:13px">本月尚無打卡紀錄</div>';
     dates.forEach(d => {
       const g = grouped[d];
       const inTime = g.clockin ? g.clockin.time.slice(0,5) : "--:--";
@@ -835,6 +924,7 @@ function populateMonthSelects() {
   }
   document.getElementById("historyMonth").innerHTML = html;
   document.getElementById("adminMonth").innerHTML = html;
+  document.getElementById("calMonth").innerHTML = html;
 }
 
 async function loadHistory() {
@@ -843,20 +933,14 @@ async function loadHistory() {
   try {
     const snap = await db.collection(COLLECTION).doc("records").collection(currentUser.id).get();
     const records = [];
-    snap.forEach(doc => {
-      const r = doc.data();
-      if (r.date && r.date.startsWith(ym)) records.push(r);
-    });
+    snap.forEach(doc => { const r = doc.data(); if (r.date && r.date.startsWith(ym)) records.push(r); });
 
     const grouped = {};
-    records.forEach(r => {
-      if (!grouped[r.date]) grouped[r.date] = {};
-      grouped[r.date][r.type] = r;
-    });
+    records.forEach(r => { if (!grouped[r.date]) grouped[r.date] = {}; grouped[r.date][r.type] = r; });
 
     let html = "";
     const dates = Object.keys(grouped).sort().reverse();
-    if (dates.length === 0) { html = '<div style="text-align:center;color:var(--text-light);padding:24px">此月尚無打卡紀錄</div>'; }
+    if (dates.length === 0) html = '<div style="text-align:center;color:var(--text-light);padding:24px">此月尚無打卡紀錄</div>';
     dates.forEach(d => {
       const g = grouped[d];
       const inTime = g.clockin ? g.clockin.time.slice(0,5) : "--:--";
@@ -881,6 +965,52 @@ async function loadHistory() {
   } catch(e) {
     document.getElementById("historyList").innerHTML = '<div style="color:var(--danger);padding:12px">載入失敗</div>';
   }
+}
+
+// ============ CALENDAR ============
+async function loadCalendar() {
+  if (!currentUser) return;
+  const ym = document.getElementById("calMonth").value;
+  const [year, month] = ym.split("-").map(Number);
+  const firstDay = new Date(year, month-1, 1).getDay();
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const today = new Date().toISOString().slice(0,10);
+
+  let records = [];
+  try {
+    const snap = await db.collection(COLLECTION).doc("records").collection(currentUser.id).get();
+    snap.forEach(doc => { const r = doc.data(); if (r.date && r.date.startsWith(ym)) records.push(r); });
+  } catch(e) {}
+
+  const grouped = {};
+  records.forEach(r => { if (!grouped[r.date]) grouped[r.date] = {}; grouped[r.date][r.type] = r; });
+
+  let html = "";
+  for (let i=0; i<firstDay; i++) html += '<div class="cal-day empty"></div>';
+
+  for (let d=1; d<=daysInMonth; d++) {
+    const dateStr = `${ym}-${String(d).padStart(2,'0')}`;
+    const dayOfWeek = new Date(year, month-1, d).getDay();
+    const isWeekend = settings.restDays.includes(dayOfWeek);
+    const isToday = dateStr === today;
+    const g = grouped[dateStr] || {};
+    const hasRecord = g.clockin || g.clockout;
+    const isLate = g.clockin && g.clockin.time.slice(0,5) > settings.workStart;
+
+    let cls = "cal-day";
+    if (isToday) cls += " today";
+    if (isWeekend && !hasRecord) cls += " weekend";
+    if (hasRecord && isLate) cls += " late";
+    if (hasRecord) cls += " has-record";
+    if (!isWeekend && !hasRecord && dateStr < today) cls += " absent";
+
+    let tooltip = "";
+    if (g.clockin) tooltip += `上:${g.clockin.time.slice(0,5)} `;
+    if (g.clockout) tooltip += `下:${g.clockout.time.slice(0,5)}`;
+
+    html += `<div class="${cls}" title="${tooltip}">${d}</div>`;
+  }
+  document.getElementById("calBody").innerHTML = html;
 }
 
 // ============ ADMIN ============
@@ -926,19 +1056,95 @@ async function loadAdminData() {
         <td>${r.type === 'clockout' ? r.time.slice(0,5) : '-'}</td>
         <td>${r.type === 'clockout' ? '-' : '-'}</td>
         <td>${isLate ? '<span class="tag tag-late">遲到</span>' : (r.type==='clockin'?'<span class="tag tag-in">準時</span>':'<span class="tag tag-out">下班</span>')}</td>
-        <td>${r.location ? '已記錄' : '無'}</td>
       </tr>`;
     });
 
-    document.getElementById("adminTableBody").innerHTML = html || '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-light)">此月尚無紀錄</td></tr>';
+    document.getElementById("adminTableBody").innerHTML = html || '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-light)">此月尚無紀錄</td></tr>';
     document.getElementById("statTotal").textContent = allRecords.length;
-    document.getElementById("statLate").textContent = totalLate;
+    document.getElementById("statLate2").textContent = totalLate;
     document.getElementById("statOnTime").textContent = Math.max(0, Math.floor(allRecords.length/2) - totalLate);
-    document.getElementById("statOvertime").textContent = totalOvertime + "h";
+    document.getElementById("statOvertime2").textContent = totalOvertime;
   } catch(e) {
     console.error(e);
-    document.getElementById("adminTableBody").innerHTML = '<tr><td colspan="7" style="color:var(--danger)">載入失敗</td></tr>';
+    document.getElementById("adminTableBody").innerHTML = '<tr><td colspan="6" style="color:var(--danger)">載入失敗</td></tr>';
   }
+}
+
+// ============ EMPLOYEE MANAGEMENT ============
+async function adminAddEmployee() {
+  const name = document.getElementById("addEmpName").value.trim();
+  const pw = document.getElementById("addEmpPw").value;
+  const errEl = document.getElementById("addEmpError");
+  const successEl = document.getElementById("addEmpSuccess");
+
+  if (!name || !pw) { errEl.textContent = "請填寫員工姓名和密碼"; errEl.classList.remove("hidden"); successEl.classList.add("hidden"); return; }
+  if (pw.length < 4) { errEl.textContent = "密碼至少4個字元"; errEl.classList.remove("hidden"); successEl.classList.add("hidden"); return; }
+
+  try {
+    const id = await getNextEmployeeId();
+    const doc = await db.collection(COLLECTION).doc("employees").get();
+    const employees = doc.exists ? doc.data().list : [];
+    employees.push({name, id, pw, role:"employee", forcePasswordChange:true, createdAt: Date.now()});
+    await db.collection(COLLECTION).doc("employees").set({list: employees});
+    errEl.classList.add("hidden");
+    successEl.innerHTML = `✅ 已新增：<strong>${name}</strong>｜帳號：<strong>${id}</strong>｜密碼：<strong>${pw}</strong><br><small style="color:var(--text-light)">員工首次登入後需更改密碼</small>`;
+    successEl.classList.remove("hidden");
+    document.getElementById("addEmpName").value = "";
+    document.getElementById("addEmpPw").value = "";
+    loadEmployeeList();
+  } catch(e) {
+    errEl.textContent = "新增失敗：" + e.message; errEl.classList.remove("hidden"); successEl.classList.add("hidden");
+  }
+}
+
+async function loadEmployeeList() {
+  if (!currentUser || currentUser.role !== "admin") return;
+  try {
+    const doc = await db.collection(COLLECTION).doc("employees").get();
+    const employees = doc.exists ? doc.data().list : [];
+    let html = "";
+    employees.forEach(emp => {
+      const isPending = emp.forcePasswordChange ? '<span class="tag tag-late" style="margin-left:4px">待改密</span>' : '';
+      html += `<div class="history-row">
+        <div class="history-date">${emp.id}</div>
+        <div class="history-times">
+          <strong>${emp.name}</strong>
+          <span class="tag ${emp.role==='admin'?'tag-late':'tag-in'}" style="margin-left:6px">${emp.role==='admin'?'管理員':'員工'}</span>
+          ${isPending}
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="adminDeleteEmployee('${emp.id}','${emp.name}')" ${emp.role==='admin'?'disabled style="opacity:0.3"':''}>刪除</button>
+      </div>`;
+    });
+    document.getElementById("employeeList").innerHTML = html || '<div style="text-align:center;color:var(--text-light);padding:16px">尚無員工帳號</div>';
+  } catch(e) {
+    document.getElementById("employeeList").innerHTML = '<div style="color:var(--danger);padding:12px">載入失敗</div>';
+  }
+}
+
+async function adminDeleteEmployee(empId, empName) {
+  if (!confirm(`確定要刪除「${empName}（${empId}）」嗎？`)) return;
+  try {
+    const doc = await db.collection(COLLECTION).doc("employees").get();
+    const employees = doc.exists ? doc.data().list : [];
+    await db.collection(COLLECTION).doc("employees").set({list: employees.filter(e => e.id !== empId)});
+    showToast(`✅ 已刪除 ${empName}`, 2000);
+    loadEmployeeList();
+  } catch(e) { showToast("❌ 刪除失敗：" + e.message, 3000); }
+}
+
+async function getNextEmployeeId() {
+  const prefix = settings.idPrefix || "A";
+  const digits = settings.idDigits || 3;
+  const doc = await db.collection(COLLECTION).doc("employees").get();
+  const employees = doc.exists ? doc.data().list : [];
+  let maxNum = (settings.idStartNum || 1) - 1;
+  employees.forEach(emp => {
+    if (emp.id && emp.id.startsWith(prefix)) {
+      const num = parseInt(emp.id.slice(prefix.length));
+      if (!isNaN(num) && num > maxNum) maxNum = num;
+    }
+  });
+  return prefix + String(maxNum + 1).padStart(digits, "0");
 }
 
 // ============ SETTINGS ============
@@ -950,10 +1156,18 @@ async function loadSettings() {
       document.getElementById("inputRange").value = settings.range;
       document.getElementById("workStart").value = settings.workStart;
       document.getElementById("workEnd").value = settings.workEnd;
+      document.getElementById("idPrefix").value = settings.idPrefix || "A";
+      document.getElementById("idStartNum").value = settings.idStartNum || 1;
+      document.getElementById("idDigits").value = settings.idDigits || 3;
+      updateIdPreview();
       if (settings.companyLat && settings.companyLng) {
         document.getElementById("companyLocation").textContent = `${settings.companyLat.toFixed(5)}, ${settings.companyLng.toFixed(5)}`;
       }
       document.getElementById("companyRange").textContent = settings.range + " 公尺";
+      if (settings.companyName) {
+        document.getElementById("loginTitle").textContent = settings.companyName + " GPS 打卡系統";
+        document.getElementById("headerTitle").textContent = settings.companyName + " GPS 打卡";
+      }
     }
   } catch(e) { console.error(e); }
 }
@@ -983,18 +1197,104 @@ async function saveWorkHours() {
   showToast("✅ 上下班時間已更新", 2000);
 }
 
-async function saveSysName() {
-  const name = document.getElementById("sysName").value.trim();
-  if (name) {
-    document.title = name;
-    showToast("✅ 系統名稱已更新", 2000);
-    closeSettings();
+// ============ REST DAYS ============
+function buildRestDayUI() {
+  const days = ["日","一","二","三","四","五","六"];
+  let html = '<div style="display:flex;gap:6px;flex-wrap:wrap">';
+  for (let i=0; i<7; i++) {
+    const checked = (settings.restDays || []).includes(i) ? "checked" : "";
+    html += `<label style="display:flex;align-items:center;gap:4px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:13px;background:${checked?'var(--primary-light)':'#fff'}">
+      <input type="checkbox" value="${i}" ${checked} onchange="this.parentElement.style.background=this.checked?'var(--primary-light)':'#fff'" style="accent-color:var(--primary)"> 週${days[i]}
+    </label>`;
+  }
+  html += '</div>';
+  document.getElementById("restDaySettings").innerHTML = html;
+}
+
+async function saveRestDays() {
+  const checkboxes = document.querySelectorAll('#restDaySettings input[type="checkbox"]');
+  settings.restDays = [];
+  checkboxes.forEach(cb => { if (cb.checked) settings.restDays.push(parseInt(cb.value)); });
+  await db.collection(COLLECTION).doc("settings").set(settings);
+  showToast("✅ 休息日已更新", 2000);
+}
+
+// ============ ID RULE ============
+function updateIdPreview() {
+  const prefix = document.getElementById("idPrefix").value.toUpperCase() || "A";
+  const num = parseInt(document.getElementById("idStartNum").value) || 1;
+  const digits = parseInt(document.getElementById("idDigits").value) || 3;
+  document.getElementById("idPreview").textContent = prefix + String(num).padStart(digits, "0");
+}
+
+async function saveIdRule() {
+  settings.idPrefix = document.getElementById("idPrefix").value.toUpperCase() || "A";
+  settings.idStartNum = parseInt(document.getElementById("idStartNum").value) || 1;
+  settings.idDigits = parseInt(document.getElementById("idDigits").value) || 3;
+  await db.collection(COLLECTION).doc("settings").set(settings);
+  updateIdPreview();
+  showToast("✅ 編號規則已更新", 2000);
+}
+
+// ============ ADMIN PASSWORD ============
+async function changeAdminPassword() {
+  const oldPw = document.getElementById("adminOldPw").value;
+  const newPw = document.getElementById("adminNewPw").value;
+  const newPw2 = document.getElementById("adminNewPw2").value;
+  const errEl = document.getElementById("adminPwError");
+  const successEl = document.getElementById("adminPwSuccess");
+
+  errEl.classList.add("hidden");
+  successEl.classList.add("hidden");
+
+  if (!oldPw || !newPw) { errEl.textContent = "請填寫所有欄位"; errEl.classList.remove("hidden"); return; }
+  if (oldPw !== settings.adminPw) { errEl.textContent = "目前密碼錯誤"; errEl.classList.remove("hidden"); return; }
+  if (newPw.length < 4) { errEl.textContent = "新密碼至少4個字元"; errEl.classList.remove("hidden"); return; }
+  if (newPw !== newPw2) { errEl.textContent = "兩次新密碼不一致"; errEl.classList.remove("hidden"); return; }
+
+  try {
+    settings.adminPw = newPw;
+    await db.collection(COLLECTION).doc("settings").set(settings);
+    successEl.textContent = "✅ 密碼已更新，下次登入請使用新密碼";
+    successEl.classList.remove("hidden");
+    document.getElementById("adminOldPw").value = "";
+    document.getElementById("adminNewPw").value = "";
+    document.getElementById("adminNewPw2").value = "";
+  } catch(e) {
+    errEl.textContent = "更新失敗：" + e.message; errEl.classList.remove("hidden");
+  }
+}
+
+// ============ EMPLOYEE PASSWORD CHANGE ============
+async function doChangePassword() {
+  const newPw = document.getElementById("newPw").value;
+  const newPw2 = document.getElementById("newPw2").value;
+  const errEl = document.getElementById("pwChangeError");
+
+  if (!newPw || newPw.length < 4) { errEl.textContent = "密碼至少4個字元"; errEl.classList.remove("hidden"); return; }
+  if (newPw !== newPw2) { errEl.textContent = "兩次密碼不一致"; errEl.classList.remove("hidden"); return; }
+
+  try {
+    const doc = await db.collection(COLLECTION).doc("employees").get();
+    const employees = doc.exists ? doc.data().list : [];
+    const emp = employees.find(e => e.id === currentUser.id);
+    if (emp) {
+      emp.pw = newPw;
+      emp.forcePasswordChange = false;
+      await db.collection(COLLECTION).doc("employees").set({list: employees});
+    }
+    currentUser.pw = newPw;
+    currentUser.forcePasswordChange = false;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(currentUser));
+    document.getElementById("pwChangeModal").style.display = "none";
+    showToast("✅ 密碼已更新", 2000);
+  } catch(e) {
+    errEl.textContent = "更新失敗：" + e.message; errEl.classList.remove("hidden");
   }
 }
 
 // ============ EXPORT ============
 function exportMyCSV() { exportCSV(allAdminData.length ? allAdminData : todayRecords, "我的打卡紀錄"); }
-function exportMyJSON() { exportJSON(allAdminData.length ? allAdminData : todayRecords, "我的打卡紀錄"); }
 function exportAdminCSV() { exportCSV(allAdminData, "全部打卡紀錄"); }
 function exportAdminJSON() { exportJSON(allAdminData, "全部打卡紀錄"); }
 
@@ -1009,8 +1309,7 @@ function exportCSV(data, filename) {
 
 function exportJSON(data, filename) {
   if (!data || data.length === 0) { showToast("⚠️ 沒有資料可匯出", 2000); return; }
-  const json = JSON.stringify(data, null, 2);
-  downloadFile(json, filename + ".json", "application/json");
+  downloadFile(JSON.stringify(data, null, 2), filename + ".json", "application/json");
 }
 
 function downloadFile(content, filename, type) {
@@ -1023,20 +1322,15 @@ function downloadFile(content, filename, type) {
 }
 
 // ============ UI ============
-function switchPage(name) {
+function switchPage(name, btn) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.getElementById("page"+name).classList.add("active");
   document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
-  event.currentTarget.classList.add("active");
-  if (name === "Admin" && currentUser.role === "admin") loadAdminData();
+  if (btn) btn.classList.add("active");
+  if (name === "Admin" && currentUser.role === "admin") { loadAdminData(); loadEmployeeList(); }
   if (name === "History") loadHistory();
-}
-
-function openSettings() { document.getElementById("settingsModal").classList.remove("hidden"); }
-function closeSettings(e) {
-  if (!e || e.target === document.getElementById("settingsModal")) {
-    document.getElementById("settingsModal").classList.add("hidden");
-  }
+  if (name === "Calendar") loadCalendar();
+  if (name === "Profile") buildRestDayUI();
 }
 
 function showToast(msg, duration) {
@@ -1047,19 +1341,36 @@ function showToast(msg, duration) {
 }
 
 // ============ INIT ============
-window.addEventListener("load", () => {
-  const saved = localStorage.getItem("gps_user");
+window.addEventListener("load", async () => {
+  await loadSettings();
+  const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
-    try { currentUser = JSON.parse(saved); enterApp(); } catch(e) { showLogin(); }
+    try {
+      currentUser = JSON.parse(saved);
+      if (currentUser.role !== "admin") {
+        const doc = await db.collection(COLLECTION).doc("employees").get();
+        const employees = doc.exists ? doc.data().list : [];
+        const latest = employees.find(e => e.id === currentUser.id);
+        if (latest) {
+          currentUser.forcePasswordChange = latest.forcePasswordChange;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(currentUser));
+        }
+      }
+      enterApp();
+    } catch(e) { showLogin && showLogin(); }
   }
 });
 
-// Enter key login
 document.addEventListener("keydown", e => {
-  if (e.key === "Enter") {
-    if (!document.getElementById("loginForm").classList.contains("hidden")) doLogin();
-    else if (!document.getElementById("registerForm").classList.contains("hidden")) doRegister();
-  }
+  if (e.key === "Enter" && !document.getElementById("loginPage").style.display.includes("none")) doLogin();
+});
+
+["idPrefix","idStartNum","idDigits"].forEach(id => {
+  document.getElementById(id).addEventListener("input", updateIdPreview);
+});
+
+document.getElementById("pwChangeModal").addEventListener("click", e => {
+  if (e.target === document.getElementById("pwChangeModal")) e.target.style.display = "none";
 });
 </script>
 </body>
