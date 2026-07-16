@@ -531,7 +531,7 @@ tr:hover td{background:#f8fafc}
 
   <!-- Bottom Nav -->
   <div class="bottom-nav">
-    <button class="nav-btn active" onclick="switchPage('Clock',this)">
+    <button class="nav-btn active" id="navClock" onclick="switchPage('Clock',this)">
       <span class="icon">📍</span>打卡
     </button>
     <button class="nav-btn" onclick="switchPage('History',this)">
@@ -700,9 +700,15 @@ async function enterApp() {
   if (currentUser.role === "admin") {
     document.getElementById("navAdmin").classList.remove("hidden");
     document.getElementById("adminSettingsCard").classList.remove("hidden");
+    document.getElementById("navClock").classList.add("hidden");
+    document.getElementById("pageClock").classList.remove("active");
+    document.getElementById("pageHistory").classList.remove("active");
+    document.getElementById("pageCalendar").classList.remove("active");
+    document.getElementById("pageAdmin").classList.add("active");
   } else {
     document.getElementById("navAdmin").classList.add("hidden");
     document.getElementById("adminSettingsCard").classList.add("hidden");
+    document.getElementById("navClock").classList.remove("hidden");
   }
 
   await loadSettings();
@@ -1455,6 +1461,7 @@ function downloadFile(content, filename, type) {
 
 // ============ UI ============
 async function switchPage(name, btn) {
+  if (name === "Clock" && currentUser.role === "admin") { name = "Admin"; btn = document.querySelector("#navAdmin"); }
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.getElementById("page"+name).classList.add("active");
   document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
