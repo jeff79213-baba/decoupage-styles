@@ -366,17 +366,11 @@ tr:hover td{background:#f8fafc}
     </div>
 
     <div class="card">
-      <div class="card-title">📋 出勤紀錄</div>
-      <div class="filter-bar">
-        <select id="adminMonth" onchange="loadAdminData()"></select>
-        <select id="adminEmployee" onchange="loadAdminData()">
-          <option value="all">全部員工</option>
-        </select>
-      </div>
+      <div class="card-title">📋 今日出勤狀況</div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>員工</th><th>日期</th><th>上班</th><th>下班</th><th>工時</th><th>狀態</th><th>操作</th></tr></thead>
-          <tbody id="adminTableBody"><tr><td colspan="7" class="loading"><div class="spinner"></div></td></tr></tbody>
+          <thead><tr><th>員工</th><th>班次</th><th>上班</th><th>下班</th><th>工時</th><th>狀態</th></tr></thead>
+          <tbody id="adminTableBody"><tr><td colspan="6" class="loading"><div class="spinner"></div></td></tr></tbody>
         </table>
       </div>
       <div class="btn-group" style="justify-content:flex-end">
@@ -449,16 +443,11 @@ tr:hover td{background:#f8fafc}
         <button class="btn btn-success btn-sm" onclick="saveCompanyRange()" style="width:100%;margin-top:6px">💾 儲存範圍</button>
       </div>
 
-      <div class="card-title" style="margin-top:16px">⏰ 上下班時間</div>
-      <div class="setting-row">
-        <div class="setting-label">上班時間</div>
-        <div class="setting-value"><input type="time" id="workStart" value="09:00" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px;width:150px;max-width:100%"></div>
-      </div>
-      <div class="setting-row">
-        <div class="setting-label">下班時間</div>
-        <div class="setting-value"><input type="time" id="workEnd" value="18:00" style="border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:13px;width:150px;max-width:100%"></div>
-      </div>
-      <button class="btn btn-success btn-sm" onclick="saveWorkHours()" style="width:100%;margin-top:4px">💾 儲存上下班時間</button>
+      <div class="card-title" style="margin-top:16px">⏰ 班次設定</div>
+      <div style="font-size:12px;color:var(--text-light);margin-bottom:8px">可設定多個時段（如早中晚班），員工打卡時會依時間自動判斷班次</div>
+      <div id="shiftsContainer"></div>
+      <button class="btn btn-outline btn-sm" onclick="addShiftUI()" style="width:100%;margin-top:8px">➕ 新增班次</button>
+      <button class="btn btn-success btn-sm" onclick="saveShifts()" style="width:100%;margin-top:4px">💾 儲存班次設定</button>
 
       <div class="card-title" style="margin-top:16px">📅 休息日設定</div>
       <div style="font-size:12px;color:var(--text-light);margin-bottom:8px">勾選公司固定休息日（這些天不需打卡）</div>
@@ -574,6 +563,14 @@ tr:hover td{background:#f8fafc}
   </div>
 </div>
 
+<!-- Day Detail Modal -->
+<div id="dayDetailModal" class="modal-overlay" style="display:none">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:320px">
+    <button type="button" class="modal-close" onclick="document.getElementById('dayDetailModal').style.display='none'">&times;</button>
+    <div id="dayDetailInfo"></div>
+  </div>
+</div>
+
 <!-- Delete Confirmation Modal -->
 <div id="deleteConfirmModal" class="modal-overlay" style="display:none">
   <div class="modal" onclick="event.stopPropagation()">
@@ -622,6 +619,7 @@ let settings = {
   range: 500,
   workStart: "09:00",
   workEnd: "18:00",
+  shifts: [{ name: "早班", start: "09:00", end: "18:00" }],
   idPrefix: "A",
   idStartNum: 1,
   idDigits: 3,
@@ -1031,6 +1029,8 @@ async function loadHistory() {
 }
 
 // ============ CALENDAR ============
+let calendarDayData = {};
+
 async function loadCalendar() {
   if (!currentUser) return;
   const ym = document.getElementById("calMonth").value;
@@ -1073,69 +1073,106 @@ async function loadCalendar() {
     if (hasRecord) cls += " has-record";
     if (!isWeekend && !isHoliday && !hasRecord && dateStr < today) cls += " absent";
 
-    let tooltip = "";
-    if (isHoliday) tooltip += holiday.reason ? `🎉 ${holiday.reason} ` : '🎉 特殊假日 ';
-    if (g.clockin) tooltip += `上:${g.clockin.time.slice(0,5)} `;
-    if (g.clockout) tooltip += `下:${g.clockout.time.slice(0,5)}`;
-
-    html += `<div class="${cls}" title="${tooltip}">${d}</div>`;
+    calendarDayData[dateStr] = { isHoliday, holiday, g, isLate, hasRecord, isWeekend };
+    html += `<div class="${cls}" onclick="showDayDetail('${dateStr}')">${d}</div>`;
   }
   document.getElementById("calBody").innerHTML = html;
+}
+
+function showDayDetail(dateStr) {
+  const data = calendarDayData[dateStr];
+  if (!data) return;
+  const el = document.getElementById("dayDetailInfo");
+  let info = `<div style="font-size:16px;font-weight:700;margin-bottom:10px">${dateStr}</div>`;
+  if (data.isHoliday && data.holiday) {
+    info += `<div style="background:var(--info-light);padding:10px;border-radius:8px;margin-bottom:8px;font-size:14px">🎉 ${data.holiday.reason || '特殊假日'}</div>`;
+  } else if (data.isHoliday) {
+    info += `<div style="background:var(--info-light);padding:10px;border-radius:8px;margin-bottom:8px;font-size:14px">🎉 特殊假日</div>`;
+  }
+  if (data.isWeekend && !data.hasRecord) {
+    info += `<div style="background:#f0f0ff;padding:10px;border-radius:8px;margin-bottom:8px;font-size:14px">📅 休息日</div>`;
+  }
+  if (data.hasRecord) {
+    if (data.g.clockin) info += `<div style="padding:6px 0;font-size:14px">✅ 上班：<strong>${data.g.clockin.time.slice(0,5)}</strong></div>`;
+    if (data.g.clockout) info += `<div style="padding:6px 0;font-size:14px">✅ 下班：<strong>${data.g.clockout.time.slice(0,5)}</strong></div>`;
+    if (data.isLate) info += `<div style="color:var(--danger);font-size:13px;margin-top:4px">⚠️ 遲到</div>`;
+  } else if (!data.isWeekend && !data.isHoliday) {
+    info += `<div style="color:var(--text-light);font-size:13px">無打卡紀錄</div>`;
+  }
+  el.innerHTML = info;
+  document.getElementById("dayDetailModal").style.display = "flex";
 }
 
 // ============ ADMIN ============
 async function loadAdminData() {
   if (!currentUser || currentUser.role !== "admin") return;
-  const ym = document.getElementById("adminMonth").value;
-  const empFilter = document.getElementById("adminEmployee").value;
+  const now = new Date();
+  const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const today = now.toISOString().slice(0,10);
 
   try {
     const empDoc = await db.collection(COLLECTION).doc("employees").get();
     const employees = empDoc.exists ? empDoc.data().list : [];
 
-    const empSelect = document.getElementById("adminEmployee");
-    const currentVal = empSelect.value;
-    empSelect.innerHTML = '<option value="all">全部員工</option>';
-    employees.forEach(e => {
-      empSelect.innerHTML += `<option value="${e.id}" ${e.id===currentVal?'selected':''}>${e.name}（${e.id}）</option>`;
-    });
-
+    // Monthly stats
     let allRecords = [];
-    const targetEmployees = empFilter === "all" ? employees : employees.filter(e => e.id === empFilter);
-
-    for (const emp of targetEmployees) {
+    for (const emp of employees) {
       const snap = await db.collection(COLLECTION).doc("records").collection(emp.id).get();
       snap.forEach(doc => {
         const r = doc.data();
-        if (r.date && r.date.startsWith(ym)) allRecords.push({ ...r, _docId: doc.id, _empId: emp.id });
+        if (r.date && r.date.startsWith(ym)) allRecords.push(r);
       });
     }
-
-    allRecords.sort((a,b) => b.timestamp - a.timestamp);
-    allAdminData = allRecords;
-
-    let totalLate = 0, totalOvertime = 0;
-    let html = "";
+    let totalLate = 0;
     allRecords.forEach(r => {
-      const isLate = r.type === "clockin" && r.time.slice(0,5) > settings.workStart;
-      if (isLate) totalLate++;
-      const typeLabel = r.type === 'clockin' ? '上班' : '下班';
-      html += `<tr>
-        <td><strong>${r.employeeName}</strong><br><small style="color:var(--text-light)">${r.employeeId}</small></td>
-        <td>${r.date}</td>
-        <td>${r.type === 'clockin' ? r.time.slice(0,5) : '-'}</td>
-        <td>${r.type === 'clockout' ? r.time.slice(0,5) : '-'}</td>
-        <td>${r.type === 'clockout' ? '-' : '-'}</td>
-        <td>${isLate ? '<span class="tag tag-late">遲到</span>' : (r.type==='clockin'?'<span class="tag tag-in">準時</span>':'<span class="tag tag-out">下班</span>')}</td>
-        <td><button class="btn btn-danger btn-sm" onclick="adminDeleteRecord('${r._empId}','${r._docId}','${r.employeeName}','${r.date}','${typeLabel}')">刪除</button></td>
-      </tr>`;
+      if (r.type === "clockin") {
+        const shift = getShiftForTime(r.time);
+        if (r.time.slice(0,5) > (shift ? shift.start : settings.workStart)) totalLate++;
+      }
     });
+    const clockinDates = new Set(allRecords.filter(r => r.type === "clockin").map(r => r.date));
+    document.getElementById("statTotal").textContent = clockinDates.size;
+    document.getElementById("statLate2").textContent = Math.min(totalLate, clockinDates.size);
+    document.getElementById("statOnTime").textContent = Math.max(0, clockinDates.size - totalLate);
+    document.getElementById("statOvertime2").textContent = "0";
 
-    document.getElementById("adminTableBody").innerHTML = html || '<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-light)">此月尚無紀錄</td></tr>';
-    document.getElementById("statTotal").textContent = allRecords.length;
-    document.getElementById("statLate2").textContent = totalLate;
-    document.getElementById("statOnTime").textContent = Math.max(0, Math.floor(allRecords.length/2) - totalLate);
-    document.getElementById("statOvertime2").textContent = totalOvertime;
+    // Today's attendance per employee
+    allAdminData = [];
+    let html = "";
+    for (const emp of employees) {
+      const snap = await db.collection(COLLECTION).doc("records").collection(emp.id)
+        .where("dateKey", "==", today).get();
+      const empRecords = [];
+      snap.forEach(doc => empRecords.push({ ...doc.data(), _docId: doc.id }));
+      allAdminData.push(...empRecords);
+
+      const clockIn = empRecords.find(r => r.type === "clockin");
+      const clockOut = empRecords.find(r => r.type === "clockout");
+      const shift = clockIn ? getShiftForTime(clockIn.time) : null;
+      const isLate = clockIn && clockIn.time.slice(0,5) > (shift ? shift.start : settings.workStart);
+
+      let statusHtml, hrs = "--";
+      if (clockIn && clockOut) {
+        const diff = clockOut.timestamp - clockIn.timestamp;
+        hrs = Math.floor(diff/3600000) + "h" + Math.floor((diff%3600000)/60000) + "m";
+        statusHtml = isLate ? '<span class="tag tag-late">遲到</span>' : '<span class="tag tag-in">已完成</span>';
+      } else if (clockIn) {
+        statusHtml = isLate ? '<span class="tag tag-late">遲到</span>' : '<span class="tag tag-in">已上班</span>';
+      } else {
+        statusHtml = '<span class="tag tag-absent">尚未打卡</span>';
+      }
+
+      html += `<tr>
+        <td><strong>${emp.name}</strong><br><small style="color:var(--text-light)">${emp.id}</small></td>
+        <td>${shift ? shift.name : '--'}</td>
+        <td>${clockIn ? clockIn.time.slice(0,5) : '--:--'}</td>
+        <td>${clockOut ? clockOut.time.slice(0,5) : '--:--'}</td>
+        <td>${hrs}</td>
+        <td>${statusHtml}</td>
+      </tr>`;
+    }
+
+    document.getElementById("adminTableBody").innerHTML = html || '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-light)">今日尚無員工打卡</td></tr>';
   } catch(e) {
     console.error(e);
     document.getElementById("adminTableBody").innerHTML = '<tr><td colspan="6" style="color:var(--danger)">載入失敗</td></tr>';
@@ -1248,8 +1285,6 @@ async function loadSettings() {
 
 function applySettingsToUI() {
   document.getElementById("inputRange").value = settings.range;
-  document.getElementById("workStart").value = settings.workStart;
-  document.getElementById("workEnd").value = settings.workEnd;
   document.getElementById("idPrefix").value = settings.idPrefix || "A";
   document.getElementById("idStartNum").value = settings.idStartNum || 1;
   document.getElementById("idDigits").value = settings.idDigits || 3;
@@ -1264,6 +1299,7 @@ function applySettingsToUI() {
   }
   buildRestDayUI();
   renderSpecialHolidays();
+  renderShifts();
 }
 
 async function setCompanyLocation() {
@@ -1284,11 +1320,70 @@ async function saveCompanyRange() {
   showToast("✅ 打卡範圍已更新", 2000);
 }
 
-async function saveWorkHours() {
-  settings.workStart = document.getElementById("workStart").value;
-  settings.workEnd = document.getElementById("workEnd").value;
+// ============ SHIFTS ============
+function renderShifts() {
+  const container = document.getElementById("shiftsContainer");
+  const shifts = settings.shifts || [{ name: "早班", start: "09:00", end: "18:00" }];
+  settings.shifts = shifts;
+  let html = "";
+  shifts.forEach((s, i) => {
+    html += `<div class="setting-row" style="flex-wrap:wrap;gap:4px">
+      <input type="text" id="shiftName${i}" value="${s.name}" placeholder="班次名稱" style="width:70px;border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:13px">
+      <label style="font-size:12px;color:var(--text-light)">上班</label>
+      <input type="time" id="shiftStart${i}" value="${s.start}" style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:13px;width:130px;max-width:100%">
+      <label style="font-size:12px;color:var(--text-light)">下班</label>
+      <input type="time" id="shiftEnd${i}" value="${s.end}" style="border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:13px;width:130px;max-width:100%">
+      <button class="btn btn-danger btn-sm" onclick="removeShiftUI(${i})" ${shifts.length<=1?'disabled style="opacity:0.3"':''} style="flex-shrink:0">✕</button>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function addShiftUI() {
+  settings.shifts.push({ name: "新班次", start: "09:00", end: "18:00" });
+  renderShifts();
+}
+
+function removeShiftUI(index) {
+  if (settings.shifts.length <= 1) return;
+  settings.shifts.splice(index, 1);
+  renderShifts();
+}
+
+async function saveShifts() {
+  const shifts = settings.shifts || [];
+  shifts.forEach((_, i) => {
+    const nameEl = document.getElementById("shiftName" + i);
+    const startEl = document.getElementById("shiftStart" + i);
+    const endEl = document.getElementById("shiftEnd" + i);
+    if (nameEl) shifts[i].name = nameEl.value || "班次" + (i + 1);
+    if (startEl) shifts[i].start = startEl.value;
+    if (endEl) shifts[i].end = endEl.value;
+  });
+  settings.shifts = shifts;
+  settings.workStart = shifts[0]?.start || "09:00";
+  settings.workEnd = shifts[0]?.end || "18:00";
   await db.collection(COLLECTION).doc("settings").set(settings);
-  showToast("✅ 上下班時間已更新", 2000);
+  showToast("✅ 班次設定已更新", 2000);
+}
+
+function getShiftForTime(timeStr) {
+  const shifts = settings.shifts || [];
+  if (shifts.length === 0) return null;
+  const t = timeStr.slice(0, 5);
+  let best = shifts[0];
+  let bestDiff = 24;
+  for (const s of shifts) {
+    let diff = timeToMin(t) - timeToMin(s.start);
+    if (diff < 0) diff += 1440;
+    if (diff < bestDiff) { bestDiff = diff; best = s; }
+  }
+  return best;
+}
+
+function timeToMin(t) {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
 }
 
 // ============ REST DAYS ============
@@ -1515,6 +1610,9 @@ document.getElementById("pwChangeModal").addEventListener("click", e => {
 });
 document.getElementById("deleteConfirmModal").addEventListener("click", e => {
   if (e.target === document.getElementById("deleteConfirmModal")) e.target.style.display = "none";
+});
+document.getElementById("dayDetailModal").addEventListener("click", e => {
+  if (e.target === document.getElementById("dayDetailModal")) e.target.style.display = "none";
 });
 </script>
 </body>
