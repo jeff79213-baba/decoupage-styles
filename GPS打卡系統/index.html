@@ -675,7 +675,7 @@ function doLogout() {
   document.getElementById("loginPw").value = "";
 }
 
-function enterApp() {
+async function enterApp() {
   document.getElementById("loginPage").style.display = "none";
   document.getElementById("mainApp").classList.remove("hidden");
   document.getElementById("welcomeMsg").textContent = `歡迎回來，${currentUser.name}`;
@@ -691,15 +691,18 @@ function enterApp() {
     document.getElementById("adminSettingsCard").classList.add("hidden");
   }
 
-  loadSettings();
-  loadTodayRecords();
-  renderMyHistoryMini();
-  loadHistory();
-  initLocation();
+  await loadSettings();
+  applySettingsToUI();
   populateMonthSelects();
-  buildRestDayUI();
-  loadTodayStats();
-  if (currentUser.role === "admin") { loadAdminData(); loadEmployeeList(); }
+  initLocation();
+
+  await Promise.all([
+    loadTodayRecords(),
+    loadHistory(),
+    loadTodayStats(),
+    currentUser.role === "admin" ? loadAdminData() : Promise.resolve(),
+    currentUser.role === "admin" ? loadEmployeeList() : Promise.resolve(),
+  ]);
 
   if (currentUser.forcePasswordChange && currentUser.role !== "admin") {
     document.getElementById("pwChangeModal").style.display = "flex";
@@ -815,11 +818,12 @@ async function loadTodayRecords() {
   try {
     const snap = await withTimeout(
       db.collection(COLLECTION).doc("records").collection(currentUser.id)
-        .where("dateKey","==",today).orderBy("timestamp","asc").get(),
+        .where("dateKey","==",today).get(),
       10000
     );
     todayRecords = [];
     snap.forEach(doc => todayRecords.push(doc.data()));
+    todayRecords.sort((a,b) => a.timestamp - b.timestamp);
     renderTodayUI();
   } catch(e) {
     console.error(e);
@@ -1195,28 +1199,32 @@ async function getNextEmployeeId() {
 // ============ SETTINGS ============
 async function loadSettings() {
   try {
-    const doc = await db.collection(COLLECTION).doc("settings").get();
+    const doc = await withTimeout(db.collection(COLLECTION).doc("settings").get(), 8000);
     if (doc.exists) {
       settings = {...settings, ...doc.data()};
-      document.getElementById("inputRange").value = settings.range;
-      document.getElementById("workStart").value = settings.workStart;
-      document.getElementById("workEnd").value = settings.workEnd;
-      document.getElementById("idPrefix").value = settings.idPrefix || "A";
-      document.getElementById("idStartNum").value = settings.idStartNum || 1;
-      document.getElementById("idDigits").value = settings.idDigits || 3;
-      updateIdPreview();
-      if (settings.companyLat && settings.companyLng) {
-        document.getElementById("companyLocation").textContent = `${settings.companyLat.toFixed(5)}, ${settings.companyLng.toFixed(5)}`;
-      }
-      document.getElementById("companyRange").textContent = settings.range + " 公尺";
-      if (settings.companyName) {
-        document.getElementById("loginTitle").textContent = settings.companyName + " GPS 打卡系統";
-        document.getElementById("headerTitle").textContent = settings.companyName + " GPS 打卡";
-      }
-      buildRestDayUI();
-      renderSpecialHolidays();
+      applySettingsToUI();
     }
-  } catch(e) { console.error(e); }
+  } catch(e) { console.error('載入設定失敗', e); }
+}
+
+function applySettingsToUI() {
+  document.getElementById("inputRange").value = settings.range;
+  document.getElementById("workStart").value = settings.workStart;
+  document.getElementById("workEnd").value = settings.workEnd;
+  document.getElementById("idPrefix").value = settings.idPrefix || "A";
+  document.getElementById("idStartNum").value = settings.idStartNum || 1;
+  document.getElementById("idDigits").value = settings.idDigits || 3;
+  updateIdPreview();
+  if (settings.companyLat && settings.companyLng) {
+    document.getElementById("companyLocation").textContent = `${settings.companyLat.toFixed(5)}, ${settings.companyLng.toFixed(5)}`;
+  }
+  document.getElementById("companyRange").textContent = settings.range + " 公尺";
+  if (settings.companyName) {
+    document.getElementById("loginTitle").textContent = settings.companyName + " GPS 打卡系統";
+    document.getElementById("headerTitle").textContent = settings.companyName + " GPS 打卡";
+  }
+  buildRestDayUI();
+  renderSpecialHolidays();
 }
 
 async function setCompanyLocation() {
@@ -1414,14 +1422,15 @@ function downloadFile(content, filename, type) {
 }
 
 // ============ UI ============
-function switchPage(name, btn) {
+async function switchPage(name, btn) {
   document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
   document.getElementById("page"+name).classList.add("active");
   document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
   if (btn) btn.classList.add("active");
+  await loadSettings();
   if (name === "Admin" && currentUser.role === "admin") { loadAdminData(); loadEmployeeList(); }
   if (name === "History") loadHistory();
-  if (name === "Calendar") loadCalendar();
+  if (name === "Calendar") { loadCalendar(); }
   if (name === "Profile") { buildRestDayUI(); renderSpecialHolidays(); }
 }
 
