@@ -173,9 +173,10 @@ tr:hover td{background:#f8fafc}
 .cal-day.has-record::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--success)}
 .cal-day.late::after{background:var(--danger)}
 .cal-day.absent{color:var(--danger)}
-.cal-day.weekend{color:var(--text-light)}
-.cal-day.holiday{color:var(--info)}
-.cal-day.holiday::after{background:var(--info)}
+.cal-day.weekend{color:var(--text-light);background:#f0f0ff}
+.cal-day.weekend::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--info)}
+.cal-day.holiday{color:var(--info);background:#f0f9ff}
+.cal-day.holiday::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--info)}
 .cal-day.empty{visibility:hidden}
 
 /* Holiday tag */
@@ -615,6 +616,9 @@ let settings = {
 };
 
 // ============ CLOCK ============
+function withTimeout(promise, ms) {
+  return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), ms))]);
+}
 function updateClock() {
   const now = new Date();
   document.getElementById("liveClock").textContent = now.toLocaleTimeString("zh-TW", {hour12:false});
@@ -809,12 +813,18 @@ async function loadTodayRecords() {
   if (!currentUser) return;
   const today = new Date().toISOString().slice(0,10);
   try {
-    const snap = await db.collection(COLLECTION).doc("records").collection(currentUser.id)
-      .where("dateKey","==",today).orderBy("timestamp","asc").get();
+    const snap = await withTimeout(
+      db.collection(COLLECTION).doc("records").collection(currentUser.id)
+        .where("dateKey","==",today).orderBy("timestamp","asc").get(),
+      10000
+    );
     todayRecords = [];
     snap.forEach(doc => todayRecords.push(doc.data()));
     renderTodayUI();
-  } catch(e) { console.error(e); }
+  } catch(e) {
+    console.error(e);
+    renderTodayUI();
+  }
 }
 
 function renderTodayUI() {
@@ -874,7 +884,10 @@ async function loadTodayStats() {
   }
 
   try {
-    const snap = await db.collection(COLLECTION).doc("records").collection(currentUser.id).get();
+    const snap = await withTimeout(
+      db.collection(COLLECTION).doc("records").collection(currentUser.id).get(),
+      10000
+    );
     let lateCount = 0, overtimeHrs = 0;
     snap.forEach(doc => {
       const r = doc.data();
@@ -890,10 +903,14 @@ async function loadTodayStats() {
 // ============ MY HISTORY MINI ============
 async function renderMyHistoryMini() {
   if (!currentUser) return;
+  const el = document.getElementById("myHistoryMini");
   const now = new Date();
   const ym = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   try {
-    const snap = await db.collection(COLLECTION).doc("records").collection(currentUser.id).get();
+    const snap = await withTimeout(
+      db.collection(COLLECTION).doc("records").collection(currentUser.id).get(),
+      10000
+    );
     const records = [];
     snap.forEach(doc => { const r = doc.data(); if (r.date && r.date.startsWith(ym)) records.push(r); });
 
@@ -923,9 +940,10 @@ async function renderMyHistoryMini() {
         <div class="history-hours">${hrs}</div>
       </div>`;
     });
-    document.getElementById("myHistoryMini").innerHTML = html;
+    el.innerHTML = html;
   } catch(e) {
-    document.getElementById("myHistoryMini").innerHTML = '<div style="color:var(--danger);padding:12px">載入失敗</div>';
+    const msg = e.message === 'timeout' ? '載入逾時，請重試' : '載入失敗';
+    el.innerHTML = `<div style="color:var(--danger);padding:12px;text-align:center">${msg}<br><button onclick="renderMyHistoryMini()" style="margin-top:6px;padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;font-size:12px">重新載入</button></div>`;
   }
 }
 
@@ -948,7 +966,10 @@ async function loadHistory() {
   if (!currentUser) return;
   const ym = document.getElementById("historyMonth").value;
   try {
-    const snap = await db.collection(COLLECTION).doc("records").collection(currentUser.id).get();
+    const snap = await withTimeout(
+      db.collection(COLLECTION).doc("records").collection(currentUser.id).get(),
+      10000
+    );
     const records = [];
     snap.forEach(doc => { const r = doc.data(); if (r.date && r.date.startsWith(ym)) records.push(r); });
 
@@ -995,7 +1016,10 @@ async function loadCalendar() {
 
   let records = [];
   try {
-    const snap = await db.collection(COLLECTION).doc("records").collection(currentUser.id).get();
+    const snap = await withTimeout(
+      db.collection(COLLECTION).doc("records").collection(currentUser.id).get(),
+      10000
+    );
     snap.forEach(doc => { const r = doc.data(); if (r.date && r.date.startsWith(ym)) records.push(r); });
   } catch(e) {}
 
