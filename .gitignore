@@ -4,7 +4,7 @@ node_modules
 
 # 個別專案 repo（不納入共用 repo 追蹤）
 breakfast-ordering-system/
-puzu-event-seating/
+百人活動用/
 葡眾獎金積分計算/
 遊戲類/鍵盤彈鋼琴/
 遊戲類/公平猜拳/
