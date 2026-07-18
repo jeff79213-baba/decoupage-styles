@@ -1,7 +1,0 @@
-﻿GitHub Pages 網址:
-https://jeff79213-baba.github.io/gomoku-photo/
-
-Firebase 路徑:
-projects > 五子棋 > files
-
-上傳日期: 2026-06-16
