@@ -1,3 +1,13 @@
 opencode-sk-*.json
 node_modules
 .tools
+
+# 個別專案 repo（不納入共用 repo 追蹤）
+breakfast-ordering-system/
+puzu-event-seating/
+葡眾獎金積分計算/
+遊戲類/鍵盤彈鋼琴/
+遊戲類/公平猜拳/
+遊戲類/文字手遊/
+遊戲類/相簿華容道/
+軟體入口/
