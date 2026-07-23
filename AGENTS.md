@@ -48,8 +48,9 @@
 ```html
 <div class="pw-wrap" style="position:relative;display:flex;align-items:center">
   <input type="password" id="xxx" style="padding-right:40px">
-  <button type="button" onclick="togglePw('xxx',this)"
-    style="position:absolute;right:8px;background:none;border:none;cursor:pointer;font-size:16px">🙈</button>
+  <button type="button" class="pw-toggle" onclick="togglePw('xxx',this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+  </button>
 </div>
 ```
 ```js
@@ -57,12 +58,14 @@ function togglePw(inputId, btn) {
   const inp = document.getElementById(inputId);
   const show = inp.type === "password";
   inp.type = show ? "text" : "password";
-  btn.textContent = show ? "👁️" : "🙈";
+  btn.innerHTML = show
+    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 }
 ```
 
 ### 規則
-- 按鈕放在輸入框右側，使用 eye emoji（👁️/🙈），不需花俏設計
+- 按鈕放在輸入框右側，使用 SVG 黑色眼睛圖示（開著=顯示，閉著+斜線=隱藏）
 - 不需外部套件，純 CSS + JS 即可
 - 每個專案第一次建立密碼欄位時自動帶入此段程式碼
 
@@ -117,6 +120,34 @@ projects (collection)
                     ├── updatedAt: Date
                     └── size: number
 ```
+
+### ⚠️ Firestore 集合命名規則（重要）
+所有 Firestore 頂層集合名稱**必須加上專案前綴**，避免與其他專案衝突。
+
+| 前綴 | 專案 | 集合名稱 |
+|------|------|----------|
+| `mpc-` | 菜單拍照計算機 | `mpc-shortlinks`, `mpc-store-codes` |
+| `gps_` | 中區建材行GPS打卡上班 | `gps_中區建材行` |
+| `projects` | 工具腳本專用 | `projects`（保留給 _tools） |
+
+**規則：**
+1. 新專案若需自訂 Firestore 集合，取 2~5 碼專案縮寫作為前綴
+2. 前綴確認表中無重複才可使用
+3. 子集合（subcollection）不受此限，因為子集合隸屬於特定 document 下
+4. `events`、`stock`、`shops` 等舊集合為歷史遺留，新專案禁止沿用
+
+### ⚠️ localStorage 命名規則（重要）
+所有 `localStorage` 的 key 也**必須加上專案前綴**，避免同一瀏覽器不同專案互相干擾。
+
+| 前綴 | 專案 | 範例 key |
+|------|------|----------|
+| `mpc-` | 菜單拍照計算機 | `mpc-calculatorConfig` |
+| `gps_` | 中區建材行GPS打卡上班 | `gps_settings` |
+
+**規則：**
+1. 前綴與 Firestore 集合命名前綴一致
+2. 若僅前端儲存（無後端），仍需加前綴
+3. 全域工具（如 `_tools/`）使用不帶前綴的 key 可豁免
 
 ## Firebase 金鑰
 服務帳戶金鑰在 firebase雲端資料夾 根目錄下的 `opencode-sk-*.json` 檔案。

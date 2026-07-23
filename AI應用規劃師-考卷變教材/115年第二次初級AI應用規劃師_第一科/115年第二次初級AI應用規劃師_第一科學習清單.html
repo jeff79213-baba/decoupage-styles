@@ -1,0 +1,1482 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>115年初級AI應用規劃師｜第一科 人工智慧基礎概論｜學習清單</title>
+<style>
+  :root {
+    --primary: #1a73e8;
+    --primary-light: #e8f0fe;
+    --accent: #ea4335;
+    --accent-light: #fce8e6;
+    --success: #34a853;
+    --success-light: #e6f4ea;
+    --warning: #fbbc04;
+    --warning-light: #fef7e0;
+    --gray-bg: #f8f9fa;
+    --gray-border: #dadce0;
+    --text: #202124;
+    --text-secondary: #5f6368;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+    background: #f0f2f5;
+    color: var(--text);
+    line-height: 1.7;
+  }
+  .header {
+    background: linear-gradient(135deg, #1a73e8, #4285f4);
+    color: #fff;
+    padding: 40px 20px;
+    text-align: center;
+  }
+  .header h1 { font-size: 1.8em; margin-bottom: 8px; }
+  .header p { opacity: 0.9; font-size: 1em; }
+  .header .meta {
+    display: inline-flex; gap: 20px; margin-top: 12px;
+    font-size: 0.9em; opacity: 0.85;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 20px; }
+
+  /* Nav */
+  .nav {
+    background: #fff; border-radius: 12px; padding: 20px 24px;
+    margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  }
+  .nav h2 { font-size: 1.1em; margin-bottom: 12px; color: var(--primary); }
+  .nav-list {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 8px; list-style: none;
+  }
+  .nav-list a {
+    display: block; padding: 8px 12px; border-radius: 8px;
+    text-decoration: none; color: var(--text); font-size: 0.92em;
+    transition: background .15s;
+  }
+  .nav-list a:hover { background: var(--primary-light); }
+  .nav-list .q-count {
+    display: inline-block; background: var(--primary); color: #fff;
+    border-radius: 10px; padding: 1px 8px; font-size: 0.78em;
+    margin-left: 4px; vertical-align: middle;
+  }
+
+  /* Category Section */
+  .category {
+    background: #fff; border-radius: 12px; margin-bottom: 28px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08); overflow: hidden;
+  }
+  .cat-header {
+    padding: 20px 24px; border-bottom: 2px solid var(--primary-light);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .cat-num {
+    background: var(--primary); color: #fff; border-radius: 50%;
+    width: 36px; height: 36px; display: flex; align-items: center;
+    justify-content: center; font-weight: bold; flex-shrink: 0;
+  }
+  .cat-header h2 { font-size: 1.2em; }
+  .cat-header .cat-range { color: var(--text-secondary); font-size: 0.85em; margin-left: auto; }
+  .cat-body { padding: 24px; }
+
+  /* Intro Box */
+  .intro-box {
+    background: var(--primary-light); border-left: 4px solid var(--primary);
+    padding: 16px 20px; border-radius: 0 8px 8px 0; margin-bottom: 20px;
+  }
+  .intro-box h3 { font-size: 1em; margin-bottom: 6px; color: var(--primary); }
+  .intro-box p { font-size: 0.92em; }
+
+  /* Exam Trap */
+  .trap-box {
+    background: var(--accent-light); border-left: 4px solid var(--accent);
+    padding: 16px 20px; border-radius: 0 8px 8px 0; margin-bottom: 20px;
+  }
+  .trap-box h3 { font-size: 1em; margin-bottom: 8px; color: var(--accent); }
+  .trap-box ul { padding-left: 18px; font-size: 0.92em; }
+  .trap-box li { margin-bottom: 4px; }
+
+  /* Key Points */
+  .key-box {
+    background: var(--success-light); border-left: 4px solid var(--success);
+    padding: 16px 20px; border-radius: 0 8px 8px 0; margin-bottom: 24px;
+  }
+  .key-box h3 { font-size: 1em; margin-bottom: 8px; color: var(--success); }
+  .key-box ul { padding-left: 18px; font-size: 0.92em; }
+  .key-box li { margin-bottom: 4px; }
+
+  /* Question Card */
+  .q-card {
+    border: 1px solid var(--gray-border); border-radius: 10px;
+    margin-bottom: 16px; overflow: hidden;
+  }
+  .q-title {
+    padding: 14px 18px; background: var(--gray-bg);
+    font-weight: bold; font-size: 0.95em;
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .q-num {
+    background: var(--primary); color: #fff; border-radius: 6px;
+    padding: 2px 8px; font-size: 0.82em; flex-shrink: 0; margin-top: 2px;
+  }
+  .q-body { padding: 14px 18px; }
+  .q-body .options { font-size: 0.9em; margin-bottom: 12px; }
+  .q-body .options div { margin-bottom: 3px; }
+  .answer-badge {
+    display: inline-block; background: var(--success); color: #fff;
+    padding: 4px 12px; border-radius: 6px; font-size: 0.85em;
+    font-weight: bold;
+  }
+  .explanation {
+    margin-top: 10px; padding: 12px 16px; background: #f8f9fa;
+    border-radius: 8px; font-size: 0.9em; line-height: 1.6;
+  }
+  .explanation strong { color: var(--primary); }
+  .correct { color: var(--success); font-weight: bold; }
+  .wrong { color: var(--accent); font-weight: bold; }
+  .trap { color: #e65100; font-weight: bold; }
+
+  /* Summary Table */
+  .summary-table {
+    width: 100%; border-collapse: collapse; font-size: 0.9em;
+  }
+  .summary-table th {
+    background: var(--primary); color: #fff; padding: 10px 12px;
+    text-align: left;
+  }
+  .summary-table td { padding: 10px 12px; border-bottom: 1px solid var(--gray-border); }
+  .summary-table tr:hover td { background: var(--primary-light); }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .header h1 { font-size: 1.3em; }
+    .cat-body { padding: 16px; }
+    .nav-list { grid-template-columns: 1fr; }
+  }
+
+  /* Stats bar */
+  .stats {
+    display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;
+  }
+  .stat-card {
+    background: #fff; border-radius: 10px; padding: 14px 18px;
+    flex: 1; min-width: 120px; text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  }
+  .stat-card .num { font-size: 1.6em; font-weight: bold; color: var(--primary); }
+  .stat-card .label { font-size: 0.82em; color: var(--text-secondary); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>115年初級 AI 應用規劃師</h1>
+  <p>第一科：人工智慧基礎概論｜考題學習清單</p>
+  <div class="meta">
+    <span>考試日期：115/05/16</span>
+    <span>共 50 題選擇題</span>
+    <span>分 9 大學習類別</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card"><div class="num">50</div><div class="label">總題數</div></div>
+    <div class="stat-card"><div class="num">9</div><div class="label">學習類別</div></div>
+    <div class="stat-card"><div class="num">6</div><div class="label">倫理法規題</div></div>
+    <div class="stat-card"><div class="num">6</div><div class="label">XAI 可解釋題</div></div>
+    <div class="stat-card"><div class="num">8</div><div class="label">LLM/生成式題</div></div>
+  </div>
+
+  <!-- Nav -->
+  <div class="nav">
+    <h2>目錄導覽</h2>
+    <ul class="nav-list">
+      <li><a href="#cat1">一、AI 基礎概念與應用場景 <span class="q-count">4題</span></a></li>
+      <li><a href="#cat2">二、機器學習類型與方法 <span class="q-count">6題</span></a></li>
+      <li><a href="#cat3">三、AI 倫理、法規與治理 <span class="q-count">6題</span></a></li>
+      <li><a href="#cat4">四、資料處理與特徵工程 <span class="q-count">7題</span></a></li>
+      <li><a href="#cat5">五、模型評估與演算法選擇 <span class="q-count">5題</span></a></li>
+      <li><a href="#cat6">六、深度學習與神經網路 <span class="q-count">7題</span></a></li>
+      <li><a href="#cat7">七、可解釋 AI（XAI）<span class="q-count">6題</span></a></li>
+      <li><a href="#cat8">八、生成式 AI 與大型語言模型 <span class="q-count">8題</span></a></li>
+      <li><a href="#cat9">九、資安隱私與模型維運 <span class="q-count">1題</span></a></li>
+    </ul>
+  </div>
+
+  <!-- ==================== 類別一 ==================== -->
+  <div class="category" id="cat1">
+    <div class="cat-header">
+      <div class="cat-num">1</div>
+      <h2>AI 基礎概念與應用場景</h2>
+      <span class="cat-range">第 1、3、4、16 題</span>
+    </div>
+    <div class="cat-body">
+      <div class="intro-box">
+        <h3>說明</h3>
+        <p>本類別考察對 AI 核心技術能力的辨識，包括：自然語言處理（NLP）、電腦視覺（CV）、異常偵測、推薦系統、語音辨識、生成對抗網路（GAN）等。需能判斷不同應用場景對應的 AI 技術類型，以及 AI 系統在即時決策中依賴的核心能力。</p>
+      </div>
+      <div class="trap-box">
+        <h3>考試陷阱</h3>
+        <ul>
+          <li><strong>技術組合陷阱</strong>：題目會列出多種技術的組合，需注意題目要求「不涉及身份辨識」等限制條件</li>
+          <li><strong>不符合 vs 最符合</strong>：題目問「最不符合」時，答案往往是最不相關的技術</li>
+          <li><strong>核心能力 vs 輔助能力</strong>：如 NLP 在交易系統中只是輔助指標，真正的核心是「即時分析大量數據」的能力</li>
+          <li><strong>異常偵測的定義</strong>：異常偵測是從正常模式中偵測偏離，不是「預測未來」也不是「分群」</li>
+        </ul>
+      </div>
+
+      <!-- Q1 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">1</span>社群媒體輿情分析 — 技術組合選擇</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 情感分析 + 關鍵詞提取 — 分析立場與高頻詞</div>
+            <div>(B) 文本分類 + 人臉辨識 — 辨識身份後分類</div>
+            <div>(C) 語音辨識 + 影像辨識 — 轉換影片為文字分析</div>
+            <div>(D) 推薦系統 + 社群圖譜分析 — 預測投票選擇</div>
+          </div>
+          <span class="answer-badge">答案：A</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(A)對：</span>情感分析可判斷立場，關鍵詞提取可找出高頻議題，完全符合「了解選民態度傾向」且不涉及身份辨識。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>「人臉辨識」涉及身份辨識，違背題目要求。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>語音辨識需影片素材，且影像辨識不在需求范围内；題目針對的是「貼文」（文字）。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>推薦系統用於「預測個人選擇」涉及個人隱私，非大規模輿情分析。<br>
+            <span class="trap">⚠️陷阱：</span>(C) 看起來技術含量高且「相關」，但題目限定的是「貼文」不是「影片」。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">3</span>電路板焊接瑕疵檢測 — 不符合的核心技術</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 自然語言處理（NLP）</div>
+            <div>(B) 電腦視覺（CV）</div>
+            <div>(C) 異常偵測（Anomaly Detection）</div>
+            <div>(D) 診斷性分析（Diagnostic Analytics）</div>
+          </div>
+          <span class="answer-badge">答案：A</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(A)對：</span>題目問「最不符合」。NLP 處理文字/語言資料，與影像瑕疵檢測完全無關。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>CV 是影像瑕疵檢測的核心技術。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>異常偵測可用於偵測偏離正常焊接模式的瑕疵。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>診斷性分析可用於分析瑕疵原因。<br>
+            <span class="trap">⚠️陷阱：</span>題目問的是「最不符合」，不要看到「相關但非核心」就選錯。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q4 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">4</span>金融科技即時交易 — 核心 AI 能力</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) NLP 分析財經新聞情緒（輔助性指標）</div>
+            <div>(B) 快速分析龐大市場數據，驅動自動化交易決策</div>
+            <div>(C) GAN 模擬極端市場情境</div>
+            <div>(D) 推薦系統推薦投資組合</div>
+          </div>
+          <span class="answer-badge">答案：B</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(B)對：</span>題目關鍵在「毫秒級時間」、「持續掃描」、「大量即時報價」。核心能力是「快速分析龐大數據並即時決策」。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>NLP 只是「輔助性指標」，不是核心。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>GAN 模擬極端情境是「預先規劃」，不等於「即時交易決策」。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>推薦系統是「推薦投資組合」，不是「即時掃描價格差異」。<br>
+            <span class="trap">⚠️陷阱：</span>(A) 出現「NLP」讓你覺得技術含量高，但題目已明確說是「輔助性」。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q16 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">16</span>異常檢測（Anomaly Detection）的應用目標</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 客群分群 → 差異化行銷（非異常偵測）</div>
+            <div>(B) 預測未來違約客戶（預測模型）</div>
+            <div>(C) 建立儀表板追蹤 KPI（描述性分析）</div>
+            <div>(D) 從感測資料中即時偵測偏離正常模式的訊號，預警故障</div>
+          </div>
+          <span class="answer-badge">答案：D</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(D)對：</span>異常偵測的核心是「即時偵測與正常模式顯著偏離的訊號」。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>客群分群是非監督式分群，不是異常偵測。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>預測未來違約是預測模型，不是異常偵測。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>建立儀表板是描述性分析，不是異常偵測。<br>
+            <span class="trap">⚠️陷阱：</span>(A) 和 (B) 都是 AI 應用，但不是「異常偵測」。異常偵測的關鍵是「偵測偏離正常模式」。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 類別二 ==================== -->
+  <div class="category" id="cat2">
+    <div class="cat-header">
+      <div class="cat-num">2</div>
+      <h2>機器學習類型與方法</h2>
+      <span class="cat-range">第 2、22、24、26、38、48 題</span>
+    </div>
+    <div class="cat-body">
+      <div class="intro-box">
+        <h3>說明</h3>
+        <p>機器學習分為四大類型：<strong>監督式學習</strong>（有標註資料，學習輸入→輸出對應）、<strong>非監督式學習</strong>（無標註，發現資料結構/分群）、<strong>半監督式學習</strong>（少量標註 + 大量未標註）、<strong>強化學習</strong>（透過環境回饋學習策略）。需能根據應用場景的資料特性與學習目標，正確選擇學習方式。</p>
+      </div>
+      <div class="trap-box">
+        <h3>考試陷阱</h3>
+        <ul>
+          <li><strong>「有誤」題型</strong>：問「何者有誤」時，要逐一驗證每個選項的正確性</li>
+          <li><strong>非監督式 ≠ 異常偵測的萬靈丹</strong>：非監督式「可以」做異常偵測，但不能「準確判斷每筆是否屬於特定異常類別」</li>
+          <li><strong>半監督式 vs 監督式</strong>：有少量標註 + 大量未標註時，應選半監督式</li>
+          <li><strong>探索與利用</strong>：強化學習的核心問題</li>
+          <li><strong>概念漂移 vs 資料漂移</strong>：特徵分布改變是資料漂移；特徵與目標的關係改變是概念漂移</li>
+        </ul>
+      </div>
+
+      <!-- Q2 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">2</span>物流公司 AI 導入 — 學習方式敘述有誤</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 監督式學習用於異常包裹偵測（需大量標註資料）</div>
+            <div>(B) 非監督式學習用於倉儲動線分群，但無法預測對錯</div>
+            <div>(C) 強化學習適合路線規劃，透過嘗試與回饋找出最佳策略</div>
+            <div>(D) 非監督式學習可用於異常偵測，並能「準確判斷每筆是否屬於特定異常類別」</div>
+          </div>
+          <span class="answer-badge">答案：D</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(D)對（有誤）：</span>非監督式學習「可以」偵測異常，但因無標籤，「無法準確判斷每筆是否屬於特定異常類別」。<br>
+            <span class="wrong">❌ 為什麼(A)不對（正確）：</span>監督式學習需要大量已標註資料，敘述正確。<br>
+            <span class="wrong">❌ 為什麼(B)不對（正確）：</span>非監督式可用於分群，但無法預測對錯，敘述正確。<br>
+            <span class="wrong">❌ 為什麼(C)不對（正確）：</span>強化學習透過嘗試與回饋找最佳策略，敘述正確。<br>
+            <span class="trap">⚠️陷阱：</span>題目問「何者有誤」，(D) 前半段「可用於異常偵測」是對的，但後半段「準確判斷每筆是否屬於特定異常類別」是錯的。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q22 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">22</span>企業 AI 應用 — 機器學習類型判斷</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 客服對話分析：少量標註 + 大量未標註 → 監督式學習</div>
+            <div>(B) 商品自動分群：未使用標註資料 → 監督式學習</div>
+            <div>(C) 自動駕駛：根據結果回饋調整策略 → 非監督式學習</div>
+            <div>(D) 使用者行為分析：依瀏覽模式分群、無標註 → 非監督式學習</div>
+          </div>
+          <span class="answer-badge">答案：D</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(D)對：</span>無標註資料 + 依據行為模式分群 = 非監督式學習。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>少量標註+大量未標註 → 應為半監督式學習。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>無標註的分群 → 非監督式學習。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>有回饋調整策略 → 強化學習。<br>
+            <span class="trap">⚠️陷阱：</span>(A) 看起來「有標註資料」就像監督式，但「少量標註+大量未標註」正是半監督式的定義。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q24 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">24</span>電商推薦策略 — 強化學習核心問題</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 探索與利用的權衡（Exploration vs. Exploitation）</div>
+            <div>(B) 偏差與變異的權衡（Bias vs. Variance）</div>
+            <div>(C) 梯度爆炸與消失</div>
+            <div>(D) 過擬合與欠擬合</div>
+          </div>
+          <span class="answer-badge">答案：A</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(A)對：</span>「總是推薦表現好的商品」= Exploitation；「頻繁嘗試未知商品」= Exploration。正是強化學習的經典問題。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>Bias vs. Variance 是模型泛化能力的一般性問題。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>梯度問題是深度學習訓練穩定性的問題。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>過擬合/欠擬合是模型泛化問題。<br>
+            <span class="trap">⚠️陷阱：</span>BCD 都是機器學習的常見問題，但只有(A)是強化學習特有的核心問題。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q26 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">26</span>生鮮商品損耗預測 — 標註資源有限</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 監督式學習：用8萬筆標註訓練，捨棄其餘</div>
+            <div>(B) 半監督式學習：利用少量標註 + 大量未標註</div>
+            <div>(C) 非監督式學習：自動分群後人工確認</div>
+            <div>(D) 強化學習：依據實際損耗回饋調整策略</div>
+          </div>
+          <span class="answer-badge">答案：B</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(B)對：</span>8萬筆標註 + 112萬筆未標註，正是半監督式學習的典型應用場景。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>捨棄112萬筆未標註資料太浪費。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>非監督式分群後需人工確認，且無法直接預測分類。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>強化學習適合序列決策問題，不適合靜態分類。<br>
+            <span class="trap">⚠️陷阱：</span>(A) 看起來「可行」，但題目問的是「最適合」，半監督式能同時利用兩類資料。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q38 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">38</span>偵測異常評論行為 — 機器學習框架</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 非監督式學習的關聯規則挖掘</div>
+            <div>(B) 監督式學習的二元分類</div>
+            <div>(C) 半監督式學習的異常偵測</div>
+            <div>(D) 強化學習的回饋機制</div>
+          </div>
+          <span class="answer-badge">答案：C</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(C)對：</span>「異常樣本難以事先完整標記」但可從「大量正常評論的分布來識別偏離行為」→ 半監督式異常偵測。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>關聯規則是找「頻繁共現的項目」，不適合異常偵測。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>監督式需要「已標記的異常樣本」，但異常樣本「難以事先完整標記」。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>強化學習適合序列決策問題。<br>
+            <span class="trap">⚠️陷阱：</span>(A) 看起來「不需要標註」就像非監督式，但關聯規則的用途是找「頻繁共現」，不是偵測異常。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q48 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">48</span>電商模型劣化 — 概念漂移 vs 資料漂移</div>
+        <div class="q-body">
+          <div class="options">
+            <div>情形甲：消費趨勢轉變，特徵分布相近但預測準確率下降</div>
+            <div>情形乙：新增行動裝置端，新用戶特徵與原訓練資料差異大</div>
+            <div style="margin-top: 8px;">
+              <div>(A) 甲=資料漂移、乙=概念漂移</div>
+              <div>(B) 甲=概念漂移、乙=資料漂移</div>
+              <div>(C) 甲=過擬合、乙=資料漂移</div>
+              <div>(D) 甲與乙均為概念漂移</div>
+            </div>
+          </div>
+          <span class="answer-badge">答案：D</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(D)對：</span><br>
+            情形甲：「特徵分布相近」但「行為模式改變」→ 概念漂移。<br>
+            情形乙：新用戶的「特徵→購買」關係與舊用戶不同 → 也是概念漂移。<br>
+            <span class="wrong">❌ 為什麼(A)(B)不對：</span>情形乙不只是「特徵分布不同」（資料漂移），而是「特徵與目標的關係改變」（概念漂移）。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>甲不是過擬合（過擬合是訓練集好但測試集差）。<br>
+            <span class="trap">⚠️陷阱：</span>情形乙是最大陷阱！新用戶的特徵分布確實不同，但关键是「購買行為模式與舊用戶不同」→ 概念漂移。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 類別三 ==================== -->
+  <div class="category" id="cat3">
+    <div class="cat-header">
+      <div class="cat-num">3</div>
+      <h2>AI 倫理、法規與治理</h2>
+      <span class="cat-range">第 5、6、7、8、9、11 題</span>
+    </div>
+    <div class="cat-body">
+      <div class="intro-box">
+        <h3>說明</h3>
+        <p>本類別涵蓋 <strong>AI 倫理五大核心原則</strong>（透明性、公平性、隱私性、問責性、安全性）、<strong>《人工智慧基本法》精神</strong>、<strong>金融機構 AI 作業規範</strong>、<strong>AI 產品評測中心評測項目</strong>，以及訓練階段的偏見防治措施。這是本次考試的重點區域（6題）。</p>
+      </div>
+      <div class="trap-box">
+        <h3>考試陷阱</h3>
+        <ul>
+          <li><strong>倫理五原則的對應</strong>：「無法理解判斷依據」= 透明性；「誤診率偏高」= 公平性；「未告知當事人」= 隱私性</li>
+          <li><strong>金融揭露義務</strong>：不要求「公開模型架構與完整訓練資料」</li>
+          <li><strong>AI 評測中心</strong>：評測項目包括公平性、可靠性、效率性，但「資安（Secure）」不在此列</li>
+          <li><strong>代理特徵歧視</strong>：以性別作為愛滋病風險預測特徵 → 強化歧視性標籤 → 違反公平性</li>
+        </ul>
+      </div>
+
+      <!-- Q5 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">5</span>低收入補助 AI 審核 — 偏誤處理</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 要求廠商提出無歧視聲明，持續觀察</div>
+            <div>(B) 提升整體準確率，降低錯誤影響</div>
+            <div>(C) 進行偏誤影響評估並建立可解釋與申訴機制</div>
+            <div>(D) 尚無大量申訴，暫不調整</div>
+          </div>
+          <span class="answer-badge">答案：C</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(C)對：</span>依《人工智慧基本法》精神，最優先應進行「偏誤影響評估」並建立「可解釋與申訴機制」。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>無歧視聲明只是形式，沒有實際解決偏誤。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>提升整體準確率不等於解決特定族群偏誤。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>忽視問題，不符合法規精神。<br>
+            <span class="trap">⚠️陷阱：</span>(B) 看起來「合理」，但公平性問題不是靠提升整體準確率能解決的。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q6 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">6</span>AI 產品評測中心 — 非評測項目</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 資安（Secure）</div>
+            <div>(B) 公平性（Fair）</div>
+            <div>(C) 效率性（Efficiency）</div>
+            <div>(D) 可靠性（Reliability）</div>
+          </div>
+          <span class="answer-badge">答案：A</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(A)對：</span>「資安（Secure）」不屬於AI評測中心的評測範圍（資安由其他機構負責）。需死記此考點。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>公平性是評測項目之一。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>效率性是評測項目之一。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>可靠性是評測項目之一。<br>
+            <span class="trap">⚠️陷阱：</span>需死記「AI評測中心不評測資安」。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q7 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">7</span>生成式AI 訓練 — 降低偏見的優先措施</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 確保訓練資料來源多元，嚴格清洗與偏見過濾</div>
+            <div>(B) 完全避免使用外部文本資料</div>
+            <div>(C) 僅使用公司內部新聞稿訓練</div>
+            <div>(D) 限制模型僅產出固定格式內容</div>
+          </div>
+          <span class="answer-badge">答案：A</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(A)對：</span>從「訓練階段」降低偏見的最有效做法是確保資料多元化 + 嚴格清洗。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>完全不用外部資料會嚴重限制模型能力。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>僅用內部資料會導致偏頗且資料量不足。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>限制輸出格式不等於降低訓練偏見。<br>
+            <span class="trap">⚠️陷阱：</span>(C) 看起來「可控」，但「符合企業立場」恰恰可能引入偏見。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q8 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">8</span>金融 AI 核保 — 非必要揭露事項</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 詳細公開模型架構與完整訓練資料</div>
+            <div>(B) 說明適用對象與用途範圍</div>
+            <div>(C) 說明是否提供人工複核或申訴管道</div>
+            <div>(D) 告知審查結果由AI自動完成</div>
+          </div>
+          <span class="answer-badge">答案：A</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(A)對：</span>金融規範「不要求」公開「模型架構與完整訓練資料」，涉及商業機密與資安風險。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>適用對象與用途範圍是必要揭露事項。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>人工複核/申訴管道是必要揭露事項。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>告知AI自動審核是必要揭露事項。<br>
+            <span class="trap">⚠️陷阱：</span>(D) 看起來「好像不需要」，但金融規範確實要求「告知消費者審查結果由AI自動完成」。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q9 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">9</span>醫療 AI — 倫理五原則違反對應</div>
+        <div class="q-body">
+          <div class="options">
+            <div>① 放射科醫師無法理解判斷依據</div>
+            <div>② 對特定族裔誤診率偏高</div>
+            <div>③ 病患個資未告知即納入再訓練</div>
+            <div style="margin-top: 8px;">
+              <div>(A) ①安全性 ②問責性 ③透明性</div>
+              <div>(B) ①隱私性 ②安全性 ③公平性</div>
+              <div>(C) ①公平性 ②透明性 ③問責性</div>
+              <div>(D) ①透明性 ②公平性 ③隱私性</div>
+            </div>
+          </div>
+          <span class="answer-badge">答案：D</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(D)對：</span><br>
+            ①「無法理解判斷依據」→ 透明性<br>
+            ②「對特定族裔誤診率偏高」→ 公平性<br>
+            ③「個資未告知當事人即使用」→ 隱私性<br>
+            <span class="wrong">❌ 為什麼(A)(B)(C)不對：</span>三組對應均錯誤。<br>
+            <span class="trap">⚠️陷阱：</span>記憶法：看不懂 = 透明；不公平 = 公平；偷用資料 = 隱私。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q11 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">11</span>以性別預測愛滋病風險 — 不適當原因</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 性別為類別型變數，增加前處理複雜度</div>
+            <div>(B) 性別特徵可能存在缺失值</div>
+            <div>(C) 強化對特定族群的歧視性標籤，違反公平性</div>
+            <div>(D) 統計相關性有限，降低預測效能</div>
+          </div>
+          <span class="answer-badge">答案：C</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(C)對：</span>以性別作為愛滋病風險的代理特徵，即使有統計相關性，也會「強化對特定族群的歧視性標籤」，違反公平性原則。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>類別變數編碼是技術問題，不涉及倫理核心。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>缺失值是技術問題，不涉及倫理核心。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>統計相關性有限是效能問題，不涉及倫理核心。<br>
+            <span class="trap">⚠️陷阱：</span>(A)(B)(D) 都是技術性問題，在AI倫理框架下，公平性是最關鍵的理由。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 類別四 ==================== -->
+  <div class="category" id="cat4">
+    <div class="cat-header">
+      <div class="cat-num">4</div>
+      <h2>資料處理與特徵工程</h2>
+      <span class="cat-range">第 10、12、13、14、17、18、20 題</span>
+    </div>
+    <div class="cat-body">
+      <div class="intro-box">
+        <h3>說明</h3>
+        <p>本類別涵蓋：大數據特性（3V/5V）、資料型態、特徵編碼方式、交叉驗證方法、遺漏值處理、去識別化方法、資料傳輸安全措施。</p>
+      </div>
+      <div class="trap-box">
+        <h3>考試陷阱</h3>
+        <ul>
+          <li><strong>大數據 5V</strong>：Volume / Velocity / Variety / Veracity / Value</li>
+          <li><strong>特徵編碼陷阱</strong>：Label/Binary Encoding 會讓模型錯誤解讀類別間有「大小順序」關係</li>
+          <li><strong>k-fold vs 時序資料</strong>：隨機分割會破壞時間順序（未來資料洩漏）</li>
+          <li><strong>去識別化</strong>：「替換為隨機編號且不保留對應」才是真正的去識別化</li>
+          <li><strong>防中間人攻擊</strong>：加密 + 雙向身份驗證</li>
+        </ul>
+      </div>
+
+      <!-- Q10 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">10</span>空氣品質監測 — 大數據特性挑戰</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) Volume 與 Velocity</div>
+            <div>(B) Variety 與 Veracity</div>
+            <div>(C) Velocity 與 Value</div>
+            <div>(D) Volume 與 Value</div>
+          </div>
+          <span class="answer-badge">答案：C</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(C)對：</span>「即時處理」和「持續產生」→ Velocity；「需即時判斷價值」→ Value。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>Volume 合理，但題目更強調「即時處理」。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>不是題目強調的重點。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>「篩選有用資訊」不是題目強調的挑戰。<br>
+            <span class="trap">⚠️陷阱：</span>(A) 看起來最直覺（5萬感測器 = 量大），但題目核心在「即時處理」= Velocity + Value。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q12 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">12</span>ERP + 感測器 + 手寫描述 — 資料型態對應</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) ERP=半結構化、感測器=結構化、文字=非結構化</div>
+            <div>(B) ERP=結構化、感測器=結構化、文字=非結構化</div>
+            <div>(C) ERP=結構化、感測器=非結構化、文字=半結構化</div>
+            <div>(D) 三者皆結構化（可轉為數值格式）</div>
+          </div>
+          <span class="answer-badge">答案：B</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(B)對：</span>ERP有固定欄位=結構化；感測器連續數值=結構化；手寫掃描PDF=非結構化。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>ERP是結構化（有固定欄位）。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>感測器數值是結構化。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>「可轉換為數值格式」≠「就是結構化」。<br>
+            <span class="trap">⚠️陷阱：</span>(D) 的邏輯錯誤：「可轉換」≠「就是」。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q13 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">13</span>職業類別編碼 — 導致錯誤解讀的方式</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) One-Hot Encoding</div>
+            <div>(B) Binary Encoding</div>
+            <div>(C) Target Encoding</div>
+            <div>(D) Label Encoding</div>
+          </div>
+          <span class="answer-badge">答案：B</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(B)對：</span>Binary Encoding 將類別轉為二進制，模型可能錯誤解讀「11 > 10」代表排序關係。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>One-Hot 不會產生順序關係。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>Target Encoding 以目標值編碼，不會產生順序誤解。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>Label Encoding 也有順序問題，但此題答案是 Binary Encoding。<br>
+            <span class="trap">⚠️陷阱：</span>(D) 也有順序問題，但 Binary Encoding 在二進制編碼中更隱含了數學順序。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q14 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">14</span>用電需求預測 — k-fold 交叉驗證的根本問題</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 計算資源過大</div>
+            <div>(B) 隨機分割破壞時間依賴性（未來資料洩漏）</div>
+            <div>(C) 折數過少，應改 10-fold</div>
+            <div>(D) 僅適用於分類問題</div>
+          </div>
+          <span class="answer-badge">答案：B</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(B)對：</span>標準k-fold的「隨機分割」會讓「未來時間點的資料出現在訓練集中」，破壞時間因果順序。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>計算資源不是根本問題。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>折數影響穩定性，不是時間序列的根本問題。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>k-fold完全適用於迴歸問題。<br>
+            <span class="trap">⚠️陷阱：</span>(D) 看起來「好像有道理」，但k-fold完全可用於迴歸問題。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q17 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">17</span>公車乘客資料 — 最符合去識別化要求</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 將卡號全部刪除</div>
+            <div>(B) MD5 雜湊處理，保留對照表</div>
+            <div>(C) 彙總為每日各路線總乘客數</div>
+            <div>(D) 替換為隨機編號，不保留對應關係</div>
+          </div>
+          <span class="answer-badge">答案：D</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(D)對：</span>替換為隨機編號 + 不保留對應 → 可跨時間追蹤，且無法逆推真實身份。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>刪除卡號 → 無法追蹤同一乘客。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>MD5+保留對照表 → 可逆推，不是真正的去識別化。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>彙總統計 → 單筆資料消失。<br>
+            <span class="trap">⚠️陷阱：</span>(B) 看起來「有加密」就像去識別化，但「保留對照表」意味著可逆推。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q18 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">18</span>工業感測器遺漏值 — 最合適填補方式</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 全數填補為 0</div>
+            <div>(B) 以前後時間點進行線性插補</div>
+            <div>(C) 填補整份資料的平均值</div>
+            <div>(D) 直接刪除包含遺漏值的時間點</div>
+          </div>
+          <span class="answer-badge">答案：B</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(B)對：</span>線性插補利用前後時間點的觀測值插值，保留時間序列連續性，不引入虛假異常。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>填0會造成人為低值異常。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>填平均值忽略時間趨勢。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>刪除會丟失有價值的時間點。<br>
+            <span class="trap">⚠️陷阱：</span>(A) 看起來「簡單」，但填0會造成人為異常。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q20 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">20</span>跨國資料傳輸 — 防範中間人攻擊</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 接收端加強存取權限</div>
+            <div>(B) 傳輸加密 + 雙向身份驗證</div>
+            <div>(C) 將資料拆分多部分分批傳送</div>
+            <div>(D) 改用離線備援方式</div>
+          </div>
+          <span class="answer-badge">答案：B</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(B)對：</span>防範MITM的核心是「加密 + 雙向身份驗證（如TLS/SSL）」。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>只保護端點，不保護傳輸過程。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>拆分傳送不能防止竊聽。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>離線備援會影響即時性。<br>
+            <span class="trap">⚠️陷阱：</span>(C) 看起來「聰明」，但中間人可以攔截所有部分。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 類別五 ==================== -->
+  <div class="category" id="cat5">
+    <div class="cat-header">
+      <div class="cat-num">5</div>
+      <h2>模型評估與演算法選擇</h2>
+      <span class="cat-range">第 15、19、23、41、45 題</span>
+    </div>
+    <div class="cat-body">
+      <div class="intro-box">
+        <h3>說明</h3>
+        <p>本類別涵蓋：模型對特徵尺度的敏感度、分類模型評估指標（Precision / Recall / F1 / Accuracy）、迴歸模型評估指標（MSE）、各演算法的特性與適用場景。</p>
+      </div>
+      <div class="trap-box">
+        <h3>考試陷阱</h3>
+        <ul>
+          <li><strong>特徵標準化</strong>：SVM、KNN、線性迴歸都對尺度敏感，決策樹不需要</li>
+          <li><strong>Precision vs Recall</strong>：「誤判正常為異常」代價高 → 優先看Precision</li>
+          <li><strong>房價預測</strong>：迴歸問題 → 用MSE，不要選分類指標</li>
+          <li><strong>SVM</strong>：適合高維度+小樣本；不適合大規模資料</li>
+        </ul>
+      </div>
+
+      <!-- Q15 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">15</span>特徵標準化 — 對尺度最不敏感的模型</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 線性迴歸</div>
+            <div>(B) 支援向量機</div>
+            <div>(C) K 近鄰演算法</div>
+            <div>(D) 決策樹</div>
+          </div>
+          <span class="answer-badge">答案：D</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(D)對：</span>決策樹基於「閾值分割」分支，不涉及距離計算，對特徵尺度完全不敏感。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>迴歸係數會受尺度影響。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>SVM涉及距離計算，尺度敏感。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>KNN基於距離計算，尺度敏感。<br>
+            <span class="trap">⚠️陷阱：</span>看到「影像」→ 選CNN；看到「不需要標準化」→ 選決策樹。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q19 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">19</span>害蟲檢測 — 最需要優先關注的評估指標</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 召回率（Recall）</div>
+            <div>(B) 精確率（Precision）</div>
+            <div>(C) 準確率（Accuracy）</div>
+            <div>(D) F1 分數</div>
+          </div>
+          <span class="answer-badge">答案：B</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(B)對：</span>20張正常葉片被誤判 → 不必要的防治措施浪費資源。減少誤報（提升Precision）是優先考量。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>漏檢10隻雖不好，但誤判20張的代價更高。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>類別不平衡時Accuracy不適用。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>F1是平衡指標，此場景應優先關注Precision。<br>
+            <span class="trap">⚠️陷阱：</span>(A) 看起來「漏檢害蟲很嚴重」，但題目強調的是「誤判正常葉片」的代價。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q23 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">23</span>房價預測系統 — 最適合的評估指標</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 均方誤差（MSE）</div>
+            <div>(B) 精確率（Precision）</div>
+            <div>(C) F1 分數</div>
+            <div>(D) 召回率（Recall）</div>
+          </div>
+          <span class="answer-badge">答案：A</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(A)對：</span>房價預測是迴歸問題，MSE是迴歸的標準評估指標。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>Precision是分類問題的指標。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>F1是分類問題的指標。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>Recall是分類問題的指標。<br>
+            <span class="trap">⚠️陷阱：</span>看到「預測價格/數值」→ 一定是迴歸問題 → 選MSE。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q41 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">41</span>支援向量機（SVM）的特性</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 擅長處理大規模非結構化資料</div>
+            <div>(B) 透過多個模型集體決策提升穩定性</div>
+            <div>(C) 高維度+小樣本表現良好，大資料量時運算成本高</div>
+            <div>(D) 具備強大的特徵自動萃取能力</div>
+          </div>
+          <span class="answer-badge">答案：C</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(C)對：</span>SVM在高維度且樣本數有限時表現出色，但大資料量時計算核矩陣成本大幅上升。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>描述的是深度學習。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>描述的是集成方法（如隨機森林）。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>描述的是CNN等深度學習模型。<br>
+            <span class="trap">⚠️陷阱：</span>ABD 都是其他模型的特性，不是SVM。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q45 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">45</span>智慧交通車輛識別 — 最適合的神經網路架構</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 循環神經網路（RNN）</div>
+            <div>(B) 卷積神經網路（CNN）</div>
+            <div>(C) 長短期記憶網路（LSTM）</div>
+            <div>(D) 多層感知機（MLP）</div>
+          </div>
+          <span class="answer-badge">答案：B</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(B)對：</span>「影像中的物件類型識別」→ CNN是處理影像資料的標準架構。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>RNN適合序列資料，不適合影像。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>LSTM適合長期依賴的序列資料。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>MLP缺乏空間特徵萃取能力。<br>
+            <span class="trap">⚠️陷阱：</span>看到「影像」→ 直接選CNN。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 類別六 ==================== -->
+  <div class="category" id="cat6">
+    <div class="cat-header">
+      <div class="cat-num">6</div>
+      <h2>深度學習與神經網路</h2>
+      <span class="cat-range">第 21、25、27、28、33、36、47 題</span>
+    </div>
+    <div class="cat-body">
+      <div class="intro-box">
+        <h3>說明</h3>
+        <p>本類別涵蓋：深度學習的基本特性、RNN/LSTM/CNN/GAN 等架構差異、Batch Normalization 的作用、優化器的功能、自編碼器（Autoencoder）的應用、模式崩潰（Mode Collapse）等。</p>
+      </div>
+      <div class="trap-box">
+        <h3>考試陷阱</h3>
+        <ul>
+          <li><strong>深度學習</strong>：特點是「自動特徵萃取」，但「通常需要大量資料」</li>
+          <li><strong>RNN vs LSTM</strong>：LSTM專門解決RNN的「長期記憶遺忘」問題</li>
+          <li><strong>Batch Normalization</strong>：作用是「降低內部特徵分布變動」</li>
+          <li><strong>優化器</strong>：功能是「調整參數以最小化損失函數」</li>
+          <li><strong>Mode Collapse</strong>：生成器只產生少數幾種回應，缺乏多樣性</li>
+        </ul>
+      </div>
+
+      <!-- Q21 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">21</span>深度學習的正確敘述</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 通常需要人工設計特徵</div>
+            <div>(B) 主要用於資料壓縮</div>
+            <div>(C) 透過多層神經網路，自動從大量資料中學習抽象特徵</div>
+            <div>(D) 不需要大量資料</div>
+          </div>
+          <span class="answer-badge">答案：C</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(C)對：</span>深度學習透過多層神經網路逐層抽象化，自動從原始資料中學習特徵。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>深度學習的優勢正是「自動特徵萃取」。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>廣泛用於預測、分類、生成等任務。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>深度學習通常「需要」大量資料。<br>
+            <span class="trap">⚠️陷阱：</span>(A) 的「需要人工設計特徵」是傳統機器學習的特點，不是深度學習。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q25 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">25</span>語音辨識 — 改善長序列問題</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 長短期記憶網路（LSTM）</div>
+            <div>(B) 循環神經網路（RNN）</div>
+            <div>(C) 卷積神經網路（CNN）</div>
+            <div>(D) 生成式對抗網路（GAN）</div>
+          </div>
+          <span class="answer-badge">答案：A</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(A)對：</span>LSTM正是為解決RNN的梯度消失問題而設計，透過門控機制保留長期記憶。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>RNN正是「有此問題」的模型。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>CNN主要處理影像。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>GAN是生成模型。<br>
+            <span class="trap">⚠️陷阱：</span>(B) RNN 看起來「相關」，但RNN正是「有此問題」的模型。LSTM才是解决方案。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q27 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">27</span>Autoencoder 最適合的應用情境</div>
+        <div class="q-body">
+          <div class="options">
+            <div>（甲）感測器異常偵測（乙）文字情緒判斷（丙）影像瑕疵分類</div>
+            <div style="margin-top: 8px;">
+              <div>(A) 甲 (B) 乙 (C) 丙 (D) 甲與丙</div>
+            </div>
+          </div>
+          <span class="answer-badge">答案：D</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(D)對：</span>Autoencoder的核心是「學習正常資料的壓縮表示，然後重建」。甲（感測器異常偵測）和丙（影像瑕疵分類）都是典型應用。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>文字情緒判斷通常用NLP模型（如BERT）。<br>
+            <span class="trap">⚠️陷阱：</span>(B) 看起來「好像可以」，但Autoencoder的主要應用是異常偵測和降維。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q28 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">28</span>Batch Normalization 的主要作用</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 標準化輸入影像</div>
+            <div>(B) 自動調整權重初始化</div>
+            <div>(C) 增加非線性能力</div>
+            <div>(D) 降低不同批次輸入造成的內部特徵分布變動</div>
+          </div>
+          <span class="answer-badge">答案：D</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(D)對：</span>BN的主要作用是「對每一層的輸入進行正規化」，降低批次間的特徵分布差異。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>這是資料前處理。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>BN不負責調整初始化。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>增加非線性的是激活函數。<br>
+            <span class="trap">⚠️陷阱：</span>(C) 看起來「好像可以」，但增加非線性的是激活函數，不是BN。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q33 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">33</span>照片轉公仔風格 — 設計方式</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 稠密Transformer架構</div>
+            <div>(B) 稀疏專家混合（Sparse MoE）架構</div>
+            <div>(C) 生成對抗網路（GAN）</div>
+            <div>(D) 卷積神經網路（CNN）</div>
+          </div>
+          <span class="answer-badge">答案：B</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(B)對：</span>題目強調「模型規模較大」且「兼顧運算效率」。Sparse MoE每次推理只啟用部分專家模型，大幅降低運算成本。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>「每次使用全部參數」與「兼顧效率」矛盾。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>GAN適合風格轉換，但不涉及「大模型效率」的設計。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>CNN可處理影像，但不涉及「大模型效率」的設計。<br>
+            <span class="trap">⚠️陷阱：</span>(C) 看起來「合理」（GAN適合風格轉換），但題目重點是「大模型+高效率」。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q36 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">36</span>持續比對預測值與實際值並調整參數</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 優化器（Optimizer）</div>
+            <div>(B) 資料前處理模組</div>
+            <div>(C) 模型架構</div>
+            <div>(D) 激活函數</div>
+          </div>
+          <span class="answer-badge">答案：A</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(A)對：</span>「比對差距」= 計算損失函數；「調整參數」= 使用優化器根據梯度更新參數。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>前處理是訓練前的準備。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>模型架構是網路結構設計。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>激活函數負責引入非線性，不負責調整參數。<br>
+            <span class="trap">⚠️陷阱：</span>(D) 看起來「好像可以」，但激活函數只負責「引入非線性」。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q47 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">47</span>LLM 生成缺乏多樣性的回應</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 過度擬合（Overfitting）</div>
+            <div>(B) 模式崩潰（Mode Collapse）</div>
+            <div>(C) 梯度消失</div>
+            <div>(D) 模型收斂速度</div>
+          </div>
+          <span class="answer-badge">答案：B</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(B)對：</span>「長期集中產生少數幾種相似回應，缺乏多樣性」= 模式崩潰。生成器學會少量模式後就不再探索。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>過擬合是「記住訓練資料的細節」。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>梯度消失是「訓練困難」的問題。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>收斂速度是「訓練快慢」的問題。<br>
+            <span class="trap">⚠️陷阱：</span>(A) 看起來「好像可以」，但過擬合是「記住訓練資料」，模式崩潰是「只生成少數模式」。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 類別七 ==================== -->
+  <div class="category" id="cat7">
+    <div class="cat-header">
+      <div class="cat-num">7</div>
+      <h2>可解釋 AI（XAI）</h2>
+      <span class="cat-range">第 30、31、32、37、42、43 題</span>
+    </div>
+    <div class="cat-body">
+      <div class="intro-box">
+        <h3>說明</h3>
+        <p>可解釋 AI（XAI）是讓黑箱模型的決策過程透明化的方法。主要工具：<strong>LIME</strong>（局部解釋）、<strong>SHAP</strong>（量化特徵貢獻）、<strong>PDP</strong>（整體趨勢）、<strong>Saliency Map</strong>（標示影響最大區域/詞彙）。本類別有 6 題，是考試重點！</p>
+      </div>
+      <div class="trap-box">
+        <h3>考試陷阱</h3>
+        <ul>
+          <li><strong>LIME</strong> = 局部解釋（針對單筆資料，用代理模型近似）</li>
+          <li><strong>SHAP</strong> = 量化每個特徵的貢獻值（正/負影響程度）</li>
+          <li><strong>PDP</strong> = 整體趨勢，不能解釋「單筆資料」</li>
+          <li><strong>Saliency Map</strong> = 視覺化標示「哪個區域/詞彙」影響最大</li>
+          <li><strong>「標示影像中影響最大的區域」</strong>→ 選 Saliency Map</li>
+        </ul>
+      </div>
+
+      <!-- Q30 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">30</span>合約風險審查 — 顯著性圖在 NLP 中標示什麼</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 語意相似程度</div>
+            <div>(B) 輸入文字中對結果影響程度較高的文字片段</div>
+            <div>(C) 不同版本之間的文字差異</div>
+            <div>(D) 高頻詞彙</div>
+          </div>
+          <span class="answer-badge">答案：B</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(B)對：</span>Saliency Map在NLP中標示「對模型預測結果影響最大的詞彙/片段」。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>語意相似度是另一種技術。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>文字差異比對是版本控制功能。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>高頻詞彙是詞頻統計，與模型預測無關。<br>
+            <span class="trap">⚠️陷阱：</span>(D) 看起來「好像可以」，但高頻詞彙 ≠ 對預測影響最大的詞彙。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q31 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">31</span>PDP 在品質預測中的限制</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 無法顯示預測準確率</div>
+            <div>(B) 無法提供特徵影響資訊</div>
+            <div>(C) 僅能用於單一特徵分析</div>
+            <div>(D) 僅呈現整體趨勢，無法判斷單一批次的原因</div>
+          </div>
+          <span class="answer-badge">答案：D</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(D)對：</span>PDP呈現「平均效果」（整體趨勢），無法回答「這一批瑕疵中溫度是否為主要原因」。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>PDP不是用來顯示準確率的。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>PDP正是用來提供特徵影響資訊的。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>PDP可以分析多個特徵。<br>
+            <span class="trap">⚠️陷阱：</span>PDP的主要限制是「只能看整體趨勢，不能看個別樣本」。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q32 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">32</span>LIME 中代理模型的意義</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 全局解釋所有預測的線性模型</div>
+            <div>(B) 產生擾動資料的機制</div>
+            <div>(C) 獨立訓練的生成式模型</div>
+            <div>(D) 擬合原黑箱模型在目標實例附近的預測行為</div>
+          </div>
+          <span class="answer-badge">答案：D</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(D)對：</span>LIME用簡單代理模型「近似」黑箱在特定局部區域的決策邏輯。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>LIME是「局部解釋」，不是「全局解釋」。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>擾動資料是LIME的步驟之一，不是代理模型的意義。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>代理模型是「簡單模型」，不是「生成式模型」。<br>
+            <span class="trap">⚠️陷阱：</span>(A) 的「全局解釋」是最大陷阱。LIME是局部解釋。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q37 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">37</span>醫療 X 光影像 — 標示影響最大區域</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) LIME</div>
+            <div>(B) SHAP</div>
+            <div>(C) PDP</div>
+            <div>(D) 顯著性圖（Saliency Map）</div>
+          </div>
+          <span class="answer-badge">答案：D</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(D)對：</span>「標示影像中哪些區域對診斷判斷影響最大」→ Saliency Map的核心功能。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>LIME不直接標示影像區域。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>SHAP給出特徵貢獻值，不直接標示影像區域。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>PDP是趨勢圖。<br>
+            <span class="trap">⚠️陷阱：</span>看到「標示影像中影響最大的區域」→ 直接選Saliency Map。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q42 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">42</span>LIME 最可能被用於的情境</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 分析訊息傳輸效率瓶頸</div>
+            <div>(B) 強化資料安全與隱私保護</div>
+            <div>(C) 貸款申請被拒時，分析各項因素與結果的關聯</div>
+            <div>(D) 優化推薦系統回應速度</div>
+          </div>
+          <span class="answer-badge">答案：C</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(C)對：</span>LIME是可解釋AI工具，最典型場景：貸款被拒 → 分析哪些因素導致拒絕。<br>
+            <span class="wrong">❌ 為什麼(A)(B)(D)不對：</span>都是系統效能/資安問題，與可解釋性無關。<br>
+            <span class="trap">⚠️陷阱：</span>看到「可解釋」→ 選與「解釋模型決策」相關的選項。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q43 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">43</span>SHAP Shapley 值提供的資訊</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 訓練穩定性的影響</div>
+            <div>(B) 各項特徵分別讓風險評分上升或下降的影響程度</div>
+            <div>(C) 整體預測準確度的影響</div>
+            <div>(D) 特徵被使用的頻率</div>
+          </div>
+          <span class="answer-badge">答案：B</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(B)對：</span>SHAP針對「特定個體」，量化「每個特徵對結果的正/負貢獻」。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>SHAP不看「訓練穩定性」。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>SHAP是「局部解釋」，不是「全局」。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>SHAP不看「使用頻率」。<br>
+            <span class="trap">⚠️陷阱：</span>(C) 看起來「好像可以」，但SHAP是「局部解釋」（特定個體）。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 類別八 ==================== -->
+  <div class="category" id="cat8">
+    <div class="cat-header">
+      <div class="cat-num">8</div>
+      <h2>生成式 AI 與大型語言模型</h2>
+      <span class="cat-range">第 34、35、39、40、44、46、49、50 題</span>
+    </div>
+    <div class="cat-body">
+      <div class="intro-box">
+        <h3>說明</h3>
+        <p>本類別涵蓋：CLIP/DINO 的自監督學習、Transformer 的架構限制、GAN 的應用、LLM 部署考量、AutoSkill 框架、GRPO 強化學習方法、RAG vs Fine-tuning 的比較。這是本次考試占比最大的類別（8題）。</p>
+      </div>
+      <div class="trap-box">
+        <h3>考試陷阱</h3>
+        <ul>
+          <li><strong>CLIP vs DINO</strong>：CLIP用「圖像+文字配對」，DINO用「未標註圖像」</li>
+          <li><strong>Transformer</strong>：固定長度的上下文窗口限制</li>
+          <li><strong>LLM 部署</strong>：最大挑戰是「推理延遲 + 運算成本」</li>
+          <li><strong>RAG vs Fine-tuning</strong>：需要「即時反映更新」→ RAG</li>
+          <li><strong>AutoSkill</strong>：將互動經驗轉化為可重複使用的技能模組</li>
+          <li><strong>CRF</strong>：鑑別式模型，不是生成式或無監督</li>
+        </ul>
+      </div>
+
+      <!-- Q34 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">34</span>CLIP vs DINO — 訓練資料差異</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 皆使用有標註圖像資料</div>
+            <div>(B) 皆使用未標註圖像資料</div>
+            <div>(C) CLIP使用圖像與文字配對，DINO使用未標註圖像</div>
+            <div>(D) CLIP使用未標註圖像，DINO使用圖像與文字配對</div>
+          </div>
+          <span class="answer-badge">答案：C</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(C)對：</span>CLIP使用「圖像-文字配對」資料；DINO使用「未標註圖像」資料。兩者都是自監督學習。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>兩者都是自監督學習，不需要人工標註。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>CLIP使用「圖像+文字配對」。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>刚好相反。<br>
+            <span class="trap">⚠️陷阱：</span>(D) 是常見的混淆——把CLIP和DINO的資料型態記反了。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q35 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">35</span>Transformer 在長篇法規問答中的限制</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 固定長度的上下文窗口，無法同時處理分散於全文的資訊</div>
+            <div>(B) 推理時遇到新內容可能無法應對</div>
+            <div>(C) 長序列處理時效率下降，但仍可完整處理</div>
+            <div>(D) 每次推理後都需重新訓練</div>
+          </div>
+          <span class="answer-badge">答案：A</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(A)對：</span>Transformer的核心限制是「固定長度的上下文窗口」。超出窗口的資訊會被截斷。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>這是一般性限制，不是架構問題。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>錯在「仍可完整處理」——超出窗口的資訊會被截斷。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>推理後不需重新訓練。<br>
+            <span class="trap">⚠️陷阱：</span>(C) 的「仍可完整處理」是錯的。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q39 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">39</span>CRF 在 NER 任務中的模型類型</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 生成式模型</div>
+            <div>(B) 無監督模型</div>
+            <div>(C) 鑑別式模型</div>
+            <div>(D) 自迴歸模型</div>
+          </div>
+          <span class="answer-badge">答案：C</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(C)對：</span>CRF是鑑別式模型：直接建模P(Y|X)，不建模P(X,Y)。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>生成式模型建模P(X,Y)。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>CRF需要標註資料訓練。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>自迴歸模型是「逐步生成」（如GPT）。<br>
+            <span class="trap">⚠️陷阱：</span>CRF是鑑別式（P(Y|X)），不是生成式（P(X,Y)）。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q40 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">40</span>音樂生成 — 真正學習結構與風格</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) KNN</div>
+            <div>(B) Autoencoder</div>
+            <div>(C) GAN</div>
+            <div>(D) 隨機森林</div>
+          </div>
+          <span class="answer-badge">答案：C</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(C)對：</span>「不能只是播放或拼接」、「不能僅進行資料重建」、「要創作新旋律」→ 需要生成式模型。GAN透過對抗訓練生成新內容。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>KNN是分類/回歸演算法。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>Autoencoder是「重建」輸入，不是「生成新內容」。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>隨機森林是集成學習方法。<br>
+            <span class="trap">⚠️陷阱：</span>(B) 看起來「好像可以」，但題目明確說「不能僅進行資料重建」。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q44 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">44</span>超大型 LLM 部署 — 最需優先考量的因素</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 輸出差異極大</div>
+            <div>(B) 無法支援批次處理</div>
+            <div>(C) 推理延遲較高且運算資源消耗龐大</div>
+            <div>(D) 會自動調整運算資源配置</div>
+          </div>
+          <span class="answer-badge">答案：C</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(C)對：</span>120B參數的超大型LLM，最關鍵挑戰是「推理延遲」和「運算成本」。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>輸出差異主要來自sampling參數，不是參數量。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>大模型可以批次處理。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>LLM不會自動調整運算資源。<br>
+            <span class="trap">⚠️陷阱：</span>(A) 看起來「好像有道理」，但LLM的輸出差異主要來自sampling參數。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q46 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">46</span>AutoSkill 框架的主要目標</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 降低對LLM的依賴</div>
+            <div>(B) 持續更新模型參數</div>
+            <div>(C) 將重複互動經驗轉化為可重複使用的技能模組</div>
+            <div>(D) 檢索外部知識改善回應品質</div>
+          </div>
+          <span class="answer-badge">答案：C</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(C)對：</span>AutoSkill將Agent的重複經驗自動提煉為「技能模組」，後續可直接調用。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>不是為了降低依賴。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>不是更新參數，而是「技能化」。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>檢索外部知識是RAG的功能。<br>
+            <span class="trap">⚠️陷阱：</span>(D) 檢索外部知識是RAG，不是AutoSkill。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q49 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">49</span>生成式 AI 模擬攻擊流量 — 對防禦模型的助益</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 可取代真實攻擊資料</div>
+            <div>(B) 可直接負責防禦決策</div>
+            <div>(C) 可使模型自動轉為生成式架構</div>
+            <div>(D) 將模擬攻擊納入訓練，可提升對未知攻擊的辨識能力</div>
+          </div>
+          <span class="answer-badge">答案：D</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(D)對：</span>模擬攻擊 → 納入訓練 → 防禦模型「見過」更多樣化攻擊 → 提升辨識能力。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>模擬資料不能完全取代真實資料。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>生成式AI負責「模擬」不是「防禦決策」。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>加入模擬資料不會改變模型架構。<br>
+            <span class="trap">⚠️陷阱：</span>(A) 看起來「好像可以」，但模擬資料不能完全取代真實資料。
+          </div>
+        </div>
+      </div>
+
+      <!-- Q50 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">50</span>知識問答系統 — RAG vs Fine-tuning</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) Fine-tuning較適合，定期加入更新文件</div>
+            <div>(B) RAG較適合，同步至知識庫即可查詢最新內容</div>
+            <div>(C) Fine-tuning較適合，回應品質優於RAG</div>
+            <div>(D) 兩者皆可，差異僅在建置成本</div>
+          </div>
+          <span class="answer-badge">答案：B</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(B)對：</span>題目核心需求：「文件更新後必須能立即反映」。RAG將文件同步到知識庫，不需重新訓練。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>Fine-tuning需要重新訓練，不符合「立即反映」。<br>
+            <span class="wrong">❌ 為什麼(C)不對：</span>題目核心需求是「立即反映更新」，不是「品質」。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>兩者在「即時反映」上有根本差異。<br>
+            <span class="trap">⚠️陷阱：</span>(C) 看起來「有道理」（品質較好），但題目核心需求是「立即反映更新」。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 類別九 ==================== -->
+  <div class="category" id="cat9">
+    <div class="cat-header">
+      <div class="cat-num">9</div>
+      <h2>資安、隱私保護與模型維運</h2>
+      <span class="cat-range">第 29 題</span>
+    </div>
+    <div class="cat-body">
+      <div class="intro-box">
+        <h3>說明</h3>
+        <p>本類別涵蓋：GRPO 強化學習方法、模型上線後的漂移偵測與維運管理。</p>
+      </div>
+
+      <!-- Q29 -->
+      <div class="q-card">
+        <div class="q-title"><span class="q-num">29</span>GRPO 最適合強化模型的任務</div>
+        <div class="q-body">
+          <div class="options">
+            <div>(A) 判斷客服留言的情緒傾向</div>
+            <div>(B) 將客服電話錄音即時轉換為文字</div>
+            <div>(C) 針對數學應用題或邏輯謎題，逐步推導出正確解答</div>
+            <div>(D) 分析商品圖片的外觀特徵</div>
+          </div>
+          <span class="answer-badge">答案：C</span>
+          <div class="explanation">
+            <span class="correct">✅ 為什麼(C)對：</span>GRPO強化LLM的「推理能力」，最適合「需要多步推理」的任務：數學推導、邏輯謎題。<br>
+            <span class="wrong">❌ 為什麼(A)不對：</span>情緒分類是「單步預測」，不需要GRPO。<br>
+            <span class="wrong">❌ 為什麼(B)不對：</span>語音轉文字不需要「推理回饋」。<br>
+            <span class="wrong">❌ 為什麼(D)不對：</span>圖片辨識是「單步預測」。<br>
+            <span class="trap">⚠️陷阱：</span>ABD 都是「單步預測」或「序列生成」，不需要「多步推理」。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

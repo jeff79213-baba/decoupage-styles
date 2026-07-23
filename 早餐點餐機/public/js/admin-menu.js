@@ -8,6 +8,11 @@ async function initMenuAdmin() {
 
   window.FirebaseCore.init();
   menuData = await window.FirebaseCore.getMenu();
+
+  // Cache for theme manager
+  window.ThemeManager.setCachedMenu(menuData);
+  await window.ThemeManager.load();
+
   renderAddonLibrary();
   renderCategories();
 

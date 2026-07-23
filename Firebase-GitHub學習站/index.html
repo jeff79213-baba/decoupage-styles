@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Firebase × GitHub 學習站</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #76B947;
+  --primary-light: #e8f5e0;
+  --primary-dark: #5a9a32;
+  --bg: #F1F5F2;
+  --dark: #2D2D2D;
+  --card: #FFFFFF;
+  --text: #2D2D2D;
+  --text-secondary: #6B7280;
+  --border: #E5E7EB;
+  --border-light: #F3F4F6;
+  --radius: 28px;
+  --radius-sm: 16px;
+  --radius-pill: 999px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,0.08);
+  --gap: 24px;
+  --content-padding: 32px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── NAV ── */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: var(--dark);
+  padding: 0 32px;
+  display: flex; align-items: center; height: 64px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+.nav-logo {
+  color: #fff; font-weight: 800; font-size: 18px; white-space: nowrap;
+  margin-right: 32px; letter-spacing: -0.5px;
+}
+.nav-logo span { color: var(--primary); }
+.nav-tabs {
+  display: flex; gap: 6px; overflow-x: auto; flex: 1;
+  scrollbar-width: none;
+}
+.nav-tabs::-webkit-scrollbar { display: none; }
+.nav-tab {
+  background: transparent; color: #9CA3AF; border: none;
+  padding: 8px 18px; border-radius: var(--radius-pill);
+  font-family: inherit; font-size: 14px; font-weight: 600;
+  cursor: pointer; white-space: nowrap; transition: all 0.25s;
+  letter-spacing: -0.3px;
+}
+.nav-tab:hover { color: #D1D5DB; background: rgba(255,255,255,0.08); }
+.nav-tab.active { background: var(--primary); color: #fff; }
+.progress-bar {
+  position: fixed; top: 64px; left: 0; right: 0; height: 3px;
+  background: var(--border-light); z-index: 99;
+}
+.progress-fill {
+  height: 100%; background: var(--primary); width: 0%;
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── MAIN ── */
+.main { padding: 100px 32px 60px; max-width: 1200px; margin: 0 auto; }
+
+/* ── MODULE ── */
+.module { display: none; animation: fadeIn 0.4s ease; }
+.module.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+.module-header {
+  margin-bottom: var(--gap);
+}
+.module-badge {
+  display: inline-block; background: var(--primary-light); color: var(--primary-dark);
+  padding: 6px 16px; border-radius: var(--radius-pill);
+  font-size: 13px; font-weight: 700; margin-bottom: 12px;
+  letter-spacing: -0.3px;
+}
+.module-title {
+  font-size: 36px; font-weight: 800; letter-spacing: -1px;
+  line-height: 1.2; margin-bottom: 8px;
+}
+.module-desc {
+  font-size: 16px; color: var(--text-secondary); max-width: 640px;
+  line-height: 1.7;
+}
+
+/* ── BENTO GRID ── */
+.bento {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--gap);
+  margin-top: var(--gap);
+}
+.bento-full { grid-column: 1 / -1; }
+.bento-card {
+  background: var(--card); border-radius: var(--radius);
+  border: 1px solid var(--border); padding: var(--content-padding);
+  box-shadow: var(--shadow); transition: all 0.3s;
+}
+.bento-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.bento-card h3 {
+  font-size: 18px; font-weight: 700; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 10px;
+  letter-spacing: -0.5px;
+}
+.bento-card h3 .icon {
+  width: 36px; height: 36px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.icon-green { background: var(--primary-light); }
+.icon-dark { background: #374151; color: #fff; }
+.icon-orange { background: #FFF3E0; }
+.icon-blue { background: #E3F2FD; }
+.icon-purple { background: #F3E5F5; }
+
+/* ── TREE VISUAL ── */
+.tree { font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace; font-size: 14px; line-height: 2; }
+.tree-item { padding-left: 0; cursor: default; }
+.tree-item .label { padding: 2px 8px; border-radius: 6px; transition: background 0.2s; }
+.tree-item .label:hover { background: var(--primary-light); }
+.tree-item.folder > .label { font-weight: 700; color: var(--primary-dark); }
+.tree-item.file > .label { color: var(--text-secondary); }
+.tree-children { padding-left: 24px; border-left: 2px solid var(--border-light); margin-left: 8px; overflow: hidden; transition: max-height 0.3s; }
+.tree-children.collapsed { max-height: 0; }
+.tree-toggle { cursor: pointer; user-select: none; display: inline-flex; align-items: center; gap: 4px; }
+.tree-toggle::before { content: '▸'; font-size: 12px; transition: transform 0.2s; display: inline-block; }
+.tree-toggle.open::before { transform: rotate(90deg); }
+
+/* ── SIMULATION ── */
+.sim-container {
+  background: #1E1E2E; border-radius: var(--radius-sm); padding: 24px;
+  color: #CDD6F4; font-family: 'SF Mono', 'Cascadia Code', monospace;
+  font-size: 13px; line-height: 1.8; min-height: 180px; position: relative;
+  overflow: hidden;
+}
+.sim-line { opacity: 0; transform: translateY(8px); transition: all 0.4s; }
+.sim-line.show { opacity: 1; transform: translateY(0); }
+.sim-line .prompt { color: var(--primary); }
+.sim-line .cmd { color: #89B4FA; }
+.sim-line .comment { color: #6C7086; font-style: italic; }
+.sim-line .success { color: #A6E3A1; }
+.sim-line .file { color: #F9E2AF; }
+.sim-line .highlight { color: #F38BA8; font-weight: 700; }
+.sim-btn-row { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.sim-btn {
+  background: var(--primary); color: #fff; border: none;
+  padding: 10px 20px; border-radius: var(--radius-pill);
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+}
+.sim-btn:hover { background: var(--primary-dark); transform: scale(1.03); }
+.sim-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.sim-btn.secondary { background: #4B5563; }
+.sim-btn.secondary:hover { background: #374151; }
+
+/* ── QUIZ ── */
+.quiz-q { margin-bottom: 24px; }
+.quiz-q p { font-weight: 600; margin-bottom: 12px; font-size: 15px; }
+.quiz-q .q-num {
+  display: inline-block; background: var(--primary); color: #fff;
+  width: 28px; height: 28px; border-radius: 50%; text-align: center;
+  line-height: 28px; font-size: 13px; font-weight: 700; margin-right: 8px;
+}
+.quiz-options { display: flex; flex-direction: column; gap: 8px; }
+.quiz-opt {
+  background: var(--bg); border: 2px solid var(--border);
+  padding: 12px 16px; border-radius: var(--radius-sm);
+  font-family: inherit; font-size: 14px; cursor: pointer;
+  transition: all 0.2s; text-align: left; width: 100%;
+}
+.quiz-opt:hover { border-color: var(--primary); background: var(--primary-light); }
+.quiz-opt.correct { border-color: var(--primary); background: var(--primary-light); color: var(--primary-dark); font-weight: 600; }
+.quiz-opt.wrong { border-color: #EF4444; background: #FEF2F2; color: #991B1B; }
+.quiz-opt:disabled { cursor: default; }
+.quiz-explain {
+  margin-top: 10px; padding: 12px 16px; border-radius: var(--radius-sm);
+  background: #FFFBEB; border-left: 4px solid #F59E0B;
+  font-size: 13px; color: #92400E; display: none; line-height: 1.7;
+}
+.quiz-explain.show { display: block; animation: fadeIn 0.3s; }
+.quiz-score {
+  text-align: center; padding: 24px; background: var(--primary-light);
+  border-radius: var(--radius); font-weight: 700; font-size: 18px;
+  color: var(--primary-dark); display: none;
+}
+.quiz-score.show { display: block; animation: fadeIn 0.4s; }
+
+/* ── CHEAT SHEET ── */
+.cheat-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.cheat-item {
+  background: var(--bg); border-radius: var(--radius-sm); padding: 16px 20px;
+  border: 1px solid var(--border-light);
+}
+.cheat-item code {
+  display: block; background: #1E1E2E; color: #A6E3A1;
+  padding: 10px 14px; border-radius: 10px; margin-top: 8px;
+  font-family: 'SF Mono', monospace; font-size: 13px; line-height: 1.6;
+  overflow-x: auto; white-space: pre;
+}
+.cheat-label { font-weight: 600; font-size: 14px; }
+.cheat-desc { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+/* ── FLOW VISUAL ── */
+.flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; justify-content: center; padding: 16px 0; }
+.flow-step {
+  background: var(--card); border: 2px solid var(--border);
+  border-radius: var(--radius-sm); padding: 16px 20px;
+  text-align: center; min-width: 120px; transition: all 0.3s;
+}
+.flow-step.active { border-color: var(--primary); background: var(--primary-light); }
+.flow-step .step-icon { font-size: 28px; margin-bottom: 6px; }
+.flow-step .step-label { font-size: 13px; font-weight: 600; }
+.flow-step .step-sub { font-size: 11px; color: var(--text-secondary); }
+.flow-arrow { font-size: 24px; color: var(--text-secondary); padding: 0 6px; }
+
+/* ── CONCEPT BOX ── */
+.concept {
+  background: var(--bg); border-radius: var(--radius-sm); padding: 20px 24px;
+  margin-bottom: 16px; border-left: 4px solid var(--primary);
+}
+.concept h4 { font-weight: 700; margin-bottom: 6px; font-size: 15px; }
+.concept p { font-size: 14px; color: var(--text-secondary); line-height: 1.7; }
+.concept code {
+  background: #E8F5E0; padding: 2px 8px; border-radius: 6px;
+  font-family: 'SF Mono', monospace; font-size: 13px; color: var(--primary-dark);
+  font-weight: 600;
+}
+
+/* ── COMPARISON TABLE ── */
+.compare-table {
+  width: 100%; border-collapse: separate; border-spacing: 0;
+  border-radius: var(--radius-sm); overflow: hidden;
+  border: 1px solid var(--border); font-size: 14px;
+}
+.compare-table th {
+  background: var(--dark); color: #fff; padding: 14px 18px;
+  font-weight: 600; text-align: left;
+}
+.compare-table td {
+  padding: 14px 18px; border-top: 1px solid var(--border-light);
+}
+.compare-table tr:nth-child(even) td { background: var(--bg); }
+
+/* ── INFO GRID ── */
+.info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.info-item {
+  background: var(--bg); border-radius: var(--radius-sm); padding: 20px;
+  text-align: center; border: 1px solid var(--border-light);
+}
+.info-item .info-icon { font-size: 32px; margin-bottom: 8px; }
+.info-item .info-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+.info-item .info-desc { font-size: 13px; color: var(--text-secondary); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .nav { padding: 0 16px; }
+  .nav-logo { font-size: 15px; margin-right: 16px; }
+  .nav-tab { font-size: 12px; padding: 6px 12px; }
+  .main { padding: 90px 16px 40px; }
+  .bento { grid-template-columns: 1fr; }
+  .module-title { font-size: 28px; }
+  .flow { flex-direction: column; }
+  .flow-arrow { transform: rotate(90deg); }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════ NAV ══════ -->
+<nav class="nav">
+  <div class="nav-logo"><span>FB</span> × <span>GH</span> 學習站</div>
+  <div class="nav-tabs" id="navTabs">
+    <button class="nav-tab active" data-mod="mod1">📂 Git / GitHub 基礎</button>
+    <button class="nav-tab" data-mod="mod2">🚀 GitHub 進階</button>
+    <button class="nav-tab" data-mod="mod3">🔥 Firebase 基礎</button>
+    <button class="nav-tab" data-mod="mod4">⚡ Firebase 進階</button>
+    <button class="nav-tab" data-mod="mod5">🔗 兩者整合</button>
+  </div>
+</nav>
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<!-- ══════ MAIN ══════ -->
+<div class="main">
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     模組一：Git / GitHub 基礎
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="module active" id="mod1">
+  <div class="module-header">
+    <div class="module-badge">模組 1 / 5</div>
+    <h1 class="module-title">Git / GitHub 基礎</h1>
+    <p class="module-desc">理解版本控制的核心概念：什麼是倉庫（Repository）、怎麼提交（Commit）變化、怎麼推送到雲端。</p>
+  </div>
+
+  <div class="bento">
+    <!-- 概念介紹 -->
+    <div class="bento-card">
+      <h3><span class="icon icon-green">💡</span> 核心概念</h3>
+      <div class="concept">
+        <h4>Git 是什麼？</h4>
+        <p>Git 是安裝在你電腦上的<strong>版本控制工具</strong>。它會記錄你每一次對檔案的修改，讓你可以「回到過去」。就像一個超強的「還原」按鈕。</p>
+      </div>
+      <div class="concept">
+        <h4>GitHub 是什麼？</h4>
+        <p>GitHub 是一個<strong>雲端平台</strong>，讓你把你電腦上的 Git 資料庫「上傳」到網路上，跟別人一起協作、備份你的程式碼。</p>
+      </div>
+      <table class="compare-table">
+        <thead><tr><th>比較</th><th>Git</th><th>GitHub</th></tr></thead>
+        <tbody>
+          <tr><td><strong>本質</strong></td><td>軟體工具（裝在電腦上）</td><td>網站平台（在網路上）</td></tr>
+          <tr><td><strong>功能</strong></td><td>管理檔案版本</td><td>託管 + 協作 + 部署</td></tr>
+          <tr><td><strong>需要網路？</strong></td><td>不需要</td><td>需要</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 視覺化：Repo 結構 -->
+    <div class="bento-card">
+      <h3><span class="icon icon-dark">🌳</span> 資料夾結構圖解</h3>
+      <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">點擊資料夾可以展開/收合，看看裡面有什麼。</p>
+      <div class="tree" id="tree1">
+        <div class="tree-item folder"><span class="label tree-toggle open" onclick="toggleTree(this)">📁 我的專案/</span>
+          <div class="tree-children">
+            <div class="tree-item file"><span class="label">📄 index.html</span></div>
+            <div class="tree-item file"><span class="label">📄 style.css</span></div>
+            <div class="tree-item file"><span class="label">📄 app.js</span></div>
+            <div class="tree-item folder"><span class="label tree-toggle" onclick="toggleTree(this)">📁 .git/</span>
+              <div class="tree-children collapsed">
+                <div class="tree-item file"><span class="label" style="color:#6B7280;">（Git 的心臟：所有版本紀錄都在這裡）</span></div>
+                <div class="tree-item file"><span class="label">HEAD, config, objects...</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="concept" style="margin-top:16px;border-left-color:#F59E0B;">
+        <h4>關鍵概念</h4>
+        <p>當你執行 <code>git init</code>，Git 會在你的資料夾裡建立 <code>.git/</code> 隱藏資料夾。這就是「Git 倉庫（Repository）」的本體。</p>
+      </div>
+    </div>
+
+    <!-- 核心術語 -->
+    <div class="bento-card bento-full">
+      <h3><span class="icon icon-green">📖</span> 五個必學術語</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-icon">📦</div>
+          <div class="info-title">Repository（倉庫）</div>
+          <div class="info-desc">你的專案資料夾，被 Git 管理後就叫「倉庫」</div>
+        </div>
+        <div class="info-item">
+          <div class="info-icon">✅</div>
+          <div class="info-title">Commit（提交）</div>
+          <div class="info-desc">幫目前的狀態拍一張「快照」，記錄下來</div>
+        </div>
+        <div class="info-item">
+          <div class="info-icon">📤</div>
+          <div class="info-title">Push（推送）</div>
+          <div class="info-desc">把你本地的 Commit 上傳到 GitHub 雲端</div>
+        </div>
+        <div class="info-item">
+          <div class="info-icon">📥</div>
+          <div class="info-title">Pull（拉取）</div>
+          <div class="info-desc">從 GitHub 雲端下載最新的 Commit 到你電腦</div>
+        </div>
+        <div class="info-item">
+          <div class="info-icon">🔀</div>
+          <div class="info-title">Branch（分支）</div>
+          <div class="info-desc">從主線複製一條平行線，在上面開發不影響主線</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 模擬操作 -->
+    <div class="bento-card bento-full">
+      <h3><span class="icon icon-dark">🎮</span> 模擬：第一次 Push 到 GitHub</h3>
+      <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">按照步驟點擊按鈕，體驗完整的提交和推送流程。</p>
+      <div class="sim-container" id="sim1"></div>
+      <div class="sim-btn-row">
+        <button class="sim-btn" onclick="sim1Step(1)">① git init</button>
+        <button class="sim-btn" onclick="sim1Step(2)" disabled id="sim1b2">② git add .</button>
+        <button class="sim-btn" onclick="sim1Step(3)" disabled id="sim1b3">③ git commit</button>
+        <button class="sim-btn" onclick="sim1Step(4)" disabled id="sim1b4">④ git push</button>
+        <button class="sim-btn secondary" onclick="sim1Reset()">重來</button>
+      </div>
+    </div>
+
+    <!-- 問答 -->
+    <div class="bento-card bento-full">
+      <h3><span class="icon icon-green">✏️</span> 小測驗</h3>
+      <div id="quiz1">
+        <div class="quiz-q" data-answer="3">
+          <p><span class="q-num">1</span>Git 的版本紀錄存在哪裡？</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">A. 雲端伺服器</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">B. GitHub 網站</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">C. 專案資料夾裡的 .git/ 目錄</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">D. Windows 的暫存檔</button>
+          </div>
+          <div class="quiz-explain">Git 的所有版本紀錄都存在專案資料夾內的 <code>.git/</code> 隱藏目錄中，不需要網路就能運作。</div>
+        </div>
+        <div class="quiz-q" data-answer="2">
+          <p><span class="q-num">2</span><code>git add .</code> 這個指令的作用是？</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">A. 直接把檔案上傳到 GitHub</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">B. 把所有變更的檔案加入「待提交清單」</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">C. 刪除所有檔案</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">D. 建立一個新的分支</button>
+          </div>
+          <div class="quiz-explain"><code>git add .</code> 是「暫存（Stage）」的意思，把你修改過的檔案放進「待提交清單」，還沒有真正提交喔！</div>
+        </div>
+        <div class="quiz-q" data-answer="3">
+          <p><span class="q-num">3</span>Git 和 GitHub 的關係，最接近下列哪一個？</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">A. 它們是同一個東西</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">B. GitHub 是 Git 的升級版</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">C. Git 是工具，GitHub 是放 Git 資料的雲端平台</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">D. GitHub 是 Git 的安裝程式</button>
+          </div>
+          <div class="quiz-explain">Git 是安裝在電腦上的工具，GitHub 是一個網站平台，用來在網路上託管你的 Git 倉庫。</div>
+        </div>
+        <div class="quiz-q" data-answer="2">
+          <p><span class="q-num">4</span>如果你不小心刪了一個檔案，用 Git 能救回來嗎？</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">A. 不行，刪了就沒了</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">B. 可以，只要那個檔案在之前的 Commit 裡有被記錄過</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">C. 可以，但要付費</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">D. 只能救資料夾，不能救檔案</button>
+          </div>
+          <div class="quiz-explain">只要檔案曾在某次 Commit 中被記錄過，就可以用 <code>git checkout</code> 或 <code>git restore</code> 從歷史中救回來！</div>
+        </div>
+        <div class="quiz-q" data-answer="1">
+          <p><span class="q-num">5</span> <code>.git/</code> 資料夾有什麼重要性？</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">A. 刪掉它，Git 的所有版本紀錄都會消失</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">B. 它只是一個暫存檔，刪了沒差</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">C. 它是 GitHub 自動下載的</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,1)">D. 它裡面只有設定檔而已</button>
+          </div>
+          <div class="quiz-explain"><code>.git/</code> 是 Git 倉庫的核心，裡面包含了所有的提交歷史、分支資訊、設定等。刪掉它就等於「這個資料夾不再是 Git 倉庫」。</div>
+        </div>
+      </div>
+      <div class="quiz-score" id="score1"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     模組二：GitHub 進階
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="module" id="mod2">
+  <div class="module-header">
+    <div class="module-badge">模組 2 / 5</div>
+    <h1 class="module-title">GitHub 進階</h1>
+    <p class="module-desc">學習 GitHub Pages（免費網站託管）、Branch（分支）和 Pull Request（合併請求）的實際運用。</p>
+  </div>
+
+  <div class="bento">
+    <!-- GitHub Pages -->
+    <div class="bento-card">
+      <h3><span class="icon icon-green">🌐</span> GitHub Pages</h3>
+      <div class="concept">
+        <h4>什麼是 GitHub Pages？</h4>
+        <p>GitHub 提供的<strong>免費網站託管</strong>服務。你把 HTML 檔案 Push 到 GitHub，它就自動幫你變成一個網站。不需要買伺服器！</p>
+      </div>
+      <div class="flow" id="flow-pages">
+        <div class="flow-step"><div class="step-icon">💻</div><div class="step-label">本地電腦</div><div class="step-sub">寫 HTML</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-icon">📤</div><div class="step-label">git push</div><div class="step-sub">上傳到 GitHub</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-icon">🌐</div><div class="step-label">GitHub Pages</div><div class="step-sub">自動生成網站</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-icon">🌍</div><div class="step-label">公開網址</div><div class="step-sub">任何人都能看</div></div>
+      </div>
+      <div class="concept" style="margin-top:12px;border-left-color:#89B4FA;">
+        <h4>網址格式</h4>
+        <p>你的網站網址會是：<code>https://你的帳號.github.io/專案名稱/</code></p>
+      </div>
+    </div>
+
+    <!-- Branch 分支 -->
+    <div class="bento-card">
+      <h3><span class="icon icon-dark">🔀</span> Branch 分支</h3>
+      <div class="concept">
+        <h4>為什麼需要分支？</h4>
+        <p>想象你在一條馬路上施工。如果直接在大馬路上施工，所有人都不能通行。<strong>分支就像繞一個便道</strong>，你在便道上施工，主線不受影響。</p>
+      </div>
+      <div style="font-family:monospace;font-size:13px;background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:12px;line-height:2.2;overflow-x:auto;">
+        <span style="color:#6C7086;"># 主線（main）</span><br>
+        <span style="color:#A6E3A1;">●────●────●</span><span style="color:#F9E2AF;">────●────●</span> <span style="color:#A6E3A1;">← main（穩定版）</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#89B4FA;">│</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#89B4FA;">●────●</span> <span style="color:#89B4FA;">← feature-xxx（你的開發分支）</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#CBA6F7;">╲╱</span> <span style="color:#CBA6F7;">← 合併（Merge）回 main</span><br>
+      </div>
+    </div>
+
+    <!-- Pull Request -->
+    <div class="bento-card bento-full">
+      <h3><span class="icon icon-green">🔄</span> Pull Request（PR）流程</h3>
+      <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">Pull Request 是你在分支上完成工作後，「請求」把你的修改合併回主線的過程。</p>
+      <div class="flow" id="flow-pr">
+        <div class="flow-step active"><div class="step-icon">1️⃣</div><div class="step-label">建立分支</div><div class="step-sub">git checkout -b feature</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-icon">2️⃣</div><div class="step-label">修改並 Commit</div><div class="step-sub">在分支上工作</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-icon">3️⃣</div><div class="step-label">Push 到 GitHub</div><div class="step-sub">上傳分支</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-icon">4️⃣</div><div class="step-label">開 PR</div><div class="step-sub">請求合併審查</div></div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step"><div class="step-icon">5️⃣</div><div class="step-label">審查 + Merge</div><div class="step-sub">合併回 main</div></div>
+      </div>
+    </div>
+
+    <!-- 模擬 PR -->
+    <div class="bento-card bento-full">
+      <h3><span class="icon icon-dark">🎮</span> 模擬：建立 Branch 並發起 PR</h3>
+      <div class="sim-container" id="sim2"></div>
+      <div class="sim-btn-row">
+        <button class="sim-btn" onclick="sim2Step(1)">① 建立分支</button>
+        <button class="sim-btn" onclick="sim2Step(2)" disabled id="sim2b2">② 修改檔案</button>
+        <button class="sim-btn" onclick="sim2Step(3)" disabled id="sim2b3">③ Commit + Push</button>
+        <button class="sim-btn" onclick="sim2Step(4)" disabled id="sim2b4">④ 開 PR</button>
+        <button class="sim-btn secondary" onclick="sim2Reset()">重來</button>
+      </div>
+    </div>
+
+    <!-- Cheat Sheet -->
+    <div class="bento-card bento-full">
+      <h3><span class="icon icon-green">📋</span> GitHub Cheat Sheet</h3>
+      <div class="cheat-grid">
+        <div class="cheat-item">
+          <div class="cheat-label">初始化倉庫（Initialize Repository）</div>
+          <div class="cheat-desc">在目前的資料夾建立一個新的 Git 倉庫</div>
+          <code>git init</code>
+        </div>
+        <div class="cheat-item">
+          <div class="cheat-label">複製遠端倉庫（Clone）</div>
+          <div class="cheat-desc">把 GitHub 上的倉庫下載到你的電腦</div>
+          <code>git clone https://github.com/使用者/專案.git</code>
+        </div>
+        <div class="cheat-item">
+          <div class="cheat-label">查看狀態（Status）</div>
+          <div class="cheat-desc">看哪些檔案被修改了、哪些還沒提交</div>
+          <code>git status</code>
+        </div>
+        <div class="cheat-item">
+          <div class="cheat-label">暫存所有變更（Add All）</div>
+          <div class="cheat-desc">把所有修改過的檔案加入待提交清單</div>
+          <code>git add .</code>
+        </div>
+        <div class="cheat-item">
+          <div class="cheat-label">提交（Commit）</div>
+          <div class="cheat-desc">把暫存區的變更拍一張快照</div>
+          <code>git commit -m "你的提交訊息"</code>
+        </div>
+        <div class="cheat-item">
+          <div class="cheat-label">推送（Push）</div>
+          <div class="cheat-desc">把本地的 Commit 上傳到 GitHub</div>
+          <code>git push origin main</code>
+        </div>
+        <div class="cheat-item">
+          <div class="cheat-label">拉取（Pull）</div>
+          <div class="cheat-desc">從 GitHub 下載最新的變更到本地</div>
+          <code>git pull origin main</code>
+        </div>
+        <div class="cheat-item">
+          <div class="cheat-label">建立並切換分支（Branch）</div>
+          <div class="cheat-desc">建立一個新分支並立刻切換過去</div>
+          <code>git checkout -b feature名稱</code>
+        </div>
+        <div class="cheat-item">
+          <div class="cheat-label">合併分支（Merge）</div>
+          <div class="cheat-desc">把指定分支的修改合併到目前的分支</div>
+          <code>git merge feature名稱</code>
+        </div>
+        <div class="cheat-item">
+          <div class="cheat-label">查看提交歷史（Log）</div>
+          <div class="cheat-desc">顯示所有 Commit 的紀錄</div>
+          <code>git log --oneline</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     模組三：Firebase 基礎
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="module" id="mod3">
+  <div class="module-header">
+    <div class="module-badge">模組 3 / 5</div>
+    <h1 class="module-title">Firebase 基礎</h1>
+    <p class="module-desc">認識 Firebase 的核心服務：Hosting（網站託管）和 Firestore（雲端資料庫），以及它們的資料結構。</p>
+  </div>
+
+  <div class="bento">
+    <!-- Firebase 是什麼 -->
+    <div class="bento-card bento-full">
+      <h3><span class="icon icon-orange">🔥</span> Firebase 是什麼？</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-icon">🌐</div>
+          <div class="info-title">Hosting（網站託管）</div>
+          <div class="info-desc">把你的 HTML/CSS/JS 網站放到 Google 的伺服器上，全世界都能訪問</div>
+        </div>
+        <div class="info-item">
+          <div class="info-icon">🗄️</div>
+          <div class="info-title">Firestore（資料庫）</div>
+          <div class="info-desc">雲端 NoSQL 資料庫，用來儲存和查詢資料</div>
+        </div>
+        <div class="info-item">
+          <div class="info-icon">🔐</div>
+          <div class="info-title">Authentication（驗證）</div>
+          <div class="info-desc">處理使用者登入/註冊，支援 Google、Email 等</div>
+        </div>
+        <div class="info-item">
+          <div class="info-icon">⚙️</div>
+          <div class="info-title">Functions（雲端函式）</div>
+          <div class="info-desc">在 Google 伺服器上執行後端程式碼</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Firestore 結構 -->
+    <div class="bento-card">
+      <h3><span class="icon icon-blue">🌳</span> Firestore 資料結構</h3>
+      <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">Firestore 的資料結構像俄羅斯娃娃：集合 → 文件 → 欄位 → 子集合 → …</p>
+      <div class="tree" id="tree2">
+        <div class="tree-item folder"><span class="label tree-toggle open" onclick="toggleTree(this)">📦 projects（集合 Collection）</span>
+          <div class="tree-children">
+            <div class="tree-item folder"><span class="label tree-toggle" onclick="toggleTree(this)">📄 我的專案（文件 Document）</span>
+              <div class="tree-children collapsed">
+                <div class="tree-item file"><span class="label">📝 createdAt: 2024-01-01</span></div>
+                <div class="tree-item file"><span class="label">📝 updatedAt: 2024-06-15</span></div>
+                <div class="tree-item file"><span class="label">📝 fileCount: 5</span></div>
+                <div class="tree-item folder"><span class="label tree-toggle" onclick="toggleTree(this)">📁 files（子集合）</span>
+                  <div class="tree-children collapsed">
+                    <div class="tree-item file"><span class="label">📄 index.html → { content, size }</span></div>
+                    <div class="tree-item file"><span class="label">📄 style.css → { content, size }</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="concept" style="margin-top:16px;border-left-color:#F59E0B;">
+        <h4>集合 vs 文件</h4>
+        <p><strong>集合（Collection）</strong>= 資料夾，用來放一群相關的文件。<br>
+        <strong>文件（Document）</strong>= 檔案，裡面包含多個欄位（Field）。<br>
+        一個文件裡面可以再放「子集合（Subcollection）」，無限嵌套。</p>
+      </div>
+    </div>
+
+    <!-- Hosting 部署流程 -->
+    <div class="bento-card">
+      <h3><span class="icon icon-green">🚀</span> Firebase Hosting 部署</h3>
+      <div class="concept">
+        <h4>什麼是 Hosting？</h4>
+        <p>Firebase Hosting 幫你把網站檔案（HTML、CSS、JS）放到 Google 的全球 CDN 網路上，讓網站載入超快、免費、還自動加上 HTTPS。</p>
+      </div>
+      <div style="font-family:monospace;font-size:13px;background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:12px;line-height:2;">
+        <span style="color:#6C7086;"># 部署步驟</span><br>
+        <span style="color:#F9E2AF;">1.</span> <span style="color:#F38BA8;">npm install -g firebase-tools</span> <span style="color:#6C7086;">← 安裝 Firebase 工具</span><br>
+        <span style="color:#F9E2AF;">2.</span> <span style="color:#89B4FA;">firebase login</span> <span style="color:#6C7086;">← 登入你的 Firebase 帳號</span><br>
+        <span style="color:#F9E2AF;">3.</span> <span style="color:#89B4FA;">firebase init</span> <span style="color:#6C7086;">← 初始化（會問你要用哪些功能）</span><br>
+        <span style="color:#F9E2AF;">4.</span> <span style="color:#A6E3A1;">firebase deploy --only hosting</span> <span style="color:#6C7086;">← 上傳部署！</span><br>
+      </div>
+    </div>
+
+    <!-- 模擬部署 -->
+    <div class="bento-card bento-full">
+      <h3><span class="icon icon-dark">🎮</span> 模擬：Firebase 部署流程</h3>
+      <div class="sim-container" id="sim3"></div>
+      <div class="sim-btn-row">
+        <button class="sim-btn" onclick="sim3Step(1)">① firebase init</button>
+        <button class="sim-btn" onclick="sim3Step(2)" disabled id="sim3b2">② 確認 public/ 目錄</button>
+        <button class="sim-btn" onclick="sim3Step(3)" disabled id="sim3b3">③ firebase deploy</button>
+        <button class="sim-btn" onclick="sim3Step(4)" disabled id="sim3b4">④ 部署完成！</button>
+        <button class="sim-btn secondary" onclick="sim3Reset()">重來</button>
+      </div>
+    </div>
+
+    <!-- 問答 -->
+    <div class="bento-card bento-full">
+      <h3><span class="icon icon-orange">✏️</span> 小測驗</h3>
+      <div id="quiz3">
+        <div class="quiz-q" data-answer="3">
+          <p><span class="q-num">1</span>Firestore 中，「集合（Collection）」和「文件（Document）」的關係最接近？</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">A. 它們是同義詞</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">B. 文件裡包含集合</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">C. 集合裡包含文件（像資料夾裡有檔案）</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">D. 它們沒有關聯</button>
+          </div>
+          <div class="quiz-explain">集合（Collection）就像資料夾，文件（Document）就像檔案。一個集合裡面可以有很多文件。</div>
+        </div>
+        <div class="quiz-q" data-answer="2">
+          <p><span class="q-num">2</span>Firebase Hosting 部署的指令是？</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">A. firebase upload</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">B. firebase deploy --only hosting</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">C. firebase push hosting</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">D. firebase publish</button>
+          </div>
+          <div class="quiz-explain">正確指令是 <code>firebase deploy --only hosting</code>，<code>--only hosting</code> 表示只部署網站部分。</div>
+        </div>
+        <div class="quiz-q" data-answer="1">
+          <p><span class="q-num">3</span>Firestore 中，一個文件（Document）裡面可以有什麼？</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">A. 多個欄位（Field）和子集合（Subcollection）</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">B. 只能有文字</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">C. 只能有數字</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">D. 只能有一張圖片</button>
+          </div>
+          <div class="quiz-explain">文件裡面可以有多種型態的欄位（文字、數字、布林值、陣列等），還可以再嵌套子集合，結構非常靈活。</div>
+        </div>
+        <div class="quiz-q" data-answer="4">
+          <p><span class="q-num">4</span> <code>firebase init</code> 這個指令做了什麼？</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">A. 直接部署網站</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">B. 刪除所有檔案</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">C. 安裝 Firebase</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">D. 在目前資料夾初始化 Firebase 專案設定</button>
+          </div>
+          <div class="quiz-explain"><code>firebase init</code> 會問你幾個問題（要用哪些服務、public 資料夾名稱等），然後產生 <code>firebase.json</code> 設定檔。</div>
+        </div>
+        <div class="quiz-q" data-answer="2">
+          <p><span class="q-num">5</span>Firebase Hosting 的免費方案包含什麼？</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">A. 完全沒有免費方案</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">B. 免費託管、自動 HTTPS、全球 CDN</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">C. 只有免費託管，沒有 HTTPS</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,6)">D. 只能放一個檔案</button>
+          </div>
+          <div class="quiz-explain">Firebase Hosting 的 Spark（免費）方案包含：10 GB 儲存空間、每月 10 GB 下載量、自動 HTTPS 憑證、全球 CDN 加速。</div>
+        </div>
+      </div>
+      <div class="quiz-score" id="score3"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     模組四：Firebase 進階
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="module" id="mod4">
+  <div class="module-header">
+    <div class="module-badge">模組 4 / 5</div>
+    <h1 class="module-title">Firebase 進階</h1>
+    <p class="module-desc">學習 Security Rules（安全規則）保護你的資料庫，以及 Firestore 資料結構的最佳實踐。</p>
+  </div>
+
+  <div class="bento">
+    <!-- Security Rules -->
+    <div class="bento-card bento-full">
+      <h3><span class="icon icon-purple">🛡️</span> Security Rules（安全規則）</h3>
+      <div class="concept">
+        <h4>為什麼需要安全規則？</h4>
+        <p>如果沒有安全規則，<strong>任何人都可以讀取、修改、刪除你資料庫裡的任何資料</strong>。Security Rules 就像是資料庫的「門禁系統」，決定誰能進來、能做什麼。</p>
+      </div>
+      <div style="font-family:monospace;font-size:13px;background:#1E1E2E;color:#CDD6F4;padding:24px;border-radius:12px;line-height:2;overflow-x:auto;">
+        <span style="color:#CBA6F7;">rules_version</span> = <span style="color:#A6E3A1;">'2'</span>;<br>
+        <span style="color:#CBA6F7;">service</span> cloud.firestore {<br>
+        &nbsp;&nbsp;<span style="color:#CBA6F7;">match</span> /databases/{database}/documents {<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6C7086;">// 🟢 允許所有人讀取 products 集合</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#CBA6F7;">match</span> /products/{productId} {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#CBA6F7;">allow</span> <span style="color:#89B4FA;">read</span>: <span style="color:#A6E3A1;">if true</span>;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#CBA6F7;">allow</span> <span style="color:#F38BA8;">write</span>: <span style="color:#A6E3A1;">if false</span>;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+        <br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#6C7086;">// 🟡 只有登入使用者能讀寫自己的資料</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#CBA6F7;">match</span> /users/{userId} {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#CBA6F7;">allow</span> <span style="color:#89B4FA;">read</span>, <span style="color:#F38BA8;">write</span>: <span style="color:#A6E3A1;">if request.auth != null</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;&amp; request.auth.uid == userId;<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+        <br>
+        &nbsp;&nbsp;}<br>
+        }
+      </div>
+    </div>
+
+    <!-- 規則語法解析 -->
+    <div class="bento-card">
+      <h3><span class="icon icon-green">📝</span> 規則語法解析</h3>
+      <table class="compare-table">
+        <thead><tr><th>語法</th><th>意思</th><th>白話</th></tr></thead>
+        <tbody>
+          <tr><td><code>allow read</code></td><td>允許讀取</td><td>可以看資料</td></tr>
+          <tr><td><code>allow write</code></td><td>允許寫入</td><td>可以新增/修改/刪除</td></tr>
+          <tr><td><code>if true</code></td><td>條件永遠成立</td><td>不限制，誰都可以</td></tr>
+          <tr><td><code>if false</code></td><td>條件永遠不成立</td><td>完全禁止</td></tr>
+          <tr><td><code>request.auth</code></td><td>登入的使用者資訊</td><td>看看有沒有登入</td></tr>
+          <tr><td><code>request.auth.uid</code></td><td>使用者的唯一 ID</td><td>確認是「誰」</td></tr>
+          <tr><td><code>resource.data</code></td><td>目前資料庫裡的資料</td><td>看看原本的內容</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 資料結構設計 -->
+    <div class="bento-card">
+      <h3><span class="icon icon-orange">🏗️</span> 資料結構設計</h3>
+      <div class="concept">
+        <h4>扁平 vs 嵌套</h4>
+        <p>Firestore 的設計建議「<strong>扁平化</strong>」—— 把資料攤平、減少嵌套層數。因為每多一層嵌套，讀取資料時就要多一次查詢。</p>
+      </div>
+      <div class="concept" style="border-left-color:#A6E3A1;">
+        <h4>命名前綴（Prefix）</h4>
+        <p>為了避免不同專案的集合名稱衝突，建議加上專案縮寫作為前綴。例如：<code>mpc-shortlinks</code>、<code>gps_中區建材行</code>。</p>
+      </div>
+      <div class="concept" style="border-left-color:#F38BA8;">
+        <h4>子集合 vs 欄位</h4>
+        <p>如果一筆資料很小（幾個欄位），直接放在文件的欄位裡就好。只有當資料量很大或需要獨立查詢時，才用子集合。</p>
+      </div>
+    </div>
+
+    <!-- 模擬撰寫規則 -->
+    <div class="bento-card bento-full">
+      <h3><span class="icon icon-dark">🎮</span> 模擬：撰寫並部署安全規則</h3>
+      <div class="sim-container" id="sim4"></div>
+      <div class="sim-btn-row">
+        <button class="sim-btn" onclick="sim4Step(1)">① 開啟 rules 檔案</button>
+        <button class="sim-btn" onclick="sim4Step(2)" disabled id="sim4b2">② 寫入規則</button>
+        <button class="sim-btn" onclick="sim4Step(3)" disabled id="sim4b3">③ 測試規則</button>
+        <button class="sim-btn" onclick="sim4Step(4)" disabled id="sim4b4">④ 部署規則</button>
+        <button class="sim-btn secondary" onclick="sim4Reset()">重來</button>
+      </div>
+    </div>
+
+    <!-- Cheat Sheet -->
+    <div class="bento-card bento-full">
+      <h3><span class="icon icon-purple">📋</span> Firebase Cheat Sheet</h3>
+      <div class="cheat-grid">
+        <div class="cheat-item">
+          <div class="cheat-label">安裝 Firebase CLI（Command Line Interface，命令列介面）</div>
+          <code>npm install -g firebase-tools</code>
+        </div>
+        <div class="cheat-item">
+          <div class="cheat-label">登入 Firebase</div>
+          <code>firebase login</code>
+        </div>
+        <div class="cheat-item">
+          <div class="cheat-label">初始化專案</div>
+          <code>firebase init</code>
+        </div>
+        <div class="cheat-item">
+          <div class="cheat-label">部署 Hosting</div>
+          <code>firebase deploy --only hosting</code>
+        </div>
+        <div class="cheat-item">
+          <div class="cheat-label">部署 Security Rules</div>
+          <code>firebase deploy --only firestore:rules</code>
+        </div>
+        <div class="cheat-item">
+          <div class="cheat-label">本地預覽（Preview，預覽）</div>
+          <code>firebase emulators:start</code>
+        </div>
+        <div class="cheat-item">
+          <div class="cheat-label">查看專案設定</div>
+          <code>firebase projects:list</code>
+        </div>
+        <div class="cheat-item">
+          <div class="cheat-label">Firestore 常用 JS 操作</div>
+          <code>// 新增文件
+const docRef = await addDoc(collection(db, "users"), {
+  name: "小明",
+  age: 25
+});
+
+// 讀取文件
+const docSnap = await getDoc(doc(db, "users", docId));
+if (docSnap.exists()) {
+  console.log(docSnap.data());
+}</code>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     模組五：兩者整合
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="module" id="mod5">
+  <div class="module-header">
+    <div class="module-badge">模組 5 / 5</div>
+    <h1 class="module-title">兩者整合</h1>
+    <p class="module-desc">把 GitHub 和 Firebase 串起來：從「寫完程式碼」到「網站上線」的完整流程。</p>
+  </div>
+
+  <div class="bento">
+    <!-- 完整流程圖 -->
+    <div class="bento-card bento-full">
+      <h3><span class="icon icon-green">🗺️</span> 完整部署流程圖</h3>
+      <p style="font-size:14px;color:var(--text-secondary);margin-bottom:20px;">從你在電腦上修改程式碼，到全世界都能看到你的網站，中間經歷了這些步驟：</p>
+      <div style="background:var(--bg);border-radius:var(--radius-sm);padding:24px;overflow-x:auto;">
+        <div style="display:flex;flex-direction:column;gap:16px;min-width:600px;">
+          <!-- Row 1 -->
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="background:#2D2D2D;color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;min-width:140px;text-align:center;">💻 你的電腦</div>
+            <div style="font-size:20px;color:var(--primary);">→</div>
+            <div style="background:#fff;border:2px solid var(--primary);padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;min-width:140px;text-align:center;">git add + commit</div>
+            <div style="font-size:20px;color:var(--primary);">→</div>
+            <div style="background:#fff;border:2px solid var(--primary);padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;min-width:140px;text-align:center;">git push</div>
+            <div style="font-size:20px;color:var(--primary);">→</div>
+            <div style="background:#2D2D2D;color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;min-width:140px;text-align:center;">🐙 GitHub Repo</div>
+          </div>
+          <!-- Row 2 -->
+          <div style="display:flex;align-items:center;gap:8px;padding-left:320px;">
+            <div style="font-size:20px;color:#F59E0B;">↓</div>
+          </div>
+          <!-- Row 3 -->
+          <div style="display:flex;align-items:center;gap:8px;padding-left:320px;">
+            <div style="background:#FFF3E0;border:2px solid #F59E0B;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;min-width:160px;text-align:center;">⚙️ GitHub Actions</div>
+            <div style="font-size:20px;color:#F59E0B;">→</div>
+            <div style="background:linear-gradient(135deg,#FFA726,#FB8C00);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;min-width:160px;text-align:center;">🔥 Firebase deploy</div>
+            <div style="font-size:20px;color:var(--primary);">→</div>
+            <div style="background:var(--primary);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;min-width:160px;text-align:center;">🌐 網站上線！</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 什麼是 GitHub Actions -->
+    <div class="bento-card">
+      <h3><span class="icon icon-dark">⚙️</span> GitHub Actions</h3>
+      <div class="concept">
+        <h4>自動化工作流程</h4>
+        <p>GitHub Actions 可以在你每次 Push 程式碼後，<strong>自動幫你執行指定的任務</strong>（例如：自動部署到 Firebase）。不用每次手動打指令！</p>
+      </div>
+      <div style="font-family:monospace;font-size:12px;background:#1E1E2E;color:#CDD6F4;padding:20px;border-radius:12px;line-height:2;overflow-x:auto;">
+        <span style="color:#6C7086;"># .github/workflows/deploy.yml</span><br>
+        <span style="color:#CBA6F7;">name:</span> Deploy to Firebase<br>
+        <span style="color:#CBA6F7;">on:</span><br>
+        &nbsp;&nbsp;<span style="color:#CBA6F7;">push:</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#CBA6F7;">branches:</span> [ main ]<br>
+        <br>
+        <span style="color:#CBA6F7;">jobs:</span><br>
+        &nbsp;&nbsp;<span style="color:#CBA6F7;">deploy:</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#CBA6F7;">runs-on:</span> ubuntu-latest<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#CBA6F7;">steps:</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span style="color:#CBA6F7;">uses:</span> actions/checkout@v4<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span style="color:#CBA6F7;">uses:</span> <span style="color:#A6E3A1;">FirebaseExtended/action-hosting-deploy@v0</span><br>
+      </div>
+    </div>
+
+    <!-- 部署方式比較 -->
+    <div class="bento-card">
+      <h3><span class="icon icon-green">⚖️</span> 兩種部署方式</h3>
+      <table class="compare-table">
+        <thead><tr><th>方式</th><th>手動部署</th><th>自動部署</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>操作方式</strong></td>
+            <td>每次手動執行 <code>firebase deploy</code></td>
+            <td>Push 到 GitHub 自動觸發</td>
+          </tr>
+          <tr>
+            <td><strong>適合場景</strong></td>
+            <td>個人小專案、測試用</td>
+            <td>團隊協作、正式上線</td>
+          </tr>
+          <tr>
+            <td><strong>需要設定</strong></td>
+            <td>Firebase 帳號即可</td>
+            <td>需要設定 GitHub Actions + Firebase Token</td>
+          </tr>
+          <tr>
+            <td><strong>好處</strong></td>
+            <td>簡單快速</td>
+            <td>一 Push 就上線，不用記指令</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 模擬完整流程 -->
+    <div class="bento-card bento-full">
+      <h3><span class="icon icon-dark">🎮</span> 模擬：完整「上傳部署」流程</h3>
+      <p style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">體驗從修改程式碼到網站上線的完整過程。</p>
+      <div class="sim-container" id="sim5"></div>
+      <div class="sim-btn-row">
+        <button class="sim-btn" onclick="sim5Step(1)">① 修改 index.html</button>
+        <button class="sim-btn" onclick="sim5Step(2)" disabled id="sim5b2">② git add + commit</button>
+        <button class="sim-btn" onclick="sim5Step(3)" disabled id="sim5b3">③ git push</button>
+        <button class="sim-btn" onclick="sim5Step(4)" disabled id="sim5b4">④ GitHub Actions 觸發</button>
+        <button class="sim-btn" onclick="sim5Step(5)" disabled id="sim5b5">⑤ Firebase 部署</button>
+        <button class="sim-btn" onclick="sim5Step(6)" disabled id="sim5b6">⑥ 網站上線！</button>
+        <button class="sim-btn secondary" onclick="sim5Reset()">重來</button>
+      </div>
+    </div>
+
+    <!-- 問答 -->
+    <div class="bento-card bento-full">
+      <h3><span class="icon icon-green">✏️</span> 小測驗</h3>
+      <div id="quiz5">
+        <div class="quiz-q" data-answer="2">
+          <p><span class="q-num">1</span>當你執行 <code>git push</code> 後，GitHub Actions 什麼時候會自動幫你部署？</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">A. 任何時候都會</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">B. 只有當你推送到指定的分支（通常是 main）時</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">C. 每天凌晨自動執行</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">D. 需要手動在 GitHub 上按按鈕</button>
+          </div>
+          <div class="quiz-explain">GitHub Actions 的觸發條件在 <code>on.push.branches</code> 裡設定，通常設定為只有推送到 <code>main</code> 分支才觸發部署。</div>
+        </div>
+        <div class="quiz-q" data-answer="3">
+          <p><span class="q-num">2</span>如果我想先在不影響正式站的情況下測試新功能，我應該怎麼做？</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">A. 直接在 main 分支上改</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">B. 刪掉舊檔案，重新上傳</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">C. 建立一個新的分支（Branch）在上面開發</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">D. 把整個專案複製一份</button>
+          </div>
+          <div class="quiz-explain">建立 Branch（分支）可以在不影響主線（main）的情況下自由開發。完成後再用 PR 合併回去。</div>
+        </div>
+        <div class="quiz-q" data-answer="1">
+          <p><span class="q-num">3</span> <code>firebase deploy</code> 和 <code>firebase deploy --only hosting</code> 有什麼差別？</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">A. 前者部署所有服務，後者只部署網站</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">B. 它們完全一樣</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">C. 前者只部署網站，後者部署所有服務</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">D. 前者是免費的，後者要付費</button>
+          </div>
+          <div class="quiz-explain"><code>firebase deploy</code> 會部署你專案中所有的服務（Hosting + Functions + Rules 等）。加上 <code>--only hosting</code> 只會部署 Hosting 部分。</div>
+        </div>
+        <div class="quiz-q" data-answer="4">
+          <p><span class="q-num">4</span>在「兩者整合」的流程中，GitHub 扮演什麼角色？</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">A. 網站託管</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">B. 資料庫</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">C. 網站託管 + 資料庫</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">D. 原始碼版本控制 + 自動化部署觸發</button>
+          </div>
+          <div class="quiz-explain">在整合流程中，GitHub 的角色是：1）存放原始碼並做版本控制；2）透過 Push 事件觸發 GitHub Actions 自動部署到 Firebase。</div>
+        </div>
+        <div class="quiz-q" data-answer="2">
+          <p><span class="q-num">5</span>你的網站部署到 Firebase 後，網址是什麼格式？</p>
+          <div class="quiz-options">
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">A. firebase.com/你的專案名</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">B. 你的專案名.web.app 或 你的專案名.firebaseapp.com</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">C. github.io/你的專案名</button>
+            <button class="quiz-opt" onclick="checkQuiz(this,7)">D. google.com/你的專案名</button>
+          </div>
+          <div class="quiz-explain">Firebase Hosting 預設給你的網址格式是 <code>你的專案名.web.app</code> 或 <code>你的專案名.firebaseapp.com</code>。你也可以設定自訂網域。</div>
+        </div>
+      </div>
+      <div class="quiz-score" id="score5"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end .main -->
+
+<script>
+/* ══════════════════════════════════════════════
+   TAB SWITCHING
+   ══════════════════════════════════════════════ */
+const tabs = document.querySelectorAll('.nav-tab');
+const modules = document.querySelectorAll('.module');
+const progressFill = document.getElementById('progressFill');
+const visited = new Set(['mod1']);
+
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.mod;
+    tabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    modules.forEach(m => m.classList.remove('active'));
+    document.getElementById(target).classList.add('active');
+    visited.add(target);
+    progressFill.style.width = (visited.size / modules.length * 100) + '%';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+progressFill.style.width = (visited.size / modules.length * 100) + '%';
+
+/* ══════════════════════════════════════════════
+   TREE TOGGLE
+   ══════════════════════════════════════════════ */
+function toggleTree(el) {
+  const children = el.parentElement.querySelector('.tree-children');
+  if (!children) return;
+  el.classList.toggle('open');
+  children.classList.toggle('collapsed');
+}
+
+/* ══════════════════════════════════════════════
+   SIMULATION HELPERS
+   ══════════════════════════════════════════════ */
+function addSimLine(containerId, html, delay) {
+  const c = document.getElementById(containerId);
+  const div = document.createElement('div');
+  div.className = 'sim-line';
+  div.innerHTML = html;
+  c.appendChild(div);
+  setTimeout(() => div.classList.add('show'), delay || 50);
+  c.scrollTop = c.scrollHeight;
+}
+function clearSim(containerId) {
+  document.getElementById(containerId).innerHTML = '';
+}
+
+/* ── SIM 1: Git Basics ── */
+let sim1Current = 0;
+function sim1Step(step) {
+  if (step !== sim1Current + 1) return;
+  sim1Current = step;
+  const map = {
+    1: [
+      '<span class="prompt">$</span> <span class="cmd">git init</span>',
+      '<span class="success">✓ 已初始化空的 Git 倉庫</span> 在 C:/我的專案/.git/',
+      '<span class="comment">// 你的資料夾現在是一個 Git 倉庫了！</span>',
+      ''
+    ],
+    2: [
+      '<span class="prompt">$</span> <span class="cmd">git status</span>',
+      '<span class="file">  new file:   index.html</span>',
+      '<span class="file">  new file:   style.css</span>',
+      '<span class="file">  new file:   app.js</span>',
+      '',
+      '<span class="prompt">$</span> <span class="cmd">git add .</span>',
+      '<span class="success">✓ 3 個檔案已加入暫存區</span>',
+      '<span class="comment">// 檔案準備好要被提交了</span>',
+      ''
+    ],
+    3: [
+      '<span class="prompt">$</span> <span class="cmd">git commit -m "第一次提交：建立專案"</span>',
+      '<span class="success">✓ [main（根提交）] a1b2c3d 第一次提交：建立專案</span>',
+      '<span class="file">  3 files changed, 42 insertions(+)</span>',
+      '<span class="comment">// 快照已拍好，存在 .git/ 裡了</span>',
+      ''
+    ],
+    4: [
+      '<span class="prompt">$</span> <span class="cmd">git remote add origin https://github.com/me/my-project.git</span>',
+      '<span class="prompt">$</span> <span class="cmd">git push -u origin main</span>',
+      '<span class="highlight"> enumerating objects: 5, done.</span>',
+      '<span class="highlight"> writing objects: 100% (5/5), 1.2 KiB | 1.2 MiB/s, done.</span>',
+      '<span class="success">✓ 已成功推送到 https://github.com/me/my-project.git</span>',
+      '<span class="success">✓ 分支 「main」 設置為追蹤 「origin/main」</span>',
+      '',
+      '<span class="comment">🎉 恭喜！你的程式碼已經在 GitHub 上了！</span>'
+    ]
+  };
+  const lines = map[step];
+  lines.forEach((l, i) => {
+    addSimLine('sim1', l || '<br>', i * 180);
+  });
+  if (step < 4) document.getElementById('sim1b' + (step + 1)).disabled = false;
+}
+function sim1Reset() {
+  sim1Current = 0;
+  clearSim('sim1');
+  document.getElementById('sim1b2').disabled = true;
+  document.getElementById('sim1b3').disabled = true;
+  document.getElementById('sim1b4').disabled = true;
+}
+
+/* ── SIM 2: GitHub PR ── */
+let sim2Current = 0;
+function sim2Step(step) {
+  if (step !== sim2Current + 1) return;
+  sim2Current = step;
+  const map = {
+    1: [
+      '<span class="prompt">$</span> <span class="cmd">git checkout -b feature/add-login</span>',
+      '<span class="success">✓ 已切換到新的分支 「feature/add-login」</span>',
+      '<span class="comment">// 你現在在平行線上，可以安心開發了</span>',
+      ''
+    ],
+    2: [
+      '<span class="file">📝 新增 login.html（+30 行）</span>',
+      '<span class="file">📝 修改 style.css（+5 行，-2 行）</span>',
+      '<span class="comment">// 在分支上盡情修改，main 不會受到影響</span>',
+      ''
+    ],
+    3: [
+      '<span class="prompt">$</span> <span class="cmd">git add .</span>',
+      '<span class="prompt">$</span> <span class="cmd">git commit -m "新增登入頁面"</span>',
+      '<span class="success">✓ [feature/add-login] e4f5g6h 新增登入頁面</span>',
+      '',
+      '<span class="prompt">$</span> <span class="cmd">git push origin feature/add-login</span>',
+      '<span class="success">✓ 已推送到 GitHub</span>',
+      ''
+    ],
+    4: [
+      '<span class="success">🌐 在 GitHub 上建立了 Pull Request：</span>',
+      '<span style="color:#89B4FA;">  「新增登入頁面」</span>',
+      '<span style="color:#89B4FA;">  feature/add-login → main</span>',
+      '',
+      '<span class="comment">👀 隊友可以審查你的程式碼</span>',
+      '<span class="comment">✅ 審查通過後，點「Merge」合併回 main</span>',
+      '<span class="comment">🎉 功能完成！你的分支已合併到主線</span>'
+    ]
+  };
+  const lines = map[step];
+  lines.forEach((l, i) => {
+    addSimLine('sim2', l || '<br>', i * 180);
+  });
+  if (step < 4) document.getElementById('sim2b' + (step + 1)).disabled = false;
+}
+function sim2Reset() {
+  sim2Current = 0;
+  clearSim('sim2');
+  for (let i = 2; i <= 4; i++) document.getElementById('sim2b' + i).disabled = true;
+}
+
+/* ── SIM 3: Firebase Deploy ── */
+let sim3Current = 0;
+function sim3Step(step) {
+  if (step !== sim3Current + 1) return;
+  sim3Current = step;
+  const map = {
+    1: [
+      '<span class="prompt">$</span> <span class="cmd">firebase init</span>',
+      '',
+      '  ⚫ Firebaserc 設定完成',
+      '  ⚫ firebase.json 設定完成',
+      '',
+      '<span class="file">📋 問題：你要使用哪些 Firebase 服務？</span>',
+      '<span class="success">  ✓ Hosting：設定為把 public/ 資料夾部署上線</span>',
+      '<span class="comment">// Firebase 已知道你專案的結構了</span>',
+      ''
+    ],
+    2: [
+      '<span class="file">📁 你的專案結構：</span>',
+      '',
+      '  我的專案/',
+      '  ├── <span class="success">public/</span>          ← Firebase 會部署這個資料夾',
+      '  │   ├── index.html',
+      '  │   ├── style.css',
+      '  │   └── app.js',
+      '  ├── <span class="file">firebase.json</span>     ← Firebase 設定檔',
+      '  └── <span class="file">.firebaserc</span>      ← 專案 ID 設定',
+      '',
+      '<span class="success">✓ 確認 public/ 目錄內容正確</span>',
+      ''
+    ],
+    3: [
+      '<span class="prompt">$</span> <span class="cmd">firebase deploy --only hosting</span>',
+      '',
+      '<span class="highlight">=== Deploying to 「my-project」...</span>',
+      '',
+      '<span class="file">i</span>  hosting: 發現 public/ 中有 3 個檔案',
+      '<span class="file">i</span>  hosting: index.html (1.2 KB)',
+      '<span class="file">i</span>  hosting: style.css (0.8 KB)',
+      '<span class="file">i</span>  hosting: app.js (2.1 KB)',
+      '',
+      '<span class="highlight">✓ 發布完成</span>',
+      ''
+    ],
+    4: [
+      '<span class="success">🎉 部署成功！</span>',
+      '',
+      '<span class="file"> Hosting URL：https://my-project.web.app</span>',
+      '<span class="file"> Firebase Console：https://console.firebase.google.com</span>',
+      '',
+      '<span class="comment">// 現在全世界的人都可以透過網址看到你的網站了！</span>',
+      '<span class="comment">// 每次修改後執行 firebase deploy 就能更新</span>'
+    ]
+  };
+  const lines = map[step];
+  lines.forEach((l, i) => {
+    addSimLine('sim3', l || '<br>', i * 180);
+  });
+  if (step < 4) document.getElementById('sim3b' + (step + 1)).disabled = false;
+}
+function sim3Reset() {
+  sim3Current = 0;
+  clearSim('sim3');
+  for (let i = 2; i <= 4; i++) document.getElementById('sim3b' + i).disabled = true;
+}
+
+/* ── SIM 4: Security Rules ── */
+let sim4Current = 0;
+function sim4Step(step) {
+  if (step !== sim4Current + 1) return;
+  sim4Current = step;
+  const map = {
+    1: [
+      '<span class="prompt">$</span> <span class="cmd">cat firestore.rules</span>',
+      '',
+      '<span class="comment">// 目前的規則（預設：全部鎖住）</span>',
+      '<span style="color:#CBA6F7;">rules_version</span> = <span style="color:#A6E3A1;">\'2\'</span>;',
+      '<span style="color:#CBA6F7;">service</span> cloud.firestore {',
+      '  <span style="color:#CBA6F7;">match</span> /databases/{database}/documents {',
+      '    <span style="color:#F38BA8;">allow</span> read, write: <span style="color:#A6E3A1;">if false</span>;  <span style="color:#6C7086;">// 全部禁止！</span>',
+      '  }',
+      '}',
+      ''
+    ],
+    2: [
+      '<span class="file">📝 修改 firestore.rules：</span>',
+      '',
+      '<span style="color:#CBA6F7;">rules_version</span> = <span style="color:#A6E3A1;">\'2\'</span>;',
+      '<span style="color:#CBA6F7;">service</span> cloud.firestore {',
+      '  <span style="color:#CBA6F7;">match</span> /databases/{database}/documents {',
+      '',
+      '    <span style="color:#6C7086;">// products：所有人都能讀，只有管理員能寫</span>',
+      '    <span style="color:#CBA6F7;">match</span> /<span style="color:#89B4FA;">products</span>/{productId} {',
+      '      <span style="color:#A6E3A1;">allow read: if true;</span>',
+      '      <span style="color:#F38BA8;">allow write: if false;</span>',
+      '    }',
+      '',
+      '    <span style="color:#6C7086;">// users：只有本人能讀寫</span>',
+      '    <span style="color:#CBA6F7;">match</span> /<span style="color:#89B4FA;">users</span>/{userId} {',
+      '      <span style="color:#A6E3A1;">allow read, write: if request.auth != null</span>',
+      '        <span style="color:#A6E3A1;">&& request.auth.uid == userId;</span>',
+      '    }',
+      '  }',
+      '}',
+      '<span class="success">✓ 規則已寫入</span>',
+      ''
+    ],
+    3: [
+      '<span class="prompt">$</span> <span class="cmd">firebase emulators:start</span>',
+      '',
+      '<span class="file">  ✓ Firestore emulator 在 localhost:8080 啟動</span>',
+      '',
+      '<span class="comment">// 測試 1：匿名讀取 products</span>',
+      '<span class="success">  ✓ products/{id}.get() → 成功（因為 allow read: if true）</span>',
+      '',
+      '<span class="comment">// 測試 2：匿名寫入 products</span>',
+      '<span class="success">  ✓ products/{id}.set({}) → 拒絕（因為 allow write: if false）</span>',
+      '',
+      '<span class="comment">// 測試 3：登入使用者讀自己的資料</span>',
+      '<span class="success">  ✓ users/{自己的uid}.get() → 成功</span>',
+      '',
+      '<span class="comment">// 測試 4：登入使用者讀別人的資料</span>',
+      '<span class="success">  ✓ users/{別人的uid}.get() → 拒絕（uid 不符）</span>',
+      '',
+      '<span class="success">✓ 所有測試通過！規則正確</span>',
+      ''
+    ],
+    4: [
+      '<span class="prompt">$</span> <span class="cmd">firebase deploy --only firestore:rules</span>',
+      '',
+      '<span class="highlight">=== Deploying Firestore Rules ===</span>',
+      '<span class="file">i</span>  讀取 firestore.rules...',
+      '<span class="file">i</span>  解析規則語法...',
+      '<span class="file">i</span>  上傳規則...',
+      '',
+      '<span class="success">✓ Firestore Rules 發布成功！</span>',
+      '<span class="success">✓ 規則已在全球 Firebase 伺服器生效</span>',
+      '',
+      '<span class="comment">// 現在你的資料庫受到安全規則保護了！</span>'
+    ]
+  };
+  const lines = map[step];
+  lines.forEach((l, i) => {
+    addSimLine('sim4', l || '<br>', i * 180);
+  });
+  if (step < 4) document.getElementById('sim4b' + (step + 1)).disabled = false;
+}
+function sim4Reset() {
+  sim4Current = 0;
+  clearSim('sim4');
+  for (let i = 2; i <= 4; i++) document.getElementById('sim4b' + i).disabled = true;
+}
+
+/* ── SIM 5: Full Deploy Flow ── */
+let sim5Current = 0;
+function sim5Step(step) {
+  if (step !== sim5Current + 1) return;
+  sim5Current = step;
+  const map = {
+    1: [
+      '<span class="comment">📝 在你的電腦上修改了程式碼</span>',
+      '',
+      '<span class="file">  修改前：</span>',
+      '  &lt;h1&gt;歡迎光臨&lt;/h1&gt;',
+      '',
+      '<span class="file">  修改後：</span>',
+      '  &lt;h1&gt;🎉 歡迎光臨我的新網站&lt;/h1&gt;',
+      '  &lt;p&gt;新增了一段介紹文字&lt;/p&gt;',
+      '',
+      '<span class="success">✓ 檔案已儲存</span>',
+      ''
+    ],
+    2: [
+      '<span class="prompt">$</span> <span class="cmd">git add .</span>',
+      '<span class="prompt">$</span> <span class="cmd">git commit -m "更新首頁標題和內容"</span>',
+      '<span class="success">✓ [main] i7j8k9l 更新首頁標題和內容</span>',
+      '<span class="file">  1 file changed, 3 insertions(+), 1 deletion(-)</span>',
+      '<span class="comment">// 變更已記錄到 Git</span>',
+      ''
+    ],
+    3: [
+      '<span class="prompt">$</span> <span class="cmd">git push origin main</span>',
+      '<span class="success">✓ 已推送到 GitHub</span>',
+      '<span class="comment">// 程式碼已上傳到 GitHub</span>',
+      ''
+    ],
+    4: [
+      '<span class="comment">⚙️ GitHub Actions 偵測到 push 到 main</span>',
+      '<span class="comment">⚙️ 自動觸發部署工作流程...</span>',
+      '',
+      '<span class="file">  Runner: ubuntu-latest</span>',
+      '<span class="file">  Step 1/3: Checkout code ✓</span>',
+      '<span class="file">  Step 2/3: Setup Node.js ✓</span>',
+      '<span class="file">  Step 3/3: Deploy to Firebase ✓</span>',
+      '',
+      '<span class="success">✓ GitHub Actions 部署完成</span>',
+      ''
+    ],
+    5: [
+      '<span class="highlight">🔥 Firebase 收到部署請求...</span>',
+      '',
+      '<span class="file">  1/3  發布檔案中...</span>',
+      '<span class="file">  2/3  上傳 index.html ✓</span>',
+      '<span class="file">  3/3  清除 CDN 快取 ✓</span>',
+      '',
+      '<span class="success">✓ Hosting 發布成功</span>',
+      ''
+    ],
+    6: [
+      '<span class="success">🎉🎉🎉 網站已上線！</span>',
+      '',
+      '<span class="file">🌐 https://my-project.web.app</span>',
+      '',
+      '<span class="comment">// 從修改程式碼到網站上線，全程自動化！</span>',
+      '<span class="comment">// 你只需要「修改 → git push」，剩下的交給機器</span>',
+      '',
+      '<span style="color:#76B947;font-weight:700;">📋 完整流程回顧：</span>',
+      '<span style="color:#76B947;">  1. 修改程式碼（你的電腦）</span>',
+      '<span style="color:#76B947;">  2. git add + commit（本地版本控制）</span>',
+      '<span style="color:#76B947;">  3. git push（上傳到 GitHub）</span>',
+      '<span style="color:#76B947;">  4. GitHub Actions 自動觸發</span>',
+      '<span style="color:#76B947;">  5. Firebase 自動部署</span>',
+      '<span style="color:#76B947;">  6. 網站上線，全世界可見</span>'
+    ]
+  };
+  const lines = map[step];
+  lines.forEach((l, i) => {
+    addSimLine('sim5', l || '<br>', i * 180);
+  });
+  if (step < 6) document.getElementById('sim5b' + (step + 1)).disabled = false;
+}
+function sim5Reset() {
+  sim5Current = 0;
+  clearSim('sim5');
+  for (let i = 2; i <= 6; i++) document.getElementById('sim5b' + i).disabled = true;
+}
+
+/* ══════════════════════════════════════════════
+   QUIZ SYSTEM
+   ══════════════════════════════════════════════ */
+const quizMeta = {
+  1: { total: 5, scoreId: 'score1', containerId: 'quiz1' },
+  6: { total: 5, scoreId: 'score3', containerId: 'quiz3' },
+  7: { total: 5, scoreId: 'score5', containerId: 'quiz5' }
+};
+const quizAnswered = {};
+
+function checkQuiz(btn, quizGroup) {
+  const q = btn.closest('.quiz-q');
+  const qNum = Array.from(q.parentElement.children).indexOf(q);
+  const answer = parseInt(q.dataset.answer) - 1;
+  const opts = q.querySelectorAll('.quiz-opt');
+  const clickedIdx = Array.from(opts).indexOf(btn);
+  const key = quizGroup + '-' + qNum;
+  if (quizAnswered[key]) return;
+  quizAnswered[key] = true;
+
+  opts.forEach(o => o.disabled = true);
+  if (clickedIdx === answer) {
+    btn.classList.add('correct');
+    quizAnswered[key] = 'correct';
+  } else {
+    btn.classList.add('wrong');
+    opts[answer].classList.add('correct');
+    quizAnswered[key] = 'wrong';
+  }
+  q.querySelector('.quiz-explain').classList.add('show');
+
+  const meta = quizMeta[quizGroup];
+  if (!meta) return;
+  const allKeys = [];
+  for (let i = 0; i < meta.total; i++) allKeys.push(quizGroup + '-' + i);
+  const allAnswered = allKeys.every(k => quizAnswered[k]);
+  if (allAnswered) {
+    const correct = allKeys.filter(k => quizAnswered[k] === 'correct').length;
+    const scoreEl = document.getElementById(meta.scoreId);
+    scoreEl.textContent = `得分：${correct} / ${meta.total}（${Math.round(correct/meta.total*100)}%）`;
+    scoreEl.classList.add('show');
+  }
+}
+</script>
+</body>
+</html>

@@ -16,12 +16,27 @@ async function initConsumer() {
     menuData = await window.FirebaseCore.getMenu();
     window.StatsTracker.trackRead();
 
+    // Cache menu for theme manager (avoids extra Firestore read)
+    window.ThemeManager.setCachedMenu(menuData);
+
     // Apply theme
     await window.ThemeManager.load();
 
     // Render
     document.getElementById('storeName').textContent = menuData.storeName;
     document.getElementById('storeSubtitle').textContent = menuData.subtitle;
+
+    if (menuData.categories.length === 0) {
+      document.getElementById('itemsGrid').innerHTML =
+        '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-muted)">' +
+        '<p style="font-size:18px;margin-bottom:8px">尚無菜單</p>' +
+        '<p>請到後台管理新增分類與品項</p></div>';
+      document.getElementById('categories').innerHTML = '';
+      document.getElementById('addonButtons').innerHTML =
+        '<span style="color:var(--text-muted)">尚無配料</span>';
+      return;
+    }
+
     renderCategories();
     renderCart();
 
@@ -80,7 +95,12 @@ function selectCategory(catId) {
 // Render items
 function renderItems() {
   const container = document.getElementById('itemsGrid');
-  container.innerHTML = selectedCategory.items.map(item => {
+  const enabledItems = selectedCategory.items.filter(item => item.enabled !== false);
+  if (enabledItems.length === 0) {
+    container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text-muted)">此分類無可用品項</div>';
+    return;
+  }
+  container.innerHTML = enabledItems.map(item => {
     const state = getItemState(item.id);
     const count = getItemCount(item.id);
     return `
@@ -315,15 +335,16 @@ function saveCartEdit() {
   const addonKey = selectedAddons.map(a => a.id).sort().join('+');
   item.key = `${item.id}_${addonKey}`;
 
-  // Check for duplicate keys
-  const otherItems = items.filter(i => i.key !== editingCartKey && i.key === item.key);
-  if (otherItems.length > 0) {
-    // Merge quantities
-    otherItems[0].quantity += item.quantity;
-    window.CartManager.removeItem(editingCartKey);
-  } else {
-    window.CartManager.saveItems(items);
+  // Check for duplicate keys and merge
+  const otherIdx = items.findIndex(i => i.key !== editingCartKey && i.key === item.key);
+  if (otherIdx >= 0) {
+    // Merge quantities into the existing entry, then remove the one we edited
+    items[otherIdx].quantity += item.quantity;
+    items.splice(items.indexOf(item), 1);
   }
+
+  // Save the updated items array
+  window.CartManager.saveItems(items);
 
   closeCartEdit();
 }

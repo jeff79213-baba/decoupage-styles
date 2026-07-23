@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>菜單拍照讀取機</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f0eb;color:#333;padding:16px;min-height:100vh}
+.container{max-width:640px;margin:0 auto}
+header{text-align:center;padding:24px 0 16px}
+header h1{font-size:28px;font-weight:700;color:#c73a0a}
+header p{color:#888;font-size:14px;margin-top:4px}
+.card{background:#fff;border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.card-title{font-size:15px;font-weight:600;color:#555;margin-bottom:12px}
+.api-row{display:flex;gap:8px}
+.api-row input{flex:1;padding:10px 12px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;outline:0;transition:border-color .2s}
+.api-row input:focus{border-color:#c73a0a}
+.api-row button{padding:10px 18px;border:0;border-radius:10px;background:#c73a0a;color:#fff;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap;transition:background .2s}
+.api-row button:hover{background:#a82e08}
+.api-row button:disabled{background:#ccc;cursor:not-allowed}
+textarea#apiKeys{width:100%;padding:10px 12px;border:1.5px solid #ddd;border-radius:10px;font-size:13px;font-family:monospace;outline:0;resize:vertical;transition:border-color .2s}
+textarea#apiKeys:focus{border-color:#c73a0a}
+.api-status{font-size:13px;margin-top:6px}
+.api-status.ok{color:#2a7d2a}
+.api-status.err{color:#c73a0a}
+.api-status.info{color:#555}
+.key-badge{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11px;margin-right:4px;margin-bottom:4px}
+.key-badge.ready{background:#e8f5e9;color:#2e7d32}
+.key-badge.exhausted{background:#fef2f2;color:#c62828}
+.key-badge.active{background:#fff3e0;color:#e65100}
+.dropzone{border:2px dashed #ddd;border-radius:16px;padding:40px 20px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;position:relative}
+.dropzone:hover,.dropzone.dragover{border-color:#c73a0a;background:#fef6f2}
+.dropzone.has-image{padding:12px;border-style:solid}
+.dropzone-icon{font-size:48px;color:#ccc;margin-bottom:8px}
+.dropzone-text{color:#888;font-size:15px}
+.dropzone-hint{color:#bbb;font-size:12px;margin-top:4px}
+.dropzone img{max-width:100%;max-height:360px;border-radius:10px;display:block;margin:0 auto}
+.dropzone input{display:none}
+.btn-analyze{display:block;width:100%;padding:14px;border:0;border-radius:12px;font-size:17px;font-weight:700;cursor:pointer;background:#c73a0a;color:#fff;transition:background .2s,opacity .2s}
+.btn-analyze:hover{background:#a82e08}
+.btn-analyze:disabled{background:#ccc;cursor:not-allowed}
+.btn-analyze.loading{pointer-events:none;opacity:.7}
+.result-area{margin-top:12px}
+.result-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.result-header span{font-size:14px;color:#666}
+.result-actions{display:flex;gap:6px}
+.result-actions button{padding:6px 12px;border:1px solid #ddd;border-radius:8px;background:#fff;font-size:12px;cursor:pointer;transition:background .2s}
+.result-actions button:hover{background:#f5f0eb}
+pre{background:#1e1e2e;color:#cdd6f4;border-radius:12px;padding:16px;overflow-x:auto;font-size:13px;line-height:1.5;font-family:'Cascadia Code','Fira Code','Consolas',monospace;white-space:pre-wrap;word-break:break-all;min-height:60px;max-height:480px;overflow-y:auto}
+pre .key{color:#89b4fa}
+pre .str{color:#a6e3a1}
+pre .num{color:#fab387}
+pre .bool{color:#cba6f7}
+pre .null{color:#f38ba8}
+pre .bracket{color:#b4befe}
+.loading-spinner{display:flex;flex-direction:column;align-items:center;padding:24px 0;color:#888;gap:10px}
+.spinner{width:32px;height:32px;border:3px solid #eee;border-top-color:#c73a0a;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-box{background:#fef2f2;color:#c73a0a;border-radius:12px;padding:14px;font-size:14px;margin-top:8px}
+.download-btn{display:inline-flex;align-items:center;gap:4px}
+.hidden{display:none!important}
+.remove-btn{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:0;background:rgba(0,0,0,.5);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.remove-btn:hover{background:rgba(0,0,0,.7)}
+.mode-badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12px;font-weight:600}
+.mode-badge.gemini{background:#e8f5e9;color:#2e7d32}
+.mode-badge.ocr{background:#fff3e0;color:#e65100}
+.raw-text{margin-top:10px;border-top:1px solid #eee;padding-top:10px}
+.raw-text summary{font-size:13px;color:#888;cursor:pointer;padding:4px 0}
+.raw-text pre{background:#f5f5f5;color:#555;border:1px solid #eee;padding:12px;font-size:12px;margin-top:6px;max-height:200px}
+footer{text-align:center;color:#bbb;font-size:12px;padding:24px 0}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>菜單拍照讀取機</h1>
+    <p>拍照上傳菜單 → 自動輸出計算總匯 JSON</p>
+  </header>
+
+  <div class="card">
+    <div class="card-title">設定 API 金鑰（可輸入多組，自動輪流使用）</div>
+    <textarea id="apiKeys" rows="3" placeholder="每行一組 API Key&#10;例如：&#10;AIzaSyAxxxxxxxxxxxx&#10;AIzaSyBxxxxxxxxxxxx&#10;AIzaSyCxxxxxxxxxxxx"></textarea>
+    <div class="api-row" style="margin-top:8px">
+      <button id="saveKeyBtn">儲存</button>
+      <button id="clearKeysBtn" style="background:#888">清除</button>
+    </div>
+    <div id="apiStatus" class="api-status hidden"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">上傳菜單照片</div>
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="fileInput" accept="image/*" capture="environment">
+      <div id="dropContent">
+        <div class="dropzone-icon">📸</div>
+        <div class="dropzone-text">點擊或拖曳上傳照片</div>
+        <div class="dropzone-hint">支援手機相機直接拍攝</div>
+      </div>
+      <img id="preview" class="hidden" alt="預覽">
+      <button class="remove-btn hidden" id="removeBtn">&times;</button>
+    </div>
+  </div>
+
+  <button class="btn-analyze" id="analyzeBtn" disabled>開始分析</button>
+
+  <div class="card result-area hidden" id="resultCard">
+    <div class="result-header">
+      <span id="modeLabel">輸出結果</span>
+      <div class="result-actions">
+        <button id="copyBtn">📋 複製</button>
+        <button id="downloadBtn" class="download-btn">⬇ 下載 JSON</button>
+      </div>
+    </div>
+    <pre id="output"></pre>
+    <details class="raw-text hidden" id="rawTextBlock">
+      <summary>查看原始辨識文字</summary>
+      <pre id="rawText"></pre>
+    </details>
+    <div class="loading-spinner hidden" id="loading">
+      <div class="spinner"></div>
+      <span id="loadingText">分析中…</span>
+    </div>
+    <div class="hidden" id="errorBox"></div>
+  </div>
+
+  <footer>
+    需要 API Key？前往
+    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>
+    免費申請
+  </footer>
+</div>
+
+<script>
+const KEYS_STORAGE = 'menu_reader_api_keys';
+const KEY_INDEX_STORAGE = 'menu_reader_key_index';
+const MODEL = 'models/gemini-2.0-flash';
+
+const $ = id => document.getElementById(id);
+const apiKeys = $('apiKeys');
+const saveKeyBtn = $('saveKeyBtn');
+const clearKeysBtn = $('clearKeysBtn');
+const apiStatus = $('apiStatus');
+const dropzone = $('dropzone');
+const fileInput = $('fileInput');
+const dropContent = $('dropContent');
+const preview = $('preview');
+const removeBtn = $('removeBtn');
+const analyzeBtn = $('analyzeBtn');
+const resultCard = $('resultCard');
+const output = $('output');
+const loadingEl = $('loading');
+const loadingText = $('loadingText');
+const errorBox = $('errorBox');
+const copyBtn = $('copyBtn');
+const downloadBtn = $('downloadBtn');
+const modeLabel = $('modeLabel');
+const rawTextBlock = $('rawTextBlock');
+const rawText = $('rawText');
+
+let currentFile = null;
+
+// --- API Keys ---
+function getKeys() {
+  const raw = localStorage.getItem(KEYS_STORAGE);
+  return raw ? raw.split('\n').map(s => s.trim()).filter(Boolean) : [];
+}
+
+function saveKeys(keys) {
+  localStorage.setItem(KEYS_STORAGE, keys.join('\n'));
+}
+
+function getStartIndex() {
+  return parseInt(localStorage.getItem(KEY_INDEX_STORAGE) || '0');
+}
+
+function setStartIndex(i) {
+  localStorage.setItem(KEY_INDEX_STORAGE, i);
+}
+
+function loadKeysToUI() {
+  const keys = getKeys();
+  apiKeys.value = keys.join('\n');
+  updateKeyStatus();
+}
+
+function updateKeyStatus() {
+  const keys = getKeys();
+  if (keys.length === 0) {
+    apiStatus.className = 'api-status hidden';
+    return;
+  }
+  let html = '';
+  keys.forEach((k, i) => {
+    const short = k.substring(0, 12) + '…';
+    html += `<span class="key-badge ready">${i + 1}. ${short}</span>`;
+  });
+  apiStatus.innerHTML = html + ` ${keys.length} 組 Key 已儲存`;
+  apiStatus.className = 'api-status info';
+}
+
+function getShuffledKeys() {
+  const keys = getKeys();
+  if (keys.length === 0) return [];
+  const start = getStartIndex() % keys.length;
+  const ordered = [...keys.slice(start), ...keys.slice(0, start)];
+  setStartIndex((start + 1) % keys.length);
+  return ordered;
+}
+
+loadKeysToUI();
+updateAnalyzeBtn();
+
+saveKeyBtn.addEventListener('click', () => {
+  const raw = apiKeys.value;
+  const keys = raw.split('\n').map(s => s.trim()).filter(Boolean);
+  if (keys.length === 0) { setApiStatus('請至少輸入一組 API Key', 'err'); return; }
+  saveKeys(keys);
+  setStartIndex(0);
+  updateKeyStatus();
+  updateAnalyzeBtn();
+  setApiStatus(`✓ ${keys.length} 組 API Key 已儲存`, 'ok');
+  setTimeout(() => { if (apiStatus.className.includes('ok')) apiStatus.className = 'api-status info'; }, 3000);
+});
+
+clearKeysBtn.addEventListener('click', () => {
+  localStorage.removeItem(KEYS_STORAGE);
+  apiKeys.value = '';
+  apiStatus.className = 'api-status hidden';
+  updateAnalyzeBtn();
+});
+
+// --- Image Upload ---
+dropzone.addEventListener('click', e => { if (e.target === removeBtn) return; fileInput.click(); });
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) handleFile(f);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) handleFile(fileInput.files[0]); });
+removeBtn.addEventListener('click', e => { e.stopPropagation(); removeImage(); });
+
+function handleFile(file) {
+  currentFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    preview.src = e.target.result;
+    preview.classList.remove('hidden');
+    dropContent.classList.add('hidden');
+    dropzone.classList.add('has-image');
+    removeBtn.classList.remove('hidden');
+    updateAnalyzeBtn();
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImage() {
+  currentFile = null;
+  preview.src = '';
+  preview.classList.add('hidden');
+  dropContent.classList.remove('hidden');
+  dropzone.classList.remove('has-image');
+  removeBtn.classList.add('hidden');
+  fileInput.value = '';
+  updateAnalyzeBtn();
+}
+
+// --- Analyze ---
+function updateAnalyzeBtn() {
+  const keys = getKeys();
+  analyzeBtn.disabled = !currentFile || keys.length === 0;
+}
+
+apiKeys.addEventListener('input', () => {
+  const keys = apiKeys.value.split('\n').map(s => s.trim()).filter(Boolean);
+  analyzeBtn.disabled = !currentFile || keys.length === 0;
+});
+
+analyzeBtn.addEventListener('click', analyze);
+
+function isQuotaError(errMsg) {
+  const lower = errMsg.toLowerCase();
+  return lower.includes('quota') || lower.includes('rate limit') || lower.includes('resource_exhausted') || lower.includes('429');
+}
+
+async function analyze() {
+  const keys = getShuffledKeys();
+  if (!currentFile) return;
+
+  analyzeBtn.disabled = true;
+  analyzeBtn.classList.add('loading');
+  analyzeBtn.textContent = '分析中…';
+  resultCard.classList.remove('hidden');
+  loadingEl.classList.remove('hidden');
+  output.textContent = '';
+  errorBox.classList.add('hidden');
+  rawTextBlock.classList.add('hidden');
+  rawText.textContent = '';
+
+  const base64 = await toBase64(currentFile);
+  const mime = currentFile.type || 'image/jpeg';
+
+  if (keys.length > 0) {
+    const geminiSuccess = await tryGemini(keys, base64, mime);
+    if (geminiSuccess) return;
+  }
+
+  // Fallback to Tesseract.js
+  await tryTesseract(base64, mime);
+
+  analyzeBtn.disabled = false;
+  analyzeBtn.classList.remove('loading');
+  analyzeBtn.textContent = '開始分析';
+}
+
+async function tryGemini(keys, base64, mime) {
+  const prompt = `你是一個菜單辨識助手。請分析這張照片中的所有菜單品項，以 JSON 格式輸出。
+
+JSON 格式要求：
+{
+  "items": [
+    {
+      "name": "品項名稱",
+      "price": 單價（純數字，不含貨幣符號）,
+      "unit": "單位（如：份、碗、杯、個、籠、盤、盒、瓶、罐）"
+    }
+  ]
+}
+
+注意事項：
+- 品項名稱使用繁體中文
+- price 只保留整數數值
+- unit 根據菜單合理推斷（沒寫單位則用「份」）
+- 如果品項有不同尺寸/口味而價格不同，請分開列出
+- 只輸出 JSON，不要其他說明文字`;
+
+  let lastError = '';
+
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    const shortKey = key.substring(0, 12) + '…';
+    loadingText.textContent = `正在嘗試 Gemini 第 ${i + 1} 組 Key (${shortKey})…`;
+
+    try {
+      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/${MODEL}:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: prompt },
+              { inline_data: { mime_type: mime, data: base64 } }
+            ]
+          }]
+        })
+      });
+
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        const errMsg = data.error?.message || `HTTP ${resp.status}`;
+        if (isQuotaError(errMsg) && i < keys.length - 1) { lastError = errMsg; continue; }
+        throw new Error(errMsg);
+      }
+
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      if (!text) throw new Error('API 沒有回傳內容');
+
+      const json = extractJson(text);
+      if (!json) throw new Error('無法解析 API 回傳的 JSON');
+
+      showResult(json);
+      loadingEl.classList.add('hidden');
+      loadingText.textContent = '分析中…';
+      modeLabel.innerHTML = '<span class="mode-badge gemini">Gemini</span> 輸出結果';
+      analyzeBtn.disabled = false;
+      analyzeBtn.classList.remove('loading');
+      analyzeBtn.textContent = '開始分析';
+      return true;
+
+    } catch (err) {
+      if (isQuotaError(err.message) && i < keys.length - 1) { lastError = err.message; continue; }
+      lastError = err.message;
+    }
+  }
+
+  loadingText.textContent = '分析中…';
+  // Gemini failed, show error but continue to Tesseract fallback
+  errorBox.classList.remove('hidden');
+  errorBox.textContent = '⚠️ Gemini 無法使用（' + lastError + '），正在切換離線 OCR…';
+  return false;
+}
+
+async function tryTesseract(base64, mime) {
+  loadingText.textContent = 'Tesseract.js 正在下載語言包…';
+
+  try {
+    const result = await Tesseract.recognize(
+      `data:${mime};base64,${base64}`,
+      'chi_tra+eng',
+      {
+        logger: m => {
+          if (m.status === 'loading tesseract core') loadingText.textContent = '載入 Tesseract 引擎…';
+          else if (m.status === 'initializing tesseract') loadingText.textContent = '初始化中…';
+          else if (m.status === 'loading language traineddata') loadingText.textContent = `下載語言包 ${Math.round(m.progress * 100)}%…`;
+          else if (m.status === 'initializing api') loadingText.textContent = '準備辨識…';
+          else if (m.status === 'recognizing text') loadingText.textContent = `辨識中 ${Math.round(m.progress * 100)}%…`;
+        }
+      }
+    );
+
+    const raw = result.data.text;
+    rawText.textContent = raw;
+    rawTextBlock.classList.remove('hidden');
+
+    const items = parseMenuText(raw);
+    if (items.length === 0) throw new Error('無法從圖片中辨識出菜單品項');
+
+    const json = { items };
+    showResult(json);
+    loadingEl.classList.add('hidden');
+    errorBox.classList.add('hidden');
+    modeLabel.innerHTML = '<span class="mode-badge ocr">離線 OCR</span> 輸出結果（請手動檢查修正）';
+
+  } catch (err) {
+    loadingEl.classList.add('hidden');
+    errorBox.classList.remove('hidden');
+    errorBox.textContent = '❌ 離線 OCR 失敗：' + err.message;
+  }
+
+  loadingText.textContent = '分析中…';
+}
+
+function parseMenuText(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const items = [];
+  const seen = new Set();
+
+  for (const line of lines) {
+    if (/^[\d\s\-_]+$/.test(line)) continue;
+
+    let name, price, unit = '份';
+
+    // Pattern: 品名-單位-價格  e.g. 益生菌-盒-1950
+    let m = line.match(/^(.+?)[-－—](.+?)[-－—](\d+)$/);
+    if (m) { name = m[1].trim(); unit = m[2].trim(); price = parseInt(m[3]); }
+    else {
+      // Pattern: 品名 價格 (whitespace separated)
+      m = line.match(/^(.+?)[\s　]+(\d+)\s*$/);
+      if (m) { name = m[1].trim(); price = parseInt(m[2]); }
+      else {
+        // Pattern: 品名 $價格
+        m = line.match(/^(.+?)\s*[$$]\s*(\d+)/);
+        if (m) { name = m[1].trim(); price = parseInt(m[2]); }
+        else {
+          // Pattern: $價格 品名
+          m = line.match(/^[$$]\s*(\d+)\s+(.+)/);
+          if (m) { name = m[2].trim(); price = parseInt(m[1]); }
+        }
+      }
+    }
+
+    if (name && price && price > 0 && name.length < 30) {
+      const key = name + price;
+      if (!seen.has(key)) {
+        seen.add(key);
+        items.push({ name, price, unit });
+      }
+    }
+  }
+
+  return items;
+}
+
+function showResult(json) {
+  const formatted = JSON.stringify(json, null, 2);
+  output.textContent = formatted;
+  highlightJSON(output);
+}
+
+function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function extractJson(text) {
+  const match = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+  const raw = match ? match[1].trim() : text.trim();
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+function highlightJSON(el) {
+  const text = el.textContent;
+  const highlighted = text.replace(/(&|"|\\n|<|>)/g, c => ({'&':'&amp;','"':'&quot;','\\n':'<br>','<':'&lt;','>':'&gt;'}[c]))
+    .replace(/"([^"]+)":/g, '<span class="key">"$1"</span>:')
+    .replace(/: "([^"]+)"/g, ': <span class="str">"$1"</span>')
+    .replace(/: (\d+)/g, ': <span class="num">$1</span>')
+    .replace(/: (true|false)/g, ': <span class="bool">$1</span>')
+    .replace(/: (null)/g, ': <span class="null">$1</span>');
+  el.innerHTML = highlighted;
+}
+
+// --- Copy ---
+copyBtn.addEventListener('click', () => {
+  const text = output.textContent;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    copyBtn.textContent = '✓ 已複製';
+    setTimeout(() => { copyBtn.textContent = '📋 複製'; }, 1500);
+  });
+});
+
+// --- Download ---
+downloadBtn.addEventListener('click', () => {
+  const text = output.textContent;
+  if (!text) return;
+  const blob = new Blob([text], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'menu_data.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>

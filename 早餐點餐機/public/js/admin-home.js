@@ -9,6 +9,10 @@ async function initAdmin() {
   window.FirebaseCore.init();
   menuData = await window.FirebaseCore.getMenu();
 
+  // Cache for theme manager
+  window.ThemeManager.setCachedMenu(menuData);
+  await window.ThemeManager.load();
+
   document.getElementById('storeName').value = menuData.storeName;
   document.getElementById('storeSubtitle').value = menuData.subtitle;
 
@@ -43,6 +47,11 @@ async function changePassword() {
   const newPw = document.getElementById('newPassword').value;
   const confirmPw = document.getElementById('confirmPassword').value;
 
+  if (!newPw || newPw.length === 0) {
+    alert('請輸入新密碼');
+    return;
+  }
+
   if (newPw !== confirmPw) {
     alert('密碼不一致');
     return;
@@ -61,11 +70,11 @@ async function changePassword() {
 }
 
 function goToKiosk() {
-  window.location.href = `index.html?shop=${window.APP_CONFIG.shopId}`;
+  window.location.href = `/?shop=${window.APP_CONFIG.shopId}`;
 }
 
 function generateQR() {
-  const url = `${window.location.origin}/index.html?shop=${window.APP_CONFIG.shopId}`;
+  const url = `${window.location.origin}/?shop=${window.APP_CONFIG.shopId}`;
   const container = document.getElementById('qrCode');
   container.innerHTML = '';
 

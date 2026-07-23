@@ -1,19 +1,24 @@
 window.AuthManager = {
   PASSWORD_KEY: 'admin_password',
 
+  getAuthKey() {
+    const shopId = window.APP_CONFIG ? window.APP_CONFIG.shopId : 'default';
+    return `admin_auth_${shopId}`;
+  },
+
   isAuthenticated() {
-    return sessionStorage.getItem('admin_auth') === 'true';
+    return sessionStorage.getItem(this.getAuthKey()) === 'true';
   },
 
   login(password) {
     const stored = localStorage.getItem(this.PASSWORD_KEY);
     if (!stored) {
       // No password set, allow access
-      sessionStorage.setItem('admin_auth', 'true');
+      sessionStorage.setItem(this.getAuthKey(), 'true');
       return true;
     }
     if (btoa(password) === stored) {
-      sessionStorage.setItem('admin_auth', 'true');
+      sessionStorage.setItem(this.getAuthKey(), 'true');
       return true;
     }
     return false;

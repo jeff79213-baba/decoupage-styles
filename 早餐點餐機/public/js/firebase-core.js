@@ -7,8 +7,12 @@ window.FirebaseCore = {
 
   init() {
     this.shopId = window.APP_CONFIG.shopId;
-    // Initialize Firebase app
-    firebase.initializeApp(window.APP_CONFIG.firebaseConfig);
+    // Initialize Firebase app (guard against double init)
+    try {
+      firebase.initializeApp(window.APP_CONFIG.firebaseConfig);
+    } catch (e) {
+      // App already initialized, reuse existing
+    }
     this.db = firebase.firestore();
     console.log(`Firebase initialized for shop: ${this.shopId}`);
   },

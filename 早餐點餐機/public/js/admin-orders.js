@@ -12,6 +12,9 @@ async function initOrders() {
   allOrders = await window.FirebaseCore.getOrders(500);
   filteredOrders = [...allOrders];
 
+  // Load theme
+  await window.ThemeManager.load();
+
   // Update back link
   const shopId = window.APP_CONFIG.shopId;
   document.getElementById('linkBack').href = `admin.html?shop=${shopId}`;
@@ -164,18 +167,21 @@ function renderStats() {
 }
 
 function loadRetention() {
-  const days = localStorage.getItem('kiosk_retention_days') || 30;
+  const shopId = window.APP_CONFIG.shopId;
+  const days = localStorage.getItem(`kiosk_retention_${shopId}`) || 30;
   document.getElementById('retentionDays').value = days;
 }
 
 function saveRetention() {
+  const shopId = window.APP_CONFIG.shopId;
   const days = document.getElementById('retentionDays').value;
-  localStorage.setItem('kiosk_retention_days', days);
+  localStorage.setItem(`kiosk_retention_${shopId}`, days);
   alert('已儲存');
 }
 
 async function autoDeleteOldOrders() {
-  const retentionDays = parseInt(localStorage.getItem('kiosk_retention_days') || '30');
+  const shopId = window.APP_CONFIG.shopId;
+  const retentionDays = parseInt(localStorage.getItem(`kiosk_retention_${shopId}`) || '30');
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - retentionDays);
 

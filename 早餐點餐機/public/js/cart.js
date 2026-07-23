@@ -1,20 +1,23 @@
 window.CartManager = {
-  STORAGE_KEY: 'kiosk_cart',
+  getStorageKey() {
+    const shopId = window.APP_CONFIG ? window.APP_CONFIG.shopId : 'default';
+    return `kiosk_cart_${shopId}`;
+  },
 
   getItems() {
-    const data = localStorage.getItem(this.STORAGE_KEY);
+    const data = localStorage.getItem(this.getStorageKey());
     return data ? JSON.parse(data) : [];
   },
 
   saveItems(items) {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(items));
+    localStorage.setItem(this.getStorageKey(), JSON.stringify(items));
     window.dispatchEvent(new CustomEvent('cart-updated', { detail: items }));
   },
 
   addItem(item, addons = [], quantity = 1) {
     const items = this.getItems();
     // Create a unique key based on item id + sorted addon ids
-    const addonKey = addons.sort().join('+');
+    const addonKey = addons.map(a => a.id).sort().join('+');
     const key = `${item.id}_${addonKey}`;
 
     // Check if same item+addons already exists
@@ -76,7 +79,7 @@ window.CartManager = {
   },
 
   clear() {
-    localStorage.removeItem(this.STORAGE_KEY);
+    localStorage.removeItem(this.getStorageKey());
     window.dispatchEvent(new CustomEvent('cart-updated', { detail: [] }));
   },
 

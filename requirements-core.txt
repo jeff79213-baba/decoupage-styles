@@ -1,0 +1,10 @@
+python-docx
+openpyxl
+python-pptx
+pypdf
+PyMuPDF
+reportlab
+pillow
+matplotlib
+qrcode[pil]
+markitdown[pdf,docx,pptx,xlsx]
