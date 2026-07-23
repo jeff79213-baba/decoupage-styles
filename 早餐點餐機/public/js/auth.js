@@ -21,8 +21,8 @@ window.AuthManager = {
 
   requireAuth() {
     if (this.isAuthenticated()) return true;
-    const password = prompt('請輸入管理密碼：');
-    if (!password) return false;
+    const password = prompt('請輸入管理密碼：\n（尚未設定密碼，直接按確定即可進入）');
+    if (password === null) return false;  // User clicked Cancel
     return this.login(password);
   }
 };
