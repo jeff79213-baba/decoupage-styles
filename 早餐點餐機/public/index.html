@@ -1,5 +1,92 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-<head><meta charset="UTF-8"><title>早餐點餐機</title></head>
-<body><h1>載入中...</h1></body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>早餐點餐機</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/consumer.css">
+</head>
+<body>
+  <div class="consumer-container">
+    <!-- Header -->
+    <header class="header">
+      <div>
+        <div class="header-title" id="storeName">載入中...</div>
+        <div class="header-subtitle" id="storeSubtitle"></div>
+      </div>
+      <div class="header-actions">
+        <button class="dine-btn" id="btnDineIn" onclick="selectDineType('dine')">內用</button>
+        <button class="dine-btn" id="btnTakeout" onclick="selectDineType('takeout')">外帶</button>
+      </div>
+    </header>
+
+    <!-- Categories -->
+    <nav class="categories" id="categories"></nav>
+
+    <!-- Items -->
+    <main class="items-panel">
+      <div class="items-grid" id="itemsGrid"></div>
+    </main>
+
+    <!-- Cart -->
+    <aside class="cart-panel">
+      <div class="cart-header">購物車</div>
+      <div class="cart-items" id="cartItems"></div>
+      <div class="cart-footer">
+        <div class="cart-total">
+          <span>總計</span>
+          <span id="cartTotal">$0</span>
+        </div>
+        <div class="cart-actions">
+          <button class="btn btn-secondary" onclick="openPrinter()">廚房列印（尚未開啟）</button>
+          <button class="btn btn-primary" id="btnConfirm" onclick="confirmOrder()">確認訂單</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Addon Bar -->
+    <div class="addon-bar" id="addonBar">
+      <span class="addon-label" id="addonLabel">配料</span>
+      <div id="addonButtons"></div>
+      <button class="add-to-cart-btn" onclick="addToCart()">加入購物車</button>
+    </div>
+  </div>
+
+  <!-- Order Confirmation Modal -->
+  <div class="modal-overlay" id="orderModal" style="display:none">
+    <div class="modal">
+      <h2>訂單確認</h2>
+      <div id="modalDineType"></div>
+      <div class="modal-items" id="modalItems"></div>
+      <div class="modal-total" id="modalTotal"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">返回修改</button>
+        <button class="btn btn-primary" onclick="submitOrder()">確認送出</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart Edit Modal -->
+  <div class="modal-overlay" id="cartEditModal" style="display:none">
+    <div class="modal">
+      <h2 id="cartEditTitle">編輯品項</h2>
+      <div id="cartEditAddons" class="cart-edit-addons"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeCartEdit()">取消</button>
+        <button class="btn btn-primary" onclick="saveCartEdit()">儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/firebase-core.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/stats-tracker.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/consumer.js"></script>
+</body>
 </html>

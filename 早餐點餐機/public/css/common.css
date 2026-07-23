@@ -1,0 +1,79 @@
+/* Reset + Base */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+
+/* Theme Variables - Dark (default) */
+:root {
+  --bg: #1A1A1A;
+  --surface: #2A2A2A;
+  --surface-hover: #333333;
+  --primary: #F27D42;
+  --primary-hover: #E06B30;
+  --text: #FFFFFF;
+  --text-muted: #AAAAAA;
+  --border: #444444;
+  --card-bg: #2A2A2A;
+  --card-selected: #F27D42;
+  --font-main: 'Inter', sans-serif;
+  --radius: 16px;
+  --radius-sm: 12px;
+  --radius-pill: 999px;
+}
+
+/* Sage Theme */
+[data-theme="sage"] {
+  --bg: #0E3E37;
+  --surface: #1A5C52;
+  --surface-hover: #247065;
+  --primary: #B58D3D;
+  --primary-hover: #9A7830;
+  --text: #FFFFFF;
+  --text-muted: #B0C4B8;
+  --border: #2A7A6A;
+  --card-bg: #1A5C52;
+  --card-selected: #B58D3D;
+  --font-main: 'Montserrat', sans-serif;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+/* Utility Classes */
+.container { display: flex; height: 100vh; }
+.panel { padding: 20px; }
+.btn {
+  padding: 12px 24px;
+  border-radius: var(--radius-pill);
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.btn-primary {
+  background-color: var(--primary);
+  color: var(--text);
+}
+.btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+.btn-secondary {
+  background-color: var(--surface);
+  color: var(--text);
+}
+.btn-secondary:hover {
+  background-color: var(--surface-hover);
+}
+.card {
+  background-color: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 16px;
+  transition: all 0.2s;
+}
+.card-selected {
+  background-color: var(--card-selected);
+  color: var(--text);
+}
