@@ -7,7 +7,13 @@ async function initMenuAdmin() {
   }
 
   window.FirebaseCore.init();
-  menuData = await window.FirebaseCore.getMenu();
+  try {
+    menuData = await window.FirebaseCore.getMenu();
+  } catch (e) {
+    console.error('Failed to load menu:', e);
+    alert('無法載入菜單資料');
+    return;
+  }
 
   // Cache for theme manager
   window.ThemeManager.setCachedMenu(menuData);
@@ -344,9 +350,14 @@ function handleExcelUpload(event) {
 
 // ===== Save =====
 async function saveMenu() {
-  await window.FirebaseCore.saveMenu(menuData);
-  renderAddonLibrary();
-  renderCategories();
+  try {
+    await window.FirebaseCore.saveMenu(menuData);
+    renderAddonLibrary();
+    renderCategories();
+  } catch (e) {
+    console.error('Save failed:', e);
+    alert('儲存失敗：' + e.message);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', initMenuAdmin);

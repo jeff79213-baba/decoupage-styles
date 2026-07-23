@@ -7,14 +7,20 @@ async function initAdmin() {
   }
 
   window.FirebaseCore.init();
-  menuData = await window.FirebaseCore.getMenu();
+  try {
+    menuData = await window.FirebaseCore.getMenu();
+  } catch (e) {
+    console.error('Failed to load menu:', e);
+    alert('無法載入菜單資料，請檢查網路連線');
+    return;
+  }
 
   // Cache for theme manager
   window.ThemeManager.setCachedMenu(menuData);
   await window.ThemeManager.load();
 
-  document.getElementById('storeName').value = menuData.storeName;
-  document.getElementById('storeSubtitle').value = menuData.subtitle;
+  document.getElementById('storeName').value = menuData.storeName || '';
+  document.getElementById('storeSubtitle').value = menuData.subtitle || '';
 
   // Highlight current theme
   document.getElementById('themeDark').classList.toggle('active', menuData.theme === 'dark');
@@ -30,17 +36,29 @@ async function initAdmin() {
 }
 
 async function saveStoreInfo() {
+  if (!menuData) return;
   menuData.storeName = document.getElementById('storeName').value;
   menuData.subtitle = document.getElementById('storeSubtitle').value;
-  await window.FirebaseCore.saveMenu(menuData);
-  alert('已儲存');
+  try {
+    await window.FirebaseCore.saveMenu(menuData);
+    alert('已儲存');
+  } catch (e) {
+    console.error('Save failed:', e);
+    alert('儲存失敗：' + e.message);
+  }
 }
 
 async function setTheme(theme) {
+  if (!menuData) return;
   menuData.theme = theme;
-  await window.FirebaseCore.saveMenu(menuData);
-  document.getElementById('themeDark').classList.toggle('active', theme === 'dark');
-  document.getElementById('themeSage').classList.toggle('active', theme === 'sage');
+  try {
+    await window.FirebaseCore.saveMenu(menuData);
+    document.getElementById('themeDark').classList.toggle('active', theme === 'dark');
+    document.getElementById('themeSage').classList.toggle('active', theme === 'sage');
+  } catch (e) {
+    console.error('Theme save failed:', e);
+    alert('主題儲存失敗：' + e.message);
+  }
 }
 
 async function changePassword() {
@@ -62,7 +80,6 @@ async function changePassword() {
     return;
   }
 
-  // Store password hash (simple hash, not production-grade)
   localStorage.setItem('admin_password', btoa(newPw));
   alert('密碼已變更');
   document.getElementById('newPassword').value = '';
