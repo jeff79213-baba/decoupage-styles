@@ -1,5 +1,13 @@
 let menuData = null;
 
+function guard() {
+  if (!menuData) {
+    alert('菜單資料尚未載入，請重新整理頁面');
+    return false;
+  }
+  return true;
+}
+
 async function initMenuAdmin() {
   if (!window.AuthManager.requireAuth()) {
     document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;"><h1>密碼錯誤</h1></div>';
@@ -11,26 +19,30 @@ async function initMenuAdmin() {
     menuData = await window.FirebaseCore.getMenu();
   } catch (e) {
     console.error('Failed to load menu:', e);
-    alert('無法載入菜單資料');
+    document.body.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;"><h1>無法載入菜單</h1><p style="color:var(--text-muted)">' + e.message + '</p><p>請確認網址含有 ?shop=店家ID</p><a href="admin.html" class="btn btn-primary">返回後台</a></div>';
     return;
   }
 
-  // Cache for theme manager
+  if (!menuData.addonLibrary) menuData.addonLibrary = [];
+  if (!menuData.categories) menuData.categories = [];
+
   window.ThemeManager.setCachedMenu(menuData);
   await window.ThemeManager.load();
 
   renderAddonLibrary();
   renderCategories();
 
-  // Update back link
   const shopId = window.APP_CONFIG.shopId;
   document.getElementById('linkBack').href = `admin.html?shop=${shopId}`;
 }
 
 // ===== Addon Library =====
 function renderAddonLibrary() {
+  if (!guard()) return;
   const container = document.getElementById('addonList');
-  container.innerHTML = menuData.addonLibrary.map(addon => `
+  container.innerHTML = menuData.addonLibrary.length === 0
+    ? '<p style="color:var(--text-muted);padding:8px">尚未新增配料</p>'
+    : menuData.addonLibrary.map(addon => `
     <div class="item-row">
       <div class="item-info">
         <span class="item-name">${addon.name}</span>
@@ -45,6 +57,7 @@ function renderAddonLibrary() {
 }
 
 function showAddAddon() {
+  if (!guard()) return;
   const name = prompt('配料名稱：');
   if (!name) return;
   const price = parseInt(prompt('價格（0 = 免費）：')) || 0;
@@ -55,6 +68,7 @@ function showAddAddon() {
 }
 
 function editAddon(addonId) {
+  if (!guard()) return;
   const addon = menuData.addonLibrary.find(a => a.id === addonId);
   if (!addon) return;
 
@@ -68,9 +82,9 @@ function editAddon(addonId) {
 }
 
 function deleteAddon(addonId) {
+  if (!guard()) return;
   if (!confirm('確定刪除此配料？')) return;
   menuData.addonLibrary = menuData.addonLibrary.filter(a => a.id !== addonId);
-  // Remove from all categories
   menuData.categories.forEach(cat => {
     cat.addonIds = cat.addonIds.filter(id => id !== addonId);
   });
@@ -79,7 +93,12 @@ function deleteAddon(addonId) {
 
 // ===== Categories =====
 function renderCategories() {
+  if (!guard()) return;
   const container = document.getElementById('categoryList');
+  if (menuData.categories.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-muted);padding:8px">尚未新增分類</p>';
+    return;
+  }
   container.innerHTML = menuData.categories.map(cat => `
     <div class="category-item">
       <div class="category-header">
@@ -92,24 +111,24 @@ function renderCategories() {
         </div>
       </div>
       <div class="category-items">
-        ${cat.items.map(item => `
+        ${(cat.items || []).map(item => `
           <div class="item-row">
             <div class="item-info">
               <span class="item-name">${item.name}</span>
               <span class="item-price">$${item.price}</span>
-              ${!item.enabled ? '<span style="color:#dc3545">（已下架）</span>' : ''}
+              ${item.enabled === false ? '<span style="color:#dc3545">（已下架）</span>' : ''}
             </div>
             <div class="item-actions">
               <button class="btn btn-sm btn-secondary" onclick="editItem('${cat.id}', '${item.id}')">編輯</button>
               <button class="btn btn-sm btn-danger" onclick="deleteItem('${cat.id}', '${item.id}')">刪除</button>
-              <button class="btn btn-sm btn-secondary" onclick="toggleItemEnabled('${cat.id}', '${item.id}')">${item.enabled ? '下架' : '上架'}</button>
+              <button class="btn btn-sm btn-secondary" onclick="toggleItemEnabled('${cat.id}', '${item.id}')">${item.enabled === false ? '上架' : '下架'}</button>
             </div>
           </div>
         `).join('')}
       </div>
       <div class="category-addons" style="margin-top:12px">
         <strong>配料：</strong>
-        ${cat.addonIds.map(aid => {
+        ${(cat.addonIds || []).map(aid => {
           const addon = menuData.addonLibrary.find(a => a.id === aid);
           return addon ? `<span class="addon-chip">${addon.name}<button onclick="removeAddonFromCategory('${cat.id}','${aid}')">×</button></span>` : '';
         }).join('')}
@@ -121,6 +140,7 @@ function renderCategories() {
 }
 
 function showAddCategory() {
+  if (!guard()) return;
   const name = prompt('分類名稱：');
   if (!name) return;
   const id = name.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now();
@@ -136,6 +156,7 @@ function showAddCategory() {
 }
 
 function editCategory(catId) {
+  if (!guard()) return;
   const cat = menuData.categories.find(c => c.id === catId);
   if (!cat) return;
   const name = prompt('分類名稱：', cat.name);
@@ -146,23 +167,25 @@ function editCategory(catId) {
 }
 
 function deleteCategory(catId) {
+  if (!guard()) return;
   if (!confirm('確定刪除此分類？')) return;
   menuData.categories = menuData.categories.filter(c => c.id !== catId);
   saveMenu();
 }
 
 function moveCategory(catId, direction) {
+  if (!guard()) return;
   const idx = menuData.categories.findIndex(c => c.id === catId);
   const newIdx = idx + direction;
   if (newIdx < 0 || newIdx >= menuData.categories.length) return;
   [menuData.categories[idx], menuData.categories[newIdx]] = [menuData.categories[newIdx], menuData.categories[idx]];
-  // Update sort orders
   menuData.categories.forEach((c, i) => c.sortOrder = i + 1);
   saveMenu();
 }
 
 // ===== Items =====
 function showAddItem(catId) {
+  if (!guard()) return;
   const name = prompt('品項名稱：');
   if (!name) return;
   const price = parseInt(prompt('價格：')) || 0;
@@ -170,14 +193,16 @@ function showAddItem(catId) {
 
   const cat = menuData.categories.find(c => c.id === catId);
   if (cat) {
+    if (!cat.items) cat.items = [];
     cat.items.push({ id, name, price, enabled: true });
     saveMenu();
   }
 }
 
 function editItem(catId, itemId) {
+  if (!guard()) return;
   const cat = menuData.categories.find(c => c.id === catId);
-  const item = cat?.items.find(i => i.id === itemId);
+  const item = cat?.items?.find(i => i.id === itemId);
   if (!item) return;
 
   const name = prompt('品項名稱：', item.name);
@@ -190,17 +215,19 @@ function editItem(catId, itemId) {
 }
 
 function deleteItem(catId, itemId) {
+  if (!guard()) return;
   if (!confirm('確定刪除此品項？')) return;
   const cat = menuData.categories.find(c => c.id === catId);
   if (cat) {
-    cat.items = cat.items.filter(i => i.id !== itemId);
+    cat.items = (cat.items || []).filter(i => i.id !== itemId);
     saveMenu();
   }
 }
 
 function toggleItemEnabled(catId, itemId) {
+  if (!guard()) return;
   const cat = menuData.categories.find(c => c.id === catId);
-  const item = cat?.items.find(i => i.id === itemId);
+  const item = cat?.items?.find(i => i.id === itemId);
   if (item) {
     item.enabled = !item.enabled;
     saveMenu();
@@ -209,11 +236,11 @@ function toggleItemEnabled(catId, itemId) {
 
 // ===== Category Addons =====
 function addAddonToCategory(catId) {
+  if (!guard()) return;
   const cat = menuData.categories.find(c => c.id === catId);
   if (!cat) return;
 
-  // Show available addons
-  const available = menuData.addonLibrary.filter(a => !cat.addonIds.includes(a.id));
+  const available = menuData.addonLibrary.filter(a => !(cat.addonIds || []).includes(a.id));
   if (available.length === 0) {
     alert('所有配料已加入此分類');
     return;
@@ -221,29 +248,34 @@ function addAddonToCategory(catId) {
 
   const list = available.map((a, i) => `${i + 1}. ${a.name}`).join('\n');
   const choice = prompt('選擇配料（輸入編號）：\n' + list);
+  if (!choice) return;
   const idx = parseInt(choice) - 1;
 
   if (idx >= 0 && idx < available.length) {
+    if (!cat.addonIds) cat.addonIds = [];
     cat.addonIds.push(available[idx].id);
     saveMenu();
   }
 }
 
 function removeAddonFromCategory(catId, addonId) {
+  if (!guard()) return;
   const cat = menuData.categories.find(c => c.id === catId);
   if (cat) {
-    cat.addonIds = cat.addonIds.filter(id => id !== addonId);
+    cat.addonIds = (cat.addonIds || []).filter(id => id !== addonId);
     saveMenu();
   }
 }
 
 // ===== Import/Export =====
 function exportJSON() {
+  if (!guard()) return;
   const json = JSON.stringify(menuData, null, 2);
   document.getElementById('jsonInput').value = json;
 }
 
 function importJSON() {
+  if (!guard()) return;
   const json = document.getElementById('jsonInput').value;
   try {
     const data = JSON.parse(json);
@@ -260,7 +292,6 @@ function importJSON() {
 }
 
 function downloadTemplate() {
-  // Create Excel template
   const ws_data = [
     ['分類名稱', '分類排序', '品項名稱', '品項價格', '配料名稱', '配料價格'],
     ['漢堡', 1, '豬肉漢堡', 65, '加蛋', 10],
@@ -287,7 +318,6 @@ function handleExcelUpload(event) {
     const sheet = workbook.Sheets[sheetName];
     const json = XLSX.utils.sheet_to_json(sheet);
 
-    // Parse Excel to menu structure
     const categories = {};
     const addonLibrary = [];
 
@@ -301,7 +331,6 @@ function handleExcelUpload(event) {
 
       if (!catName || !itemName) return;
 
-      // Create category if not exists
       if (!categories[catName]) {
         categories[catName] = {
           id: catName.toLowerCase().replace(/\s+/g, '_'),
@@ -312,7 +341,6 @@ function handleExcelUpload(event) {
         };
       }
 
-      // Create item if not exists
       const cat = categories[catName];
       if (!cat.items.find(i => i.name === itemName)) {
         cat.items.push({
@@ -323,7 +351,6 @@ function handleExcelUpload(event) {
         });
       }
 
-      // Add addon
       if (addonName) {
         let addon = addonLibrary.find(a => a.name === addonName);
         if (!addon) {
@@ -350,6 +377,7 @@ function handleExcelUpload(event) {
 
 // ===== Save =====
 async function saveMenu() {
+  if (!guard()) return;
   try {
     await window.FirebaseCore.saveMenu(menuData);
     renderAddonLibrary();

@@ -40,7 +40,7 @@ window.FirebaseCore = {
 
   async saveMenu(menuData) {
     await this.db.doc(`${this.shopPath()}/menu`).set(menuData);
-    await this.updateStats('writes', 1);
+    this.updateStats('writes', 1).catch(e => console.warn('Stats update failed:', e));
   },
 
   // Order operations
@@ -49,7 +49,7 @@ window.FirebaseCore = {
       ...orderData,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    await this.updateStats('writes', 1);
+    this.updateStats('writes', 1).catch(e => console.warn('Stats update failed:', e));
     return orderRef.id;
   },
 
@@ -63,7 +63,7 @@ window.FirebaseCore = {
 
   async deleteOrder(orderId) {
     await this.db.doc(`${this.shopPath()}/orders/${orderId}`).delete();
-    await this.updateStats('writes', 1);
+    this.updateStats('writes', 1).catch(e => console.warn('Stats update failed:', e));
   },
 
   async deleteOrders(orderIds) {
@@ -72,7 +72,7 @@ window.FirebaseCore = {
       batch.delete(this.db.doc(`${this.shopPath()}/orders/${id}`));
     });
     await batch.commit();
-    await this.updateStats('writes', orderIds.length);
+    this.updateStats('writes', orderIds.length).catch(e => console.warn('Stats update failed:', e));
   },
 
   // Stats operations
