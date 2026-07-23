@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>早餐點餐機 — 純文字版</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  [data-theme="dark"] {
+    --bg: #1A1A1A; --surface: #262626; --surface-hover: #333; --border: #333;
+    --text: #FFFFFF; --text-sec: #A0A0A0; --primary: #F27D42; --primary-hover: #E06C30;
+    --primary-glow: rgba(242,125,66,0.25); --danger: #FF4444;
+    --header-bg: #1A1A1A; --cart-bg: #1E1E1E;
+    --addon-bg: #333; --addon-border: #444; --item-active-bg: #2A2018;
+    --font: 'Inter', sans-serif;
+  }
+  [data-theme="sage"] {
+    --bg: #F8F9F8; --surface: #DDE6E0; --surface-hover: #C8D4CC; --border: #C8D4CC;
+    --text: #1A2E28; --text-sec: #5A7A6A; --primary: #B58D3D; --primary-hover: #A07C33;
+    --primary-glow: rgba(181,141,61,0.2); --danger: #C0392B;
+    --header-bg: #0E3E37; --cart-bg: #F0F4F1;
+    --addon-bg: #DDE6E0; --addon-border: #C8D4CC; --item-active-bg: #E8EDE9;
+    --font: 'Montserrat', sans-serif;
+  }
+
+  body { font-family: var(--font); background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; transition: background 0.4s, color 0.4s; }
+
+  .theme-switcher { position: fixed; top: 12px; right: 12px; z-index: 100; display: flex; gap: 6px; background: rgba(0,0,0,0.3); backdrop-filter: blur(10px); padding: 4px; border-radius: 12px; }
+  .theme-btn { padding: 6px 14px; border: none; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+  .theme-btn.dark-btn { background: #333; color: #F27D42; }
+  .theme-btn.dark-btn.active { background: #F27D42; color: #fff; }
+  .theme-btn.sage-btn { background: #DDE6E0; color: #0E3E37; }
+  .theme-btn.sage-btn.active { background: #0E3E37; color: #fff; }
+
+  .header { background: var(--header-bg); border-bottom: 1px solid var(--border); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; transition: background 0.4s; color: #fff; }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .store-name { font-size: 20px; font-weight: 900; letter-spacing: 1px; color: #fff; }
+  .store-name span { color: var(--primary); }
+  .store-badge { background: var(--primary); color: #fff; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .header-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+  .header-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+  .main { display: flex; flex: 1; overflow: hidden; }
+
+  /* CATEGORIES - 簡線條圖示 */
+  .categories { width: 72px; background: var(--bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 12px 0; gap: 4px; flex-shrink: 0; transition: background 0.4s; }
+  .cat-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px; border: none; background: transparent; color: var(--text-sec); cursor: pointer; transition: all 0.2s; border-radius: 12px; margin: 0 8px; font-family: inherit; }
+  .cat-icon { width: 28px; height: 28px; border-radius: 8px; background: var(--surface); display: flex; align-items: center; justify-content: center; transition: background 0.3s; }
+  .cat-icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .cat-label { font-size: 10px; font-weight: 700; }
+  .cat-btn:hover { background: var(--surface); }
+  .cat-btn.active { background: var(--primary); color: #fff; box-shadow: 0 4px 16px var(--primary-glow); }
+  .cat-btn.active .cat-icon { background: rgba(255,255,255,0.2); }
+
+  /* ITEMS */
+  .items-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .items-header { padding: 16px 20px 12px; display: flex; align-items: baseline; gap: 10px; flex-shrink: 0; }
+  .items-header h2 { font-size: 18px; font-weight: 800; }
+  .items-header span { font-size: 12px; color: var(--text-sec); }
+  .items-grid { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; padding: 0 20px 12px; overflow-y: auto; align-content: start; }
+  .items-grid::-webkit-scrollbar { width: 4px; }
+  .items-grid::-webkit-scrollbar-track { background: transparent; }
+  .items-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .item-card { background: var(--surface); border: 2px solid transparent; border-radius: 20px; padding: 18px 14px; cursor: pointer; transition: all 0.25s; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; position: relative; }
+  .item-card:hover { transform: translateY(-2px); }
+  .item-card.selected { border-color: var(--primary); background: var(--item-active-bg); }
+  .item-card.active { border-color: var(--primary); background: var(--item-active-bg); }
+  .item-card .item-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .item-card .item-price { font-size: 14px; font-weight: 800; color: var(--primary); }
+  .item-card .item-addons { font-size: 10px; color: var(--primary); background: var(--primary-glow); padding: 2px 8px; border-radius: 8px; margin-top: 2px; }
+  .item-card .qty-badge { position: absolute; top: 8px; right: 8px; background: var(--primary); color: #fff; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
+  .item-card .cancel-btn { position: absolute; top: 8px; left: 8px; background: var(--danger); color: #fff; width: 20px; height: 20px; border-radius: 50%; border: none; font-size: 12px; font-weight: 700; cursor: pointer; display: none; align-items: center; justify-content: center; }
+  .item-card.active .cancel-btn { display: flex; }
+
+  /* ADDONS */
+  .addons-bar { background: var(--surface); border-top: 1px solid var(--border); padding: 12px 20px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; transition: background 0.4s; }
+  .addons-label { font-size: 11px; color: var(--text-sec); font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+  .addons-list { display: flex; gap: 8px; flex: 1; overflow-x: auto; }
+  .addons-list::-webkit-scrollbar { height: 0; }
+  .addon-btn { background: var(--addon-bg); border: 1px solid var(--addon-border); color: var(--text-sec); padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0; font-family: inherit; }
+  .addon-btn:hover { color: var(--text); }
+  .addon-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .addon-btn .addon-price { opacity: 0.7; font-size: 10px; }
+  .add-to-cart-btn { background: var(--primary); border: none; color: #fff; padding: 10px 24px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; transition: all 0.2s; flex-shrink: 0; font-family: inherit; }
+  .add-to-cart-btn:hover { background: var(--primary-hover); transform: scale(1.03); }
+  .add-to-cart-btn:active { transform: scale(0.97); }
+
+  /* CART */
+  .cart-panel { width: 320px; background: var(--cart-bg); border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; transition: background 0.4s; }
+  .cart-header { padding: 16px 18px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .cart-header h3 { font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+  .cart-count { background: var(--primary); color: #fff; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
+  .cart-clear { background: none; border: none; color: var(--text-sec); font-size: 11px; cursor: pointer; font-weight: 600; font-family: inherit; }
+  .cart-clear:hover { color: var(--danger); }
+  .cart-items { flex: 1; overflow-y: auto; padding: 12px 18px; }
+  .cart-items::-webkit-scrollbar { width: 4px; }
+  .cart-items::-webkit-scrollbar-track { background: transparent; }
+  .cart-items::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .cart-item { background: var(--surface); border-radius: 16px; padding: 12px 14px; margin-bottom: 8px; transition: all 0.3s; }
+  .cart-item-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .cart-item-name { font-size: 13px; font-weight: 700; color: var(--text); flex: 1; min-width: 0; }
+  .cart-item-qty { display: flex; align-items: center; gap: 8px; }
+  .qty-btn { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--text-sec); font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-family: inherit; }
+  .qty-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .qty-btn.minus { border-color: var(--danger); color: var(--danger); }
+  .qty-num { font-size: 14px; font-weight: 800; min-width: 20px; text-align: center; }
+  .cart-item-addons { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .cart-addon-tag { background: var(--primary-glow); color: var(--primary); padding: 2px 8px; border-radius: 8px; font-size: 10px; font-weight: 600; }
+  .cart-item-price { font-size: 13px; font-weight: 800; color: var(--primary); margin-top: 6px; text-align: right; }
+  .cart-footer { border-top: 1px solid var(--border); padding: 14px 18px 18px; flex-shrink: 0; }
+  .cart-total { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .cart-total-label { font-size: 13px; color: var(--text-sec); font-weight: 600; }
+  .cart-total-amount { font-size: 24px; font-weight: 900; color: var(--primary); }
+  .cart-actions { display: flex; gap: 8px; }
+  .cart-action-btn { flex: 1; padding: 12px; border-radius: 14px; border: none; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+  .cart-action-btn.primary { background: var(--primary); color: #fff; }
+  .cart-action-btn.primary:hover { background: var(--primary-hover); }
+  .cart-action-btn.secondary { background: var(--surface); color: var(--text-sec); border: 1px solid var(--border); }
+  .cart-action-btn.secondary:hover { background: var(--surface-hover); color: var(--text); }
+</style>
+</head>
+<body data-theme="sage">
+
+<div class="theme-switcher">
+  <button class="theme-btn dark-btn" onclick="switchTheme('dark')">Dark</button>
+  <button class="theme-btn sage-btn active" onclick="switchTheme('sage')">Sage</button>
+</div>
+
+<div class="header">
+  <div class="header-left">
+    <div class="store-name"><span>//</span> 好吃早餐店</div>
+    <div class="store-badge">KIOSK</div>
+  </div>
+  <div class="header-right">
+    <button class="header-btn">新訂單</button>
+    <button class="header-btn">設定</button>
+  </div>
+</div>
+
+<div class="main">
+  <!-- CATEGORIES -->
+  <div class="categories">
+    <button class="cat-btn active" onclick="selectCat(this)">
+      <span class="cat-icon"><svg viewBox="0 0 24 24"><path d="M3 11h18M5 11V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v5M4 11v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6M12 4v16"/></svg></span>
+      <span class="cat-label">漢堡</span>
+    </button>
+    <button class="cat-btn" onclick="selectCat(this)">
+      <span class="cat-icon"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg></span>
+      <span class="cat-label">蛋餅</span>
+    </button>
+    <button class="cat-btn" onclick="selectCat(this)">
+      <span class="cat-icon"><svg viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7l9-4 9 4"/></svg></span>
+      <span class="cat-label">吐司</span>
+    </button>
+    <button class="cat-btn" onclick="selectCat(this)">
+      <span class="cat-icon"><svg viewBox="0 0 24 24"><path d="M8 2h8l2 18H6L8 2z"/><path d="M6 20h12"/></svg></span>
+      <span class="cat-label">飲料</span>
+    </button>
+  </div>
+
+  <!-- ITEMS (純文字，無圖示) -->
+  <div class="items-panel">
+    <div class="items-header"><h2>漢堡</h2><span>4 項</span></div>
+    <div class="items-grid">
+      <div class="item-card active" onclick="selectItem(this)">
+        <button class="cancel-btn" onclick="event.stopPropagation(); cancelItem(this.parentElement)">X</button>
+        <span class="qty-badge">X1</span>
+        <span class="item-name">豬肉漢堡</span>
+        <span class="item-price">$65</span>
+        <span class="item-addons">+ 加蛋 +$10</span>
+      </div>
+      <div class="item-card selected" onclick="selectItem(this)">
+        <button class="cancel-btn" onclick="event.stopPropagation(); cancelItem(this.parentElement)">X</button>
+        <span class="qty-badge">X1</span>
+        <span class="item-name">牛肉漢堡</span>
+        <span class="item-price">$75</span>
+      </div>
+      <div class="item-card" onclick="selectItem(this)">
+        <button class="cancel-btn" onclick="event.stopPropagation(); cancelItem(this.parentElement)">X</button>
+        <span class="item-name">起司漢堡</span>
+        <span class="item-price">$55</span>
+      </div>
+      <div class="item-card" onclick="selectItem(this)">
+        <button class="cancel-btn" onclick="event.stopPropagation(); cancelItem(this.parentElement)">X</button>
+        <span class="item-name">火腿漢堡</span>
+        <span class="item-price">$50</span>
+      </div>
+    </div>
+
+    <div class="addons-bar">
+      <span class="addons-label">配料（豬肉漢堡）</span>
+      <div class="addons-list">
+        <button class="addon-btn active" onclick="toggleAddon(this)">加蛋 <span class="addon-price">+$10</span></button>
+        <button class="addon-btn" onclick="toggleAddon(this)">加起司 <span class="addon-price">+$15</span></button>
+        <button class="addon-btn" onclick="toggleAddon(this)">加辣</button>
+      </div>
+      <button class="add-to-cart-btn" onclick="addToCart()">加入購物車</button>
+    </div>
+  </div>
+
+  <!-- CART -->
+  <div class="cart-panel">
+    <div class="cart-header">
+      <h3>購物車 <span class="cart-count">3</span></h3>
+      <button class="cart-clear">清除全部</button>
+    </div>
+    <div class="cart-items">
+      <div class="cart-item">
+        <div class="cart-item-top">
+          <span class="cart-item-name">豬肉漢堡</span>
+          <div class="cart-item-qty"><button class="qty-btn minus">-</button><span class="qty-num">2</span><button class="qty-btn">+</button></div>
+        </div>
+        <div class="cart-item-addons"><span class="cart-addon-tag">+ 加蛋 $10</span></div>
+        <div class="cart-item-price">$150</div>
+      </div>
+      <div class="cart-item">
+        <div class="cart-item-top">
+          <span class="cart-item-name">牛肉漢堡</span>
+          <div class="cart-item-qty"><button class="qty-btn minus">-</button><span class="qty-num">1</span><button class="qty-btn">+</button></div>
+        </div>
+        <div class="cart-item-addons"><span class="cart-addon-tag">+ 加蛋 $10</span><span class="cart-addon-tag">+ 加起司 $15</span></div>
+        <div class="cart-item-price">$100</div>
+      </div>
+      <div class="cart-item">
+        <div class="cart-item-top">
+          <span class="cart-item-name">起司漢堡</span>
+          <div class="cart-item-qty"><button class="qty-btn minus">-</button><span class="qty-num">1</span><button class="qty-btn">+</button></div>
+        </div>
+        <div class="cart-item-price">$55</div>
+      </div>
+    </div>
+    <div class="cart-footer">
+      <div class="cart-total">
+        <span class="cart-total-label">總計（4 項）</span>
+        <span class="cart-total-amount">$305</span>
+      </div>
+      <div class="cart-actions">
+        <button class="cart-action-btn secondary">廚房列印</button>
+        <button class="cart-action-btn primary">確認訂單</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTheme(t){document.body.setAttribute('data-theme',t);document.querySelectorAll('.theme-btn').forEach(b=>b.classList.remove('active'));document.querySelector('.theme-btn.'+t+'-btn').classList.add('active')}
+function selectCat(el){document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active')}
+function selectItem(el){document.querySelectorAll('.item-card').forEach(c=>{if(c!==el&&c.classList.contains('active')){c.classList.remove('active');c.classList.add('selected')}});el.classList.remove('selected');el.classList.add('active')}
+function cancelItem(el){el.classList.remove('active','selected');el.querySelector('.qty-badge')?.remove();el.querySelector('.item-addons')?.remove()}
+function toggleAddon(el){el.classList.toggle('active')}
+function addToCart(){const b=document.querySelector('.add-to-cart-btn');b.textContent='已加入！';b.style.background='#22C55E';setTimeout(()=>{b.textContent='加入購物車';b.style.background=''},1200)}
+</script>
+</body>
+</html>

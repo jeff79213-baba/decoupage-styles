@@ -1,11 +1,11 @@
-// Firebase config - replace with actual project values
+// Firebase config
 const FIREBASE_CONFIG = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "breakfast-kiosk-shared.firebaseapp.com",
-  projectId: "breakfast-kiosk-shared",
-  storageBucket: "breakfast-kiosk-shared.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBOWbd0Pcxd-yZsNXz-xNftG-2XxDfwLj8",
+  authDomain: "breakfast-sk.firebaseapp.com",
+  projectId: "breakfast-sk",
+  storageBucket: "breakfast-sk.firebasestorage.app",
+  messagingSenderId: "733355469768",
+  appId: "1:733355469768:web:a2a3243c93e0bbdc6a2efd"
 };
 
 // Get shopId from URL parameter ?shop=xxx
