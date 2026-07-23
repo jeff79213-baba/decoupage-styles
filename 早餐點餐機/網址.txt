@@ -1,0 +1,14 @@
+早餐點餐機 - 網址
+==================
+
+Firebase Hosting:
+https://breakfast-sk.web.app
+
+管理後台:
+https://breakfast-sk.web.app/admin.html?shop=shop1
+
+消費者點餐頁:
+https://breakfast-sk.web.app/?shop=shop1
+
+Firebase Console:
+https://console.firebase.google.com/project/breakfast-sk/overview

@@ -1,4 +1,5 @@
 /* Consumer Page Layout */
+body { overflow: hidden; height: 100vh; }
 .consumer-container {
   display: grid;
   grid-template-columns: 160px 1fr 320px;
