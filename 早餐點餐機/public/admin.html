@@ -1,5 +1,87 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-<head><meta charset="UTF-8"><title>後台管理</title></head>
-<body><h1>後台管理</h1></body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>後台管理</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <div class="admin-container">
+    <div class="admin-header">
+      <h1>後台管理</h1>
+      <button class="btn btn-secondary" onclick="goToKiosk()">前往點餐頁</button>
+    </div>
+
+    <!-- Store Info -->
+    <div class="admin-section">
+      <h2>店家資訊</h2>
+      <div class="form-group">
+        <label>店名</label>
+        <input type="text" id="storeName" placeholder="好吃早餐店">
+      </div>
+      <div class="form-group">
+        <label>副標題</label>
+        <input type="text" id="storeSubtitle" placeholder="新鮮現做・幸福滋味">
+      </div>
+      <button class="btn btn-primary" onclick="saveStoreInfo()">儲存</button>
+    </div>
+
+    <!-- Theme Switch -->
+    <div class="admin-section">
+      <h2>主題切換</h2>
+      <div class="theme-buttons">
+        <button class="theme-btn" id="themeDark" onclick="setTheme('dark')">
+          Dark
+        </button>
+        <button class="theme-btn" id="themeSage" onclick="setTheme('sage')">
+          Sage
+        </button>
+      </div>
+    </div>
+
+    <!-- Password -->
+    <div class="admin-section">
+      <h2>密碼設定</h2>
+      <div class="form-group">
+        <label>新密碼</label>
+        <input type="password" id="newPassword" placeholder="********">
+      </div>
+      <div class="form-group">
+        <label>確認密碼</label>
+        <input type="password" id="confirmPassword" placeholder="********">
+      </div>
+      <button class="btn btn-primary" onclick="changePassword()">變更密碼</button>
+    </div>
+
+    <!-- QR Code -->
+    <div class="admin-section">
+      <h2>QR Code</h2>
+      <div id="qrCode" style="text-align:center; margin:16px 0;"></div>
+      <button class="btn btn-primary" onclick="downloadQR()">下載 QR Code</button>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav-links">
+      <a href="admin-menu.html" class="nav-link" id="linkMenu">
+        <h3>菜單管理</h3>
+        <p>管理品項、配料、分類</p>
+      </a>
+      <a href="admin-orders.html" class="nav-link" id="linkOrders">
+        <h3>訂單紀錄</h3>
+        <p>查看歷史訂單、統計</p>
+      </a>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/firebase-core.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/admin-home.js"></script>
+</body>
 </html>

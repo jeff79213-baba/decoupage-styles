@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>菜單管理</title>
+  <link rel="stylesheet" href="css/common.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <div class="admin-container">
+    <div class="admin-header">
+      <h1>菜單管理</h1>
+      <a href="admin.html" class="btn btn-secondary" id="linkBack">返回後台</a>
+    </div>
+
+    <!-- Addon Library -->
+    <div class="admin-section">
+      <h2>配料庫（全局）</h2>
+      <div id="addonList"></div>
+      <button class="btn btn-primary" onclick="showAddAddon()">+ 新增配料</button>
+    </div>
+
+    <!-- Categories -->
+    <div class="admin-section">
+      <h2>分類管理</h2>
+      <div id="categoryList"></div>
+      <button class="btn btn-primary" onclick="showAddCategory()">+ 新增分類</button>
+    </div>
+
+    <!-- Import/Export -->
+    <div class="admin-section">
+      <h2>匯入/匯出</h2>
+      <button class="btn btn-secondary" onclick="downloadTemplate()">下載空白 Excel 範本</button>
+      <button class="btn btn-secondary" onclick="document.getElementById('excelUpload').click()">上傳 Excel 檔案</button>
+      <input type="file" id="excelUpload" accept=".xlsx,.xls" style="display:none" onchange="handleExcelUpload(event)">
+      <hr style="margin: 16px 0; border-color: var(--border);">
+      <p style="margin-bottom: 8px;">貼上 JSON：</p>
+      <textarea id="jsonInput" style="width:100%; height:150px; background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px; font-family:monospace;"></textarea>
+      <button class="btn btn-primary" onclick="importJSON()">匯入</button>
+      <button class="btn btn-secondary" onclick="exportJSON()">匯出 JSON</button>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/firebase-core.js"></script>
+  <script src="js/theme.js"></script>
+  <script src="js/admin-menu.js"></script>
+</body>
+</html>
