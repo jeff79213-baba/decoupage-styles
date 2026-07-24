@@ -25,6 +25,7 @@ async function initConsumer() {
     // Render
     document.getElementById('storeName').textContent = menuData.storeName;
     document.getElementById('storeSubtitle').textContent = menuData.subtitle;
+    document.getElementById('adminLink').href = `admin.html?shop=${window.APP_CONFIG.shopId}`;
 
     if (menuData.categories.length === 0) {
       document.getElementById('itemsGrid').innerHTML =

@@ -15,13 +15,7 @@ async function initMenuAdmin() {
   }
 
   window.FirebaseCore.init();
-  try {
-    menuData = await window.FirebaseCore.getMenu();
-  } catch (e) {
-    console.error('Failed to load menu:', e);
-    document.body.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:16px;"><h1>無法載入菜單</h1><p style="color:var(--text-muted)">' + e.message + '</p><p>請確認網址含有 ?shop=店家ID</p><a href="admin.html" class="btn btn-primary">返回後台</a></div>';
-    return;
-  }
+  menuData = await window.FirebaseCore.getMenu();
 
   if (!menuData.addonLibrary) menuData.addonLibrary = [];
   if (!menuData.categories) menuData.categories = [];
