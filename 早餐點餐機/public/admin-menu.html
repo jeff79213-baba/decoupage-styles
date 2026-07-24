@@ -44,6 +44,18 @@
     </div>
   </div>
 
+  <!-- Addon Picker Modal -->
+  <div class="modal-overlay" id="addonPickerModal" style="display:none">
+    <div class="modal">
+      <h2>選擇配料</h2>
+      <div id="addonPickerList" class="addon-picker-list"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeAddonPicker()">取消</button>
+        <button class="btn btn-primary" onclick="saveAddonPicker()">確認</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>

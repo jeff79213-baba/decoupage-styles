@@ -381,19 +381,48 @@ function addAddonToCategory(catId) {
   if (!guard()) return;
   const cat = menuData.categories.find(c => c.id === catId);
   if (!cat) return;
-  const available = menuData.addonLibrary.filter(a => !(cat.addonIds || []).includes(a.id));
-  if (available.length === 0) { alert('所有配料已加入此分類'); return; }
+  const currentIds = cat.addonIds || [];
 
-  const list = available.map((a, i) => `${i + 1}. ${a.name} $${a.price}`).join('\n');
-  const choice = prompt('選擇配料（輸入編號）：\n' + list);
-  if (!choice) return;
-  const idx = parseInt(choice) - 1;
-  if (idx >= 0 && idx < available.length) {
-    if (!cat.addonIds) cat.addonIds = [];
-    cat.addonIds.push(available[idx].id);
-    debounceSave();
-    renderCategories();
+  if (menuData.addonLibrary.length === 0) {
+    alert('配料庫為空，請先新增配料');
+    return;
   }
+
+  const modal = document.getElementById('addonPickerModal');
+  const list = document.getElementById('addonPickerList');
+  list.innerHTML = menuData.addonLibrary.map(addon => {
+    const checked = currentIds.includes(addon.id) ? 'checked' : '';
+    return `
+      <label class="addon-picker-item">
+        <input type="checkbox" value="${addon.id}" ${checked}>
+        <span class="addon-picker-name">${addon.name}</span>
+        <span class="addon-picker-price">$${addon.price}</span>
+      </label>
+    `;
+  }).join('');
+
+  modal.dataset.catId = catId;
+  modal.style.display = 'flex';
+}
+
+function closeAddonPicker() {
+  document.getElementById('addonPickerModal').style.display = 'none';
+}
+
+function saveAddonPicker() {
+  const modal = document.getElementById('addonPickerModal');
+  const catId = modal.dataset.catId;
+  const cat = menuData.categories.find(c => c.id === catId);
+  if (!cat) return;
+
+  const checked = [];
+  document.querySelectorAll('#addonPickerList input[type="checkbox"]:checked').forEach(cb => {
+    checked.push(cb.value);
+  });
+  cat.addonIds = checked;
+  debounceSave();
+  renderCategories();
+  closeAddonPicker();
 }
 
 function removeAddonFromCategory(catId, addonId) {
