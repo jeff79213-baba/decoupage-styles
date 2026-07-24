@@ -53,6 +53,7 @@ async function setTheme(theme) {
   menuData.theme = theme;
   try {
     await window.FirebaseCore.saveMenu(menuData);
+    window.ThemeManager.setTheme(theme);
     document.getElementById('themeDark').classList.toggle('active', theme === 'dark');
     document.getElementById('themeSage').classList.toggle('active', theme === 'sage');
   } catch (e) {
