@@ -782,4 +782,6 @@ body { overflow: hidden; height: 100vh; transition: background 0.4s, color 0.4s;
   .modal-actions { flex-direction: column; }
   .modal-actions button { width: 100%; }
   .dine-btn { padding: 6px 12px; font-size: 13px; }
+  .header-actions { flex-wrap: wrap; justify-content: flex-end; }
+  .mode-toggle { font-size: 11px; padding: 6px 10px; }
 }

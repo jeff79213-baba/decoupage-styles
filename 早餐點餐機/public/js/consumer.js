@@ -9,7 +9,10 @@ function applyScrollMode() {
   document.body.classList.toggle('scroll-mode', scrollMode);
   document.querySelector('.consumer-container')?.classList.toggle('scroll-mode', scrollMode);
   const btn = document.getElementById('modeToggle');
-  if (btn) btn.classList.toggle('active', scrollMode);
+  if (btn) {
+    btn.classList.toggle('active', scrollMode);
+    btn.textContent = scrollMode ? '固定' : '滑動';
+  }
 }
 
 function toggleScrollMode() {
