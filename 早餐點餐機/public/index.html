@@ -11,46 +11,57 @@
   <div class="consumer-container">
     <!-- Header -->
     <header class="header">
-      <div>
-        <div class="header-title" id="storeName">載入中...</div>
-        <div class="header-subtitle" id="storeSubtitle"></div>
-      </div>
+      <div class="header-title" id="storeName">載入中...</div>
       <div class="header-actions">
-        <a id="adminLink" href="#" style="color:var(--text-muted);font-size:14px;text-decoration:none;margin-right:8px;padding:6px 10px;border-radius:var(--radius-sm);background:var(--surface);opacity:0.6;transition:opacity 0.2s" title="後台管理" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">⚙ 設定</a>
         <button class="dine-btn" id="btnDineIn" onclick="selectDineType('dine')">內用</button>
         <button class="dine-btn" id="btnTakeout" onclick="selectDineType('takeout')">外帶</button>
+        <button class="header-btn mode-toggle" id="modeToggle" onclick="toggleScrollMode()" title="切換滑動/固定">📱</button>
+        <a id="adminLink" href="#" class="header-btn" style="text-decoration:none" title="後台管理">⚙</a>
       </div>
     </header>
 
-    <!-- Categories -->
-    <nav class="categories" id="categories"></nav>
+    <!-- Main: Sidebar + Items + Cart -->
+    <div class="consumer-main">
+      <!-- Categories -->
+      <nav class="categories" id="categories"></nav>
 
-    <!-- Items -->
-    <main class="items-panel">
-      <div class="items-grid" id="itemsGrid"></div>
-    </main>
+      <!-- Items -->
+      <main class="items-panel">
+        <div class="items-grid" id="itemsGrid"></div>
+        <!-- Addon Bar -->
+        <div class="addon-bar" id="addonBar">
+          <span class="addon-label" id="addonLabel">配料</span>
+          <div class="addon-list" id="addonButtons"></div>
+          <button class="add-to-cart-btn" onclick="confirmOrder()">確認訂單</button>
+        </div>
+      </main>
 
-    <!-- Cart -->
-    <aside class="cart-panel">
-      <div class="cart-header">購物車</div>
-      <div class="cart-items" id="cartItems"></div>
-      <div class="cart-footer">
-        <div class="cart-total">
-          <span>總計</span>
-          <span id="cartTotal">$0</span>
+      <!-- Cart -->
+      <aside class="cart-panel">
+        <div class="cart-header">
+          <h3>購物車 <span class="cart-count" id="cartCount">0</span></h3>
+          <button class="btn-clear-cart" onclick="clearCart()">全部取消</button>
         </div>
-        <div class="cart-actions">
-          <button class="btn btn-secondary" onclick="openPrinter()">廚房列印（尚未開啟）</button>
-          <button class="btn btn-primary" id="btnConfirm" onclick="confirmOrder()">確認訂單</button>
+        <div class="cart-items" id="cartItems"></div>
+        <div class="cart-footer">
+          <div class="cart-total">
+            <span class="cart-total-label">總計</span>
+            <span class="cart-total-amount" id="cartTotal">$0</span>
+          </div>
+          <div class="cart-actions">
+            <button class="cart-action-btn primary" id="btnConfirm" onclick="confirmOrder()">確認訂單</button>
+          </div>
         </div>
+      </aside>
+    </div>
+
+    <!-- Today's Orders -->
+    <div class="today-orders" id="todayOrders">
+      <div class="today-orders-header" onclick="toggleTodayOrders()">
+        <span id="todayOrdersTitle">今日訂單 (0)</span>
+        <span class="today-orders-toggle" id="todayOrdersToggle">▸</span>
       </div>
-    </aside>
-
-    <!-- Addon Bar -->
-    <div class="addon-bar" id="addonBar">
-      <span class="addon-label" id="addonLabel">配料</span>
-      <div id="addonButtons"></div>
-      <button class="add-to-cart-btn" onclick="addToCart()">加入購物車</button>
+      <div class="today-orders-list" id="todayOrdersList" style="display:none"></div>
     </div>
   </div>
 
@@ -62,8 +73,8 @@
       <div class="modal-items" id="modalItems"></div>
       <div class="modal-total" id="modalTotal"></div>
       <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeModal()">返回修改</button>
-        <button class="btn btn-primary" onclick="submitOrder()">確認送出</button>
+        <button class="cart-action-btn secondary" onclick="closeModal()">返回修改</button>
+        <button class="cart-action-btn primary" onclick="submitOrder()">確認送出</button>
       </div>
     </div>
   </div>
@@ -74,8 +85,8 @@
       <h2 id="cartEditTitle">編輯品項</h2>
       <div id="cartEditAddons" class="cart-edit-addons"></div>
       <div class="modal-actions">
-        <button class="btn btn-secondary" onclick="closeCartEdit()">取消</button>
-        <button class="btn btn-primary" onclick="saveCartEdit()">儲存</button>
+        <button class="cart-action-btn secondary" onclick="closeCartEdit()">取消</button>
+        <button class="cart-action-btn primary" onclick="saveCartEdit()">儲存</button>
       </div>
     </div>
   </div>
@@ -86,6 +97,7 @@
   <script src="js/config.js"></script>
   <script src="js/firebase-core.js"></script>
   <script src="js/theme.js"></script>
+  <script>ThemeManager.init();</script>
   <script src="js/stats-tracker.js"></script>
   <script src="js/cart.js"></script>
   <script src="js/consumer.js"></script>

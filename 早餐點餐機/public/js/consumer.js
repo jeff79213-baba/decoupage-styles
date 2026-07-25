@@ -4,10 +4,25 @@ let activeItems = {};
 let dineType = null;
 let editingCartKey = null;
 
+function applyScrollMode() {
+  const scrollMode = localStorage.getItem('sk-scroll-mode') === '1';
+  document.body.classList.toggle('scroll-mode', scrollMode);
+  document.querySelector('.consumer-container')?.classList.toggle('scroll-mode', scrollMode);
+  const btn = document.getElementById('modeToggle');
+  if (btn) btn.classList.toggle('active', scrollMode);
+}
+
+function toggleScrollMode() {
+  const current = localStorage.getItem('sk-scroll-mode') === '1';
+  localStorage.setItem('sk-scroll-mode', current ? '0' : '1');
+  applyScrollMode();
+}
+
 async function initConsumer() {
   try {
     window.FirebaseCore.init();
     window.StatsTracker.init();
+    applyScrollMode();
 
     menuData = await window.FirebaseCore.getMenu();
     window.StatsTracker.trackRead();
