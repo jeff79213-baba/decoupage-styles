@@ -1,30 +1,21 @@
-// State
 let menuData = null;
 let selectedCategory = null;
-let activeItems = {};  // { itemId: { item, addons: [], quantity } }
-let dineType = null;   // 'dine' | 'takeout' | null
+let activeItems = {};
+let dineType = null;
 let editingCartKey = null;
 
-// Initialize
 async function initConsumer() {
   try {
-    // Initialize Firebase
     window.FirebaseCore.init();
     window.StatsTracker.init();
 
-    // Load menu
     menuData = await window.FirebaseCore.getMenu();
     window.StatsTracker.trackRead();
 
-    // Cache menu for theme manager (avoids extra Firestore read)
     window.ThemeManager.setCachedMenu(menuData);
-
-    // Apply theme
     await window.ThemeManager.load();
 
-    // Render
-    document.getElementById('storeName').textContent = menuData.storeName;
-    document.getElementById('storeSubtitle').textContent = menuData.subtitle;
+    document.getElementById('storeName').innerHTML = `<span>//</span> ${menuData.storeName}`;
     document.getElementById('adminLink').href = `admin.html?shop=${window.APP_CONFIG.shopId}`;
 
     if (menuData.categories.length === 0) {
@@ -33,42 +24,38 @@ async function initConsumer() {
         '<p style="font-size:18px;margin-bottom:8px">尚無菜單</p>' +
         '<p>請到後台管理新增分類與品項</p></div>';
       document.getElementById('categories').innerHTML = '';
-      document.getElementById('addonButtons').innerHTML =
-        '<span style="color:var(--text-muted)">尚無配料</span>';
+      document.getElementById('addonBar').style.display = 'none';
       return;
     }
 
     renderCategories();
     renderCart();
+    loadTodayOrders();
 
-    // Listen for cart updates
-    window.addEventListener('cart-updated', () => renderCart());
+    window.addEventListener('cart-updated', () => { renderCart(); renderItems(); });
   } catch (e) {
     console.error('Failed to initialize:', e);
     document.getElementById('storeName').textContent = '載入失敗';
   }
 }
 
-// Render categories
 function renderCategories() {
   const container = document.getElementById('categories');
   container.innerHTML = menuData.categories.map((cat, i) => `
     <button class="category-btn ${i === 0 ? 'active' : ''}"
             onclick="selectCategory('${cat.id}')">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         ${getCategoryIcon(cat.id)}
       </svg>
-      ${cat.name}
+      <span class="cat-label">${cat.name}</span>
     </button>
   `).join('');
 
-  // Select first category
   if (menuData.categories.length > 0) {
     selectCategory(menuData.categories[0].id);
   }
 }
 
-// Category icons (simple SVG)
 function getCategoryIcon(catId) {
   const icons = {
     burger: '<rect x="2" y="8" width="20" height="12" rx="2"/><path d="M6 8V6a6 6 0 0 1 12 0v2"/>',
@@ -79,12 +66,10 @@ function getCategoryIcon(catId) {
   return icons[catId] || icons.default;
 }
 
-// Select category
 function selectCategory(catId) {
   selectedCategory = menuData.categories.find(c => c.id === catId);
   if (!selectedCategory) return;
 
-  // Update active state
   document.querySelectorAll('.category-btn').forEach(btn => {
     btn.classList.toggle('active', btn.textContent.trim().includes(selectedCategory.name));
   });
@@ -93,172 +78,149 @@ function selectCategory(catId) {
   renderAddons();
 }
 
-// Render items
+let lastClickedItemId = null;
+
+function getCartQty(itemId) {
+  const cartItems = window.CartManager.getItems();
+  let qty = 0;
+  cartItems.forEach(ci => { if (ci.id === itemId) qty += ci.quantity; });
+  return qty;
+}
+
+function getCartItemAddons(itemId) {
+  const cartItems = window.CartManager.getItems();
+  const last = [...cartItems].reverse().find(ci => ci.id === itemId);
+  if (!last || last.addons.length === 0) return '';
+  return last.addons.map(a => '+' + a.name + (a.price > 0 ? ' $' + a.price : '')).join(' ');
+}
+
 function renderItems() {
   const container = document.getElementById('itemsGrid');
+  if (!selectedCategory) return;
   const enabledItems = selectedCategory.items.filter(item => item.enabled !== false);
   if (enabledItems.length === 0) {
     container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--text-muted)">此分類無可用品項</div>';
     return;
   }
   container.innerHTML = enabledItems.map(item => {
-    const state = getItemState(item.id);
-    const count = getItemCount(item.id);
+    const qty = getCartQty(item.id);
+    const inCart = qty > 0;
+    const isLast = item.id === lastClickedItemId;
+    const itemAddons = getCartItemAddons(item.id);
     return `
-      <div class="item-card ${state}" onclick="toggleItem('${item.id}')">
-        ${state === 'active' ? '<button class="cancel-btn" onclick="event.stopPropagation(); cancelItem(\'' + item.id + '\')">×</button>' : ''}
-        ${count > 0 ? '<div class="item-count">X' + count + '</div>' : ''}
+      <div class="item-card${inCart ? ' in-cart' : ''}${isLast ? ' last-clicked' : ''}" onclick="clickItem('${item.id}')">
+        <button class="cancel-btn" onclick="event.stopPropagation(); removeItemFromCart('${item.id}')">✕</button>
+        ${inCart ? '<div class="item-count">' + qty + '</div>' : ''}
         <div class="item-name">${item.name}</div>
         <div class="item-price">$${item.price}</div>
+        ${itemAddons ? '<div class="item-addons">' + itemAddons + '</div>' : ''}
       </div>
     `;
   }).join('');
 }
 
-// Get item state
-function getItemState(itemId) {
-  const state = activeItems[itemId];
-  if (!state) return '';
-  if (state.quantity === 0) return '';
-  if (state.isActive) return 'active';
-  return 'selected';
-}
-
-// Get item count
-function getItemCount(itemId) {
-  const state = activeItems[itemId];
-  return state ? state.quantity : 0;
-}
-
-// Toggle item
-function toggleItem(itemId) {
+function clickItem(itemId) {
+  if (!selectedCategory) return;
   const item = selectedCategory.items.find(i => i.id === itemId);
   if (!item) return;
-
-  if (!activeItems[itemId]) {
-    // First click - make active
-    activeItems[itemId] = {
-      item,
-      addons: [],
-      quantity: 1,
-      isActive: true
-    };
-  } else if (activeItems[itemId].isActive) {
-    // Click on active - make selected
-    activeItems[itemId].isActive = false;
-  } else {
-    // Click on selected - make active
-    // Deactivate previous active
-    Object.keys(activeItems).forEach(id => {
-      if (activeItems[id].isActive) activeItems[id].isActive = false;
-    });
-    activeItems[itemId].isActive = true;
-  }
-
-  renderItems();
-  renderAddons();
+  lastClickedItemId = itemId;
+  window.CartManager.addItem(item, [], 1);
 }
 
-// Cancel item
-function cancelItem(itemId) {
-  delete activeItems[itemId];
-  renderItems();
-  renderAddons();
+function removeItemFromCart(itemId) {
+  const items = window.CartManager.getItems();
+  items.forEach(ci => {
+    if (ci.id === itemId) window.CartManager.removeItem(ci.key);
+  });
 }
 
-// Render addons
+function clearCart() {
+  if (window.CartManager.getCount() === 0) return;
+  if (!confirm('確定清除購物車？')) return;
+  window.CartManager.clear();
+}
+
 function renderAddons() {
   const container = document.getElementById('addonButtons');
   const label = document.getElementById('addonLabel');
 
-  // Find active item
-  const activeEntry = Object.values(activeItems).find(a => a.isActive);
-  if (!activeEntry) {
-    container.innerHTML = '<span style="color:var(--text-muted)">請先選擇品項</span>';
+  if (!selectedCategory || selectedCategory.addonIds.length === 0) {
+    container.innerHTML = '<span style="color:var(--text-muted)">此分類無配料</span>';
     label.textContent = '配料';
     return;
   }
 
-  label.textContent = `配料（${activeEntry.item.name}）`;
+  label.textContent = `配料（${selectedCategory.name}）`;
 
-  // Get addons for current category
   const categoryAddons = menuData.addonLibrary.filter(a =>
     selectedCategory.addonIds.includes(a.id)
   );
 
-  container.innerHTML = categoryAddons.map(addon => {
-    const isActive = activeEntry.addons.some(a => a.id === addon.id);
-    return `
-      <button class="addon-btn ${isActive ? 'active' : ''}"
-              onclick="toggleAddon('${addon.id}')">
-        ${addon.name}
-        ${addon.price > 0 ? '<span class="addon-price">+$' + addon.price + '</span>' : ''}
-      </button>
-    `;
-  }).join('');
+  container.innerHTML = categoryAddons.map(addon => `
+    <button class="addon-btn" onclick="addAddonToCart('${addon.id}')">
+      ${addon.name}
+      ${addon.price > 0 ? '<span class="addon-price">+$' + addon.price + '</span>' : ''}
+    </button>
+  `).join('');
 }
 
-// Toggle addon
-function toggleAddon(addonId) {
-  const activeEntry = Object.values(activeItems).find(a => a.isActive);
-  if (!activeEntry) return;
-
+function addAddonToCart(addonId) {
   const addon = menuData.addonLibrary.find(a => a.id === addonId);
-  if (!addon) return;
+  if (!addon || !selectedCategory) return;
 
-  const existingIndex = activeEntry.addons.findIndex(a => a.id === addonId);
-  if (existingIndex >= 0) {
-    activeEntry.addons.splice(existingIndex, 1);
-  } else {
-    activeEntry.addons.push(addon);
-  }
-
-  renderAddons();
-}
-
-// Add to cart
-function addToCart() {
-  Object.values(activeItems).forEach(entry => {
-    if (entry.quantity > 0) {
-      window.CartManager.addItem(entry.item, entry.addons, entry.quantity);
-    }
+  const cartItems = window.CartManager.getItems();
+  const lastItem = [...cartItems].reverse().find(ci => {
+    return selectedCategory.items.some(mi => mi.id === ci.id);
   });
 
-  // Clear active items
-  activeItems = {};
-  renderItems();
-  renderAddons();
+  if (!lastItem) {
+    alert('請先選擇品項');
+    return;
+  }
+
+  const item = selectedCategory.items.find(i => i.id === lastItem.id);
+  if (!item) return;
+
+  window.CartManager.removeItem(lastItem.key);
+  const existingAddons = lastItem.addons.filter(a => a.id !== addonId);
+  const alreadyHas = lastItem.addons.some(a => a.id === addonId);
+  const newAddons = alreadyHas ? existingAddons : [...existingAddons, addon];
+  window.CartManager.addItem(item, newAddons, lastItem.quantity);
 }
 
-// Render cart
 function renderCart() {
   const items = window.CartManager.getItems();
   const container = document.getElementById('cartItems');
   const totalEl = document.getElementById('cartTotal');
+  const countEl = document.getElementById('cartCount');
 
   container.innerHTML = items.map(item => {
     const addonText = item.addons.map(a => a.name).join(' + ');
+    const addonPrice = item.addons.reduce((s, a) => s + a.price, 0);
+    const unitPrice = item.price + addonPrice;
+    const itemTotal = unitPrice * item.quantity;
     return `
       <div class="cart-item" onclick="editCartItem('${item.key}')">
-        <div class="cart-item-info">
-          <div class="cart-item-name">${item.name} ${addonText ? '+' + addonText : ''}</div>
+        <div class="cart-item-top">
+          <span class="cart-item-name">${item.name}</span>
+          <div class="cart-item-qty">
+            <button class="qty-btn minus" onclick="event.stopPropagation(); changeQty('${item.key}', -1)">-</button>
+            <span class="qty-num">${item.quantity}</span>
+            <button class="qty-btn" onclick="event.stopPropagation(); changeQty('${item.key}', 1)">+</button>
+          </div>
         </div>
-        <div class="cart-item-qty">
-          <button onclick="event.stopPropagation(); changeQty('${item.key}', -1)">-</button>
-          <span>X${item.quantity}</span>
-          <button onclick="event.stopPropagation(); changeQty('${item.key}', 1)">+</button>
-        </div>
+        ${item.addons.length > 0 ? '<div class="cart-item-addons">' + item.addons.map(a => '<span class="cart-addon-tag">+ ' + a.name + (a.price > 0 ? ' $' + a.price : '') + '</span>').join('') + '</div>' : ''}
+        <div class="cart-item-price">$${itemTotal}</div>
       </div>
     `;
   }).join('');
 
+  const totalCount = items.reduce((s, i) => s + i.quantity, 0);
+  if (countEl) countEl.textContent = totalCount;
   totalEl.textContent = `$${window.CartManager.getTotal()}`;
-
-  // Update confirm button state
   document.getElementById('btnConfirm').disabled = items.length === 0;
 }
 
-// Change quantity
 function changeQty(key, delta) {
   const items = window.CartManager.getItems();
   const item = items.find(i => i.key === key);
@@ -267,7 +229,6 @@ function changeQty(key, delta) {
   }
 }
 
-// Edit cart item (expand details)
 function editCartItem(key) {
   editingCartKey = key;
   const items = window.CartManager.getItems();
@@ -276,7 +237,6 @@ function editCartItem(key) {
 
   document.getElementById('cartEditTitle').textContent = `編輯 ${item.name}`;
 
-  // Find the category for this item
   let category = null;
   for (const cat of menuData.categories) {
     if (cat.items.some(i => i.id === item.id)) {
@@ -319,7 +279,6 @@ function saveCartEdit() {
   const item = items.find(i => i.key === editingCartKey);
   if (!item) return;
 
-  // Get selected addons
   const selectedAddons = [];
   document.querySelectorAll('.cart-edit-addon.active').forEach(btn => {
     selectedAddons.push({
@@ -329,61 +288,60 @@ function saveCartEdit() {
     });
   });
 
-  // Update item addons
   item.addons = selectedAddons;
 
-  // Update key
   const addonKey = selectedAddons.map(a => a.id).sort().join('+');
   item.key = `${item.id}_${addonKey}`;
 
-  // Check for duplicate keys and merge
   const otherIdx = items.findIndex(i => i.key !== editingCartKey && i.key === item.key);
   if (otherIdx >= 0) {
-    // Merge quantities into the existing entry, then remove the one we edited
     items[otherIdx].quantity += item.quantity;
     items.splice(items.indexOf(item), 1);
   }
 
-  // Save the updated items array
   window.CartManager.saveItems(items);
-
   closeCartEdit();
 }
 
-// Dine type selection
 function selectDineType(type) {
   dineType = type;
   document.getElementById('btnDineIn').classList.toggle('active', type === 'dine');
   document.getElementById('btnTakeout').classList.toggle('active', type === 'takeout');
 }
 
-// Confirm order
 function confirmOrder() {
   if (window.CartManager.getCount() === 0) return;
 
-  // Check dine type
   if (!dineType) {
-    // Show prompt
     const type = prompt('請選擇：1 = 內用，2 = 外帶');
     if (type === '1') dineType = 'dine';
     else if (type === '2') dineType = 'takeout';
     else return;
   }
 
-  // Show modal
   const items = window.CartManager.getItems();
   const modalItems = document.getElementById('modalItems');
   const modalTotal = document.getElementById('modalTotal');
   const modalDineType = document.getElementById('modalDineType');
 
   modalDineType.textContent = dineType === 'dine' ? '內用' : '外帶';
-  modalItems.innerHTML = items.map(item => {
+  modalItems.innerHTML = items.map((item, idx) => {
     const addonText = item.addons.map(a => a.name).join(' + ');
+    const addonPriceText = item.addons.filter(a => a.price > 0).map(a => `+$${a.price}`).join(' ');
     const itemTotal = (item.price + item.addons.reduce((s, a) => s + a.price, 0)) * item.quantity;
     return `
       <div class="modal-item">
-        <span>${item.name} ${addonText ? '+' + addonText : ''} X${item.quantity}</span>
-        <span>$${itemTotal}</span>
+        <div class="modal-item-left">
+          <span class="modal-item-num">#${idx + 1}</span>
+          <div class="modal-item-info">
+            <span class="modal-item-name">${item.name}</span>
+            ${addonText ? '<span class="modal-item-addons">' + addonText + (addonPriceText ? ' ' + addonPriceText : '') + '</span>' : ''}
+          </div>
+        </div>
+        <div class="modal-item-right">
+          <span class="modal-item-qty">×${item.quantity}</span>
+          <span class="modal-item-price">$${itemTotal}</span>
+        </div>
       </div>
     `;
   }).join('');
@@ -392,12 +350,10 @@ function confirmOrder() {
   document.getElementById('orderModal').style.display = 'flex';
 }
 
-// Close modal
 function closeModal() {
   document.getElementById('orderModal').style.display = 'none';
 }
 
-// Submit order
 async function submitOrder() {
   const items = window.CartManager.getItems();
   const orderData = {
@@ -412,20 +368,61 @@ async function submitOrder() {
     await window.FirebaseCore.saveOrder(orderData);
     window.CartManager.clear();
     closeModal();
-    alert('訂單已送出！');
+    activeItems = {};
     dineType = null;
     document.getElementById('btnDineIn').classList.remove('active');
     document.getElementById('btnTakeout').classList.remove('active');
+    renderItems();
+    loadTodayOrders();
   } catch (e) {
     console.error('Failed to submit order:', e);
     alert('訂單送出失敗，請重試');
   }
 }
 
-// Printer (placeholder)
-function openPrinter() {
-  alert('功能尚未開啟');
+async function loadTodayOrders() {
+  try {
+    const allOrders = await window.FirebaseCore.getOrders(50);
+    const today = new Date().toISOString().split('T')[0];
+    const todayOrders = allOrders.filter(o => {
+      const ts = o.createdAt?.toDate ? o.createdAt.toDate() : (o.timestamp ? new Date(o.timestamp) : null);
+      return ts && ts.toISOString().split('T')[0] === today;
+    });
+
+    document.getElementById('todayOrdersTitle').textContent = `今日訂單 (${todayOrders.length})`;
+
+    const list = document.getElementById('todayOrdersList');
+    if (todayOrders.length === 0) {
+      list.innerHTML = '<div style="padding:12px;color:var(--text-muted);font-size:14px">尚無訂單</div>';
+      return;
+    }
+
+    list.innerHTML = todayOrders.map((order, i) => {
+      const ts = order.createdAt?.toDate ? order.createdAt.toDate() : (order.timestamp ? new Date(order.timestamp) : null);
+      const time = ts ? ts.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }) : '';
+      const itemsText = (order.items || []).map(it => it.name).join('、');
+      const typeLabel = order.dineType === 'dine' ? '內用' : order.dineType === 'takeout' ? '外帶' : '';
+      return `
+        <div class="today-order-item">
+          <span class="today-order-num">#${todayOrders.length - i}</span>
+          <span class="today-order-time">${time}</span>
+          <span class="today-order-detail">${itemsText}</span>
+          <span class="today-order-type">${typeLabel}</span>
+          <span class="today-order-total">$${order.total}</span>
+        </div>
+      `;
+    }).join('');
+  } catch (e) {
+    console.warn('Load today orders failed:', e);
+  }
 }
 
-// Initialize on load
+function toggleTodayOrders() {
+  const list = document.getElementById('todayOrdersList');
+  const toggle = document.getElementById('todayOrdersToggle');
+  const open = list.style.display === 'none';
+  list.style.display = open ? 'block' : 'none';
+  toggle.textContent = open ? '▾' : '▸';
+}
+
 document.addEventListener('DOMContentLoaded', initConsumer);
