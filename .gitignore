@@ -1,5 +1,7 @@
 opencode-sk-*.json
 node_modules
+dist/
+.superpowers/
 .tools
 
 # 個別專案 repo（不納入共用 repo 追蹤）
