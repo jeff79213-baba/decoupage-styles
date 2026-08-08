@@ -14,17 +14,21 @@ function doSearch() {
 }
 
 function nextResult() {
-  store.nextSearch()
-  if (store.searchResults.length > 0) {
-    emit('search', store.searchResults, store.searchIndex)
+  if (!store.searchResults.length && keyword.value) {
+    doSearch()
   }
+  if (!store.searchResults.length) return
+  store.nextSearch()
+  emit('search', store.searchResults, store.searchIndex)
 }
 
 function prevResult() {
-  store.prevSearch()
-  if (store.searchResults.length > 0) {
-    emit('search', store.searchResults, store.searchIndex)
+  if (!store.searchResults.length && keyword.value) {
+    doSearch()
   }
+  if (!store.searchResults.length) return
+  store.prevSearch()
+  emit('search', store.searchResults, store.searchIndex)
 }
 
 const resultLabel = computed(() => {
@@ -38,8 +42,8 @@ const resultLabel = computed(() => {
     <input v-model="keyword" placeholder="搜尋..." @keyup.enter="doSearch" @keyup.escape="keyword=''; doSearch()" />
     <button @click="doSearch" :disabled="!keyword">搜尋</button>
     <span v-if="resultLabel" class="result-count">{{ resultLabel }}</span>
-    <button @click="prevResult" :disabled="!store.searchResults.length">▲</button>
-    <button @click="nextResult" :disabled="!store.searchResults.length">▼</button>
+    <button @click="prevResult">▲</button>
+    <button @click="nextResult">▼</button>
   </div>
 </template>
 

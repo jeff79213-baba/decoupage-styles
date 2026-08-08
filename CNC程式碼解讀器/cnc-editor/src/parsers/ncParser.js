@@ -68,8 +68,8 @@ export function parseNC(text) {
     const wMatch = trimmed.match(/G(5[4-9])\b/)
     if (wMatch) {
       currentCoord = `G${wMatch[1]}`
-      if (!coordinates.find(c => c.code === wMatch[1])) {
-        coordinates.push({ code: wMatch[1], line: lineNum })
+      if (!coordinates.find(c => c.code === currentCoord)) {
+        coordinates.push({ code: currentCoord, line: lineNum })
       }
     }
 

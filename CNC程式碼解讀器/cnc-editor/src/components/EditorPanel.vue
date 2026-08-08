@@ -13,10 +13,13 @@ import ColorSettings from './ColorSettings.vue'
 const store = useEditorStore()
 const editorContainer = ref(null)
 const splitContainer = ref(null)
+const splitBody = ref(null)
 let view = null
 let view2 = null
 const showColorSettings = ref(false)
 const splitMode = ref(false)
+const splitPct = ref(50)
+let draggingDivider = false
 
 function buildExtensions() {
   return [
@@ -80,6 +83,30 @@ async function toggleSplit() {
   }
 }
 
+function onDividerDown(e) {
+  draggingDivider = true
+  e.preventDefault()
+  const move = (ev) => {
+    if (!draggingDivider || !splitBody.value) return
+    const rect = splitBody.value.getBoundingClientRect()
+    const pct = ((ev.clientX - rect.left) / rect.width) * 100
+    splitPct.value = Math.min(85, Math.max(15, pct))
+  }
+  const up = () => {
+    draggingDivider = false
+    window.removeEventListener('mousemove', move)
+    window.removeEventListener('mouseup', up)
+  }
+  window.addEventListener('mousemove', move)
+  window.addEventListener('mouseup', up)
+}
+
+function onBodyMouseLeave() {
+  if (draggingDivider) {
+    draggingDivider = false
+  }
+}
+
 onMounted(() => {
   store.loadSyntaxColors()
   initEditor()
@@ -131,8 +158,9 @@ defineExpose({ onSearchResult, goToLine })
         <button @click="showColorSettings = !showColorSettings">顏色設定</button>
       </div>
     </div>
-    <div class="editor-body" :class="{ split: splitMode }">
-      <div ref="editorContainer" class="editor-pane"></div>
+    <div ref="splitBody" class="editor-body" :class="{ split: splitMode }">
+      <div ref="editorContainer" class="editor-pane" :style="splitMode ? { flex: `0 0 ${splitPct}%` } : {}"></div>
+      <div v-if="splitMode" class="split-divider" @mousedown="onDividerDown"></div>
       <div v-if="splitMode" ref="splitContainer" class="editor-pane"></div>
     </div>
     <ColorSettings v-if="showColorSettings" @close="showColorSettings = false" />
@@ -145,9 +173,12 @@ defineExpose({ onSearchResult, goToLine })
 .file-name { font-size: 13px; color: #a6adc8; }
 .editor-actions { display: flex; align-items: center; gap: 6px; }
 button.on { background: #89b4fa; color: #11111b; }
-.editor-body { flex: 1; overflow: auto; display: flex; }
-.editor-pane { flex: 1; min-width: 0; overflow: hidden; display: flex; }
-.editor-body.split .editor-pane + .editor-pane { border-left: 1px solid #313244; }
-.editor-body :deep(.cm-editor) { height: 100%; }
+.editor-body { flex: 1; overflow: hidden; display: flex; }
+.editor-pane { min-width: 0; overflow: hidden; display: flex; }
+.editor-body:not(.split) .editor-pane { flex: 1; }
+.editor-body.split .editor-pane:last-child { flex: 1; }
+.split-divider { flex: 0 0 6px; cursor: col-resize; background: #313244; border-left: 1px solid #45475a; border-right: 1px solid #45475a; }
+.split-divider:hover, .split-divider:active { background: #89b4fa66; }
+.editor-body :deep(.cm-editor) { height: 100%; flex: 1; }
 .editor-body :deep(.cm-scroller) { overflow: auto; }
 </style>
