@@ -27,7 +27,7 @@ function buildExtensions() {
     basicSetup,
     keymap.of([...searchKeymap, indentWithTab]),
     highlightSelectionMatches(),
-    buildCncLanguage(store.syntaxColors),
+    buildCncLanguage(store.effectiveSyntaxColors),
     EditorView.updateListener.of((update) => {
       if (update.docChanged) {
         store.rawText = update.state.doc.toString()
@@ -35,6 +35,11 @@ function buildExtensions() {
       if (update.selectionSet) {
         const pos = update.state.selection.main.head
         const line = update.state.doc.lineAt(pos)
+        store.currentLine = line.number - 1
+      }
+      if (update.viewportChanged && update.view === activeView) {
+        const from = update.view.viewport.from
+        const line = update.state.doc.lineAt(from)
         store.currentLine = line.number - 1
       }
     })
@@ -134,7 +139,7 @@ watch(() => store.rawText, (newVal) => {
   }
 })
 
-watch(() => store.syntaxColors, async () => {
+watch(() => store.effectiveSyntaxColors, async () => {
   const pos = view?.state.selection.main.head ?? 0
   const pos2 = view2?.state.selection.main.head
   const activeWasView2 = activeView === view2

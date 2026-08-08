@@ -12,6 +12,8 @@ export const useEditorStore = defineStore('editor', {
     searchIndex: -1,
     currentLine: -1,
     showTypeColumn: true,
+    monochrome: false,
+    monoEnabled: {},
     syntaxColors: {
       G: '#89b4fa',
       M: '#f38ba8',
@@ -35,7 +37,18 @@ export const useEditorStore = defineStore('editor', {
     coordinates: (state) => state.parsed?.coordinates || [],
     lines: (state) => state.parsed?.lines || [],
     blocks: (state) => state.parsed?.blocks || [],
-    lineCoords: (state) => state.parsed?.lineCoords || []
+    lineCoords: (state) => state.parsed?.lineCoords || [],
+    effectiveSyntaxColors: (state) => {
+      if (!state.monochrome) return state.syntaxColors
+      const gray = { G: '#6c7086', M: '#6c7086', N: '#6c7086', X: '#6c7086', Y: '#6c7086', Z: '#6c7086', S: '#6c7086', F: '#6c7086', T: '#6c7086', H: '#6c7086', D: '#6c7086', variable: '#6c7086', comment: '#6c7086' }
+      const out = { ...gray }
+      for (const key of Object.keys(state.monoEnabled)) {
+        if (state.monoEnabled[key] && state.syntaxColors[key]) {
+          out[key] = state.syntaxColors[key]
+        }
+      }
+      return out
+    }
   },
 
   actions: {
@@ -143,10 +156,24 @@ export const useEditorStore = defineStore('editor', {
       localStorage.setItem('cnc-syntax-colors', JSON.stringify(this.syntaxColors))
     },
 
+    setMonochrome(enabled) {
+      this.monochrome = enabled
+      localStorage.setItem('cnc-monochrome', JSON.stringify(enabled))
+    },
+
+    toggleMonoEnabled(category) {
+      this.monoEnabled[category] = !this.monoEnabled[category]
+      localStorage.setItem('cnc-mono-enabled', JSON.stringify(this.monoEnabled))
+    },
+
     loadSyntaxColors() {
       try {
         const saved = localStorage.getItem('cnc-syntax-colors')
         if (saved) this.syntaxColors = { ...this.syntaxColors, ...JSON.parse(saved) }
+        const mono = localStorage.getItem('cnc-monochrome')
+        if (mono != null) this.monochrome = JSON.parse(mono)
+        const monoEnabled = localStorage.getItem('cnc-mono-enabled')
+        if (monoEnabled) this.monoEnabled = JSON.parse(monoEnabled)
       } catch {}
     }
   }
