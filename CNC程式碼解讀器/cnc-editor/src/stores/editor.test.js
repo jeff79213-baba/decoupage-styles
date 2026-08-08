@@ -6,8 +6,8 @@ import { parseNC } from '../parsers/ncParser'
 function seed(store) {
   store.$patch({
     files: [
-      { id: 1, fileName: 'A.NC', rawText: '%\nO1000\nN1(T1)\nM30\n%', parsed: parseNC('%\nO1000\nN1(T1)\nM30\n%'), currentLine: 2, bookmarks: [1] },
-      { id: 2, fileName: 'B.NC', rawText: '%\nO2000\nN2(T2)\nM30\n%', parsed: parseNC('%\nO2000\nN2(T2)\nM30\n%'), currentLine: 1, bookmarks: [] }
+      { id: 1, fileName: 'A.NC', rawText: '%\nO1000\nN1(T1)\nT1M6\nM30\n%', parsed: parseNC('%\nO1000\nN1(T1)\nT1M6\nM30\n%'), currentLine: 2, bookmarks: [1] },
+      { id: 2, fileName: 'B.NC', rawText: '%\nO2000\nN2(T2)\nT2M6\nM30\n%', parsed: parseNC('%\nO2000\nN2(T2)\nT2M6\nM30\n%'), currentLine: 1, bookmarks: [] }
     ],
     activeFileId: 1,
     nextFileId: 3
