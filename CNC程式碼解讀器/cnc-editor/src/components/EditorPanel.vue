@@ -1,14 +1,36 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { EditorView, basicSetup } from 'codemirror'
-import { EditorState } from '@codemirror/state'
-import { keymap } from '@codemirror/view'
+import { EditorState, StateEffect, StateField } from '@codemirror/state'
+import { keymap, Decoration } from '@codemirror/view'
 import { indentWithTab } from '@codemirror/commands'
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search'
 import { useEditorStore } from '../stores/editor'
 import { buildCncLanguage } from '../parsers/cncLanguage'
 import SearchBar from './SearchBar.vue'
 import ColorSettings from './ColorSettings.vue'
+
+const setBookmarksEffect = StateEffect.define()
+const bookmarkLinesField = StateField.define({
+  create: () => [],
+  update(lines, tr) {
+    lines = lines.map(l => tr.changes.mapPos(l, 1))
+    for (const e of tr.effects) {
+      if (e.is(setBookmarksEffect)) lines = e.value
+    }
+    return lines
+  },
+  provide: (f) => EditorView.decorations.from(f, (lines, view) => {
+    const doc = view.state.doc
+    return Decoration.set(
+      lines.map(lineNum => {
+        const clamped = Math.min(lineNum, doc.lines - 1)
+        const pos = doc.line(clamped + 1).from
+        return Decoration.line({ attributes: { style: 'background: #f9e2af22' } }).range(pos)
+      })
+    )
+  })
+})
 
 const store = useEditorStore()
 const editorContainer = ref(null)
@@ -25,6 +47,7 @@ let draggingDivider = false
 function buildExtensions() {
   return [
     basicSetup,
+    bookmarkLinesField,
     keymap.of([...searchKeymap, indentWithTab]),
     highlightSelectionMatches(),
     buildCncLanguage(store.effectiveSyntaxColors),
@@ -52,6 +75,9 @@ function createView(container) {
     extensions: buildExtensions()
   })
   const v = new EditorView({ state, parent: container })
+  if (store.bookmarks.length) {
+    v.dispatch({ effects: setBookmarksEffect.of([...store.bookmarks]) })
+  }
   v.dom.addEventListener('focusin', () => { activeView = v })
   v.dom.addEventListener('pointerdown', () => { activeView = v })
   return v
@@ -136,6 +162,13 @@ watch(() => store.rawText, (newVal) => {
         changes: { from: 0, to: v.state.doc.length, insert: newVal }
       })
     }
+  }
+})
+
+watch(() => store.bookmarks, () => {
+  const views = [view, view2].filter(Boolean)
+  for (const v of views) {
+    v.dispatch({ effects: setBookmarksEffect.of([...store.bookmarks]) })
   }
 })
 

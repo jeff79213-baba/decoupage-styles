@@ -10,6 +10,7 @@ export const useEditorStore = defineStore('editor', {
     searchKeyword: '',
     searchResults: [],
     searchIndex: -1,
+    bookmarks: [],
     currentLine: -1,
     showTypeColumn: true,
     monochrome: false,
@@ -56,11 +57,12 @@ export const useEditorStore = defineStore('editor', {
       this.currentFileName = file.name
       const reader = new FileReader()
       reader.onload = () => {
-        this.rawText = reader.result
-        this.parsed = parseNC(this.rawText)
-        this.searchKeyword = ''
-        this.searchResults = []
-        this.searchIndex = -1
+      this.rawText = reader.result
+      this.parsed = parseNC(this.rawText)
+      this.searchKeyword = ''
+      this.searchResults = []
+      this.searchIndex = -1
+      this.bookmarks = []
       }
       reader.readAsText(file, 'utf-8')
     },
@@ -145,6 +147,24 @@ export const useEditorStore = defineStore('editor', {
       this.currentLine = lineIndex
       this.searchResults = [{ line: lineIndex, text: this.lines[lineIndex] }]
       this.searchIndex = 0
+    },
+
+    addBookmarks() {
+      if (!this.searchResults.length) return
+      for (const r of this.searchResults) {
+        if (!this.bookmarks.includes(r.line)) {
+          this.bookmarks.push(r.line)
+        }
+      }
+      this.bookmarks.sort((a, b) => a - b)
+    },
+
+    removeBookmark(line) {
+      this.bookmarks = this.bookmarks.filter(l => l !== line)
+    },
+
+    clearBookmarks() {
+      this.bookmarks = []
     },
 
     setNav(section) {

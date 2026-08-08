@@ -44,6 +44,8 @@ const resultLabel = computed(() => {
     <span v-if="resultLabel" class="result-count">{{ resultLabel }}</span>
     <button @click="prevResult">▲</button>
     <button @click="nextResult">▼</button>
+    <button @click="store.addBookmarks" :disabled="!store.searchResults.length">＋標籤</button>
+    <button @click="store.clearBookmarks" :disabled="!store.bookmarks.length">清除標籤</button>
   </div>
 </template>
 
