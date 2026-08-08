@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "test": "vitest run",
     "build:install": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-install.ps1"
   },
   "dependencies": {
@@ -22,6 +23,8 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2",
     "vite": "^6.0",
-    "vite-plugin-singlefile": "^2.3.3"
+    "vite-plugin-singlefile": "^2.3.3",
+    "vitest": "^3.0.0",
+    "jsdom": "^26.0.0"
   }
 }
