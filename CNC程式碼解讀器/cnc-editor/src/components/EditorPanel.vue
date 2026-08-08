@@ -16,6 +16,7 @@ const splitContainer = ref(null)
 const splitBody = ref(null)
 let view = null
 let view2 = null
+let activeView = null
 const showColorSettings = ref(false)
 const splitMode = ref(false)
 const splitPct = ref(50)
@@ -45,23 +46,26 @@ function createView(container) {
     doc: store.rawText,
     extensions: buildExtensions()
   })
-  return new EditorView({ state, parent: container })
+  const v = new EditorView({ state, parent: container })
+  v.dom.addEventListener('focusin', () => { activeView = v })
+  v.dom.addEventListener('pointerdown', () => { activeView = v })
+  return v
 }
 
 function initEditor() {
   if (!editorContainer.value) return
   view = createView(editorContainer.value)
+  activeView = view
 }
 
 function goToLine(lineIndex) {
-  const views = [view, view2].filter(Boolean)
-  for (const v of views) {
-    const pos = v.state.doc.line(lineIndex + 1)
-    v.dispatch({
-      selection: { anchor: pos.from },
-      effects: EditorView.scrollIntoView(pos.from, { y: 'start' })
-    })
-  }
+  if (!view) return
+  const target = (splitMode.value && activeView) ? activeView : view
+  const pos = target.state.doc.line(lineIndex + 1)
+  target.dispatch({
+    selection: { anchor: pos.from },
+    effects: EditorView.scrollIntoView(pos.from, { y: 'start' })
+  })
 }
 
 function onSearchResult(results, index) {
@@ -74,6 +78,7 @@ async function toggleSplit() {
     view2?.destroy()
     view2 = null
     splitMode.value = false
+    activeView = view
     return
   }
   splitMode.value = true
@@ -81,6 +86,7 @@ async function toggleSplit() {
   if (splitContainer.value) {
     view2 = createView(splitContainer.value)
   }
+  activeView = view
 }
 
 function onDividerDown(e) {
@@ -131,12 +137,14 @@ watch(() => store.rawText, (newVal) => {
 watch(() => store.syntaxColors, async () => {
   const pos = view?.state.selection.main.head ?? 0
   const pos2 = view2?.state.selection.main.head
+  const activeWasView2 = activeView === view2
   view?.destroy()
   view2?.destroy()
   view = null
   view2 = null
   if (editorContainer.value) view = createView(editorContainer.value)
   if (splitMode.value && splitContainer.value) view2 = createView(splitContainer.value)
+  activeView = activeWasView2 && view2 ? view2 : view
   if (pos <= view.state.doc.length) {
     view.dispatch({ selection: { anchor: pos } })
   }
