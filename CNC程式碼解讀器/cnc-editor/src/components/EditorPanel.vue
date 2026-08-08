@@ -2,7 +2,8 @@
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { EditorView, basicSetup } from 'codemirror'
 import { EditorState, StateEffect, StateField } from '@codemirror/state'
-import { keymap, Decoration } from '@codemirror/view'
+import { keymap, GutterMarker, lineNumberMarkers } from '@codemirror/view'
+import { RangeSet } from '@codemirror/state'
 import { indentWithTab } from '@codemirror/commands'
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search'
 import { useEditorStore } from '../stores/editor'
@@ -11,6 +12,14 @@ import SearchBar from './SearchBar.vue'
 import ColorSettings from './ColorSettings.vue'
 
 const setBookmarksEffect = StateEffect.define()
+class BookmarkDot extends GutterMarker {
+  toDOM() {
+    const span = document.createElement('span')
+    span.className = 'cm-bookmark-dot'
+    return span
+  }
+  eq(other) { return other instanceof BookmarkDot }
+}
 const bookmarkPositionsField = StateField.define({
   create: () => [],
   update(positions, tr) {
@@ -20,9 +29,10 @@ const bookmarkPositionsField = StateField.define({
     }
     return positions
   },
-  provide: (f) => EditorView.decorations.from(f, positions => Decoration.set(
-    positions.map(pos => Decoration.line({ attributes: { style: 'background: #f9e2af22' } }).range(pos))
-  ))
+  provide: (f) => lineNumberMarkers.from(f, positions => {
+    const ranges = positions.map(p => new BookmarkDot().range(p))
+    return RangeSet.of(ranges)
+  })
 })
 
 const store = useEditorStore()
@@ -175,7 +185,7 @@ watch(() => store.bookmarks, () => {
   for (const v of views) {
     applyBookmarks(v)
   }
-})
+}, { deep: true })
 
 watch(() => store.effectiveSyntaxColors, async () => {
   const pos = view?.state.selection.main.head ?? 0
@@ -232,4 +242,14 @@ button.on { background: #89b4fa; color: #11111b; }
 .split-divider:hover, .split-divider:active { background: #89b4fa66; }
 .editor-body :deep(.cm-editor) { height: 100%; flex: 1; }
 .editor-body :deep(.cm-scroller) { overflow: auto; }
+.editor-body :deep(.cm-gutterElement) { position: relative; }
+.editor-body :deep(.cm-bookmark-dot) {
+  display: inline-block;
+  margin-left: 3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f9e2af;
+  vertical-align: middle;
+}
 </style>
