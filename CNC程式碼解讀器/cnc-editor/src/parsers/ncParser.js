@@ -4,7 +4,9 @@ export function parseNC(text) {
   const variables = []
   const coordinates = []
   const blocks = []
+  const lineCoords = []
   let currentBlock = null
+  let currentCoord = null
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
@@ -65,20 +67,23 @@ export function parseNC(text) {
 
     const wMatch = trimmed.match(/G(5[4-9])\b/)
     if (wMatch) {
+      currentCoord = `G${wMatch[1]}`
       if (!coordinates.find(c => c.code === wMatch[1])) {
         coordinates.push({ code: wMatch[1], line: lineNum })
       }
     }
 
-    if (/G#100\b/.test(trimmed)) {
+    if (/G#100/.test(trimmed)) {
+      const var500 = variables.find(v => v.id === '500')
+      const start = 54
+      const end = var500 ? 53 + parseInt(var500.value) : 55
+      currentCoord = `G${start}~G${end}`
       if (!coordinates.find(c => c.code.startsWith('G54~'))) {
-        const var500 = variables.find(v => v.id === '500')
-        const start = 54
-        const end = var500 ? 53 + parseInt(var500.value) : 55
         coordinates.push({ code: `G${start}~G${end}`, dynamic: true, line: lineNum })
       }
     }
 
+    lineCoords.push(currentCoord)
     if (currentBlock) currentBlock.endLine = lineNum
   }
   if (currentBlock) blocks.push(currentBlock)
@@ -111,5 +116,5 @@ export function parseNC(text) {
     }
   }
 
-  return { blocks, tools, variables, coordinates, rawText: text, lines }
+  return { blocks, tools, variables, coordinates, rawText: text, lines, lineCoords }
 }

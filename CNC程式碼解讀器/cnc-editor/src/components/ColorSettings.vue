@@ -4,12 +4,19 @@ const store = useEditorStore()
 const emit = defineEmits(['close'])
 
 const items = [
-  { key: 'gCode', label: 'G-Code' },
-  { key: 'mCode', label: 'M-Code' },
-  { key: 'nBlock', label: 'N 區段' },
-  { key: 'variable', label: '變數' },
-  { key: 'comment', label: '註解' },
-  { key: 'default', label: '預設文字' }
+  { key: 'G', label: 'G (準備機能)' },
+  { key: 'M', label: 'M (輔助機能)' },
+  { key: 'N', label: 'N (區段號碼)' },
+  { key: 'X', label: 'X (X 座標)' },
+  { key: 'Y', label: 'Y (Y 座標)' },
+  { key: 'Z', label: 'Z (Z 座標)' },
+  { key: 'S', label: 'S (主軸轉速)' },
+  { key: 'F', label: 'F (進給速率)' },
+  { key: 'T', label: 'T (刀具號碼)' },
+  { key: 'H', label: 'H (刀長補償)' },
+  { key: 'D', label: 'D (刀徑補償)' },
+  { key: 'variable', label: '# 變數' },
+  { key: 'comment', label: '( 註解 )' }
 ]
 
 function onChange() {

@@ -41,6 +41,46 @@
 
 ---
 
+## 📌 測試策略（Test Pyramid）
+
+### 分層原則
+| 層級 | 工具 | 適用場景 | 強制 |
+|------|------|----------|------|
+| 單元測試 | Vitest / Jest | 純函式邏輯：權限判斷、導向目標計算、表單驗證規則 | ✅ |
+| 元件測試 | Testing Library | 按鈕隱藏、條件渲染、表單欄位狀態、錯誤提示顯示 | ✅ |
+| E2E 測試 | Playwright | 跨頁面完整使用者旅程、多角色權限流程、金流、敏感資料操作 | ⚡ 高風險限定 |
+
+### 啟動 E2E 的判斷原則
+**只有涉及以下任一條件才強制寫 E2E，否則用單元/元件測試即可：**
+- **跨角色權限流程**：管理員 vs 一般使用者操作同一功能（需真實登入切換）
+- **金流相關**：結帳、退款、訂單狀態流轉
+- **敏感資料操作**：刪除帳號、匯出個資
+- **跨頁面導向鏈**：未登入 → 點功能 → 導登入頁 → 登入後導回原頁
+
+### 批次原則
+開發階段先累積功能，一次寫完對應測試，不逐 commit 補。
+
+### 部署前檢查
+```powershell
+npx playwright test          # 跑全部 E2E
+npx vitest run               # 跑單元 + 元件測試
+```
+
+### 開發中使用篩選
+```powershell
+npx playwright test --grep "checkout|admin-role"
+```
+
+### Playwright 初始化腳本
+```powershell
+npm init playwright@latest -- --yes --browser chromium
+```
+
+### ⚠️ 自動提醒
+當我判斷某個實作功能**符合上述 E2E 條件（跨角色權限、金流、敏感資料、跨頁導向鏈）**，我會主動提醒你：「這個建議補 E2E」，徵得你同意後才寫，不自行決定。
+
+---
+
 ## 📌 UI 規範：密碼欄位顯示開關
 所有 `type="password"` 的輸入欄位，**必須附帶顯示/隱藏密碼的切換按鈕**。
 
@@ -68,6 +108,44 @@ function togglePw(inputId, btn) {
 - 按鈕放在輸入框右側，使用 SVG 黑色眼睛圖示（開著=顯示，閉著+斜線=隱藏）
 - 不需外部套件，純 CSS + JS 即可
 - 每個專案第一次建立密碼欄位時自動帶入此段程式碼
+
+---
+
+## 📋 通用安全規範（所有專案通用）
+
+### Firebase Firestore Security Rules
+- 上線前 rules **不可為 `if true`**
+- 最低標準：`allow read, write: if request.auth != null;`
+- 建議分離 read / write 條件（例如：public read → authenticated write）
+- 同一 Firebase project 的 rules 只有一份，多專案共用 project 時要注意不要互相覆蓋
+
+### 金鑰與 API Key 管理
+- **Firebase API key（`AIza...`）** 出現在前端是正常的，真正的保護來自 Security Rules
+- **service account 金鑰（`*-adminsdk-*.json`）** 嚴禁進入前端 bundle，僅限後端/工具腳本使用
+- **Supabase `service_role` key** 等同管理員權限，只能放後端環境變數，不可出現在前端
+- **Supabase `anon` key** 可出現在前端，但 RLS 才是真正的保護
+
+### 後端 API / Cloud Functions 身份驗證
+- `onCall` → 使用 `context.auth` 檢查
+- `onRequest`（Express） → 使用 `req.headers.authorization` + `admin.auth().verifyIdToken()` 檢查
+- 每個受保護端點都必須驗證，不可只靠前端隱藏
+
+### 資料結構與敏感欄位
+- 密碼**禁止**存在 Firestore 明文，應使用 Firebase Authentication 或後端 bcrypt 雜湊
+- 員工薪資、個資等敏感資料，不應整包拉到前端再篩選（應在後端過濾）
+- 前端 Firestore query 只取當下需要的欄位
+
+### Supabase 專用
+- 新建 table 後**必須手動開啟 RLS**
+- RLS policy 不可用 `USING (true)` 作為正式規則
+- 撰寫 policy 後先用匿名 session 測試確認阻擋正確
+
+### 上線前檢查清單
+- [ ] 用匿名/未登入身份測試能讀到什麼
+- [ ] Firestore Rules 不是 `if true`
+- [ ] Cloud Functions 每條路由都有 auth 檢查
+- [ ] 前端沒有誤用 `service_role` key
+- [ ] 密碼沒存在 Firestore 明文
 
 ---
 
@@ -128,6 +206,7 @@ projects (collection)
 |------|------|----------|
 | `mpc-` | 菜單拍照計算機 | `mpc-shortlinks`, `mpc-store-codes` |
 | `gps_` | 中區建材行GPS打卡上班 | `gps_中區建材行` |
+| `inv_` | 庫存管理 | `inv_items`, `inv_settings` |
 | `projects` | 工具腳本專用 | `projects`（保留給 _tools） |
 
 **規則：**
@@ -151,6 +230,33 @@ projects (collection)
 
 ## Firebase 金鑰
 服務帳戶金鑰在 firebase雲端資料夾 根目錄下的 `opencode-sk-*.json` 檔案。
+
+## ⚠️ Firebase Hosting Site 命名規則（重要）
+所有專案**必須使用獨立的 Hosting Site**，禁止多個專案共用同一個 site。
+
+### 現有專案對照表
+
+| 專案資料夾 | Hosting Site | URL |
+|---|---|---|
+| 庫存管理 | inventory-sk | https://inventory-sk.web.app |
+| 後台帳號管理 | backend-sk | https://backend-sk.web.app |
+| 中區建材行GPS打卡上班 | gps-sk | https://gps-sk.web.app |
+| reaction-test | reaction-test-sk | https://reaction-test-sk.web.app |
+| 早餐點餐機 | （獨立 project: breakfast-sk） | https://breakfast-sk.web.app |
+
+### 規則
+1. 新專案的 `firebase.json` **必須包含 `"site": "xxx-sk"`**，不可省略
+2. Hosting Site 名稱格式：`{英文縮寫}-sk`
+3. 不得重複使用已有的 site 名稱
+4. 建立新 site 前先執行 `firebase hosting:sites:list --project opencode-sk` 確認無衝突
+5. **絕對禁止**在 `.firebaserc` 中只設定 `"default"` 而不在 `firebase.json` 指定 `site`
+
+### 新專案部署流程（簡化版）
+1. 確認 site 名稱無重複
+2. 建立 site：`firebase hosting:sites:create {name}-sk --project opencode-sk`
+3. 在 `firebase.json` 加入 `"site": "{name}-sk"`
+4. 在 `.firebaserc` 的 `targets` 加入對應 site
+5. 執行 `firebase deploy --only hosting`
 
 ---
 
@@ -246,3 +352,42 @@ AI應用規劃師-考卷變教材/
 答案：(X)
 解析：...
 ```
+
+---
+
+## 🎨 Hallmark 設計技能（按需使用）
+
+### 觸發關鍵字
+當使用者說出以下關鍵字時，**讀取並執行** `.opencode/skills/hallmark/SKILL.md`：
+- **「需要設計感」**
+- **「不要 AI 味」**
+- **「用 hallmark」**
+- **「幫我設計 landing page」**
+- **「audit」**（審計現有頁面）
+- **「redesign」**（重新設計）
+- **「study」**（從截圖/URL 提取設計 DNA）
+
+### 檔案位置
+```
+.opencode/skills/hallmark/
+├── SKILL.md                    # 主規則文件（必須讀取）
+└── references/
+    ├── anti-patterns.md        # 57 個反 AI 模式清單
+    ├── typography.md            # 字型規範
+    ├── color.md                 # 色彩規範（OKLCH）
+    ├── layout-and-space.md      # 版面與間距
+    ├── motion.md                # 動畫規範
+    ├── copy.md                  # 文案規範
+    ├── slop-test.md             # 58 道設計檢查閘門
+    └── macrostructures.md       # 21 種頁面結構索引
+```
+
+### 使用方式
+1. 說「需要設計感」或「不要 AI 味」→ 自動載入 SKILL.md 並執行設計流程
+2. 說「hallmark audit index.html」→ 僅載入 anti-patterns.md 進行審計
+3. 說「hallmark study 截圖」→ 載入 SKILL.md 的 study 流程
+
+### 注意事項
+- **不在一般對話中自動載入**，只在明確要求時才讀取
+- 每次使用大約消耗 8,000–15,000 token（input + output）
+- 用完後不需額外動作，下次對話不會自動載入

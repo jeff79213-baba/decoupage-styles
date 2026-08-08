@@ -6,20 +6,22 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:install": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-install.ps1"
   },
   "dependencies": {
-    "vue": "^3.5",
-    "pinia": "^2.2",
-    "codemirror": "^6.0",
+    "@codemirror/commands": "^6.8",
+    "@codemirror/language": "^6.10",
+    "@codemirror/search": "^6.5",
     "@codemirror/state": "^6.5",
     "@codemirror/view": "^6.35",
-    "@codemirror/language": "^6.10",
-    "@codemirror/commands": "^6.8",
-    "@codemirror/search": "^6.5"
+    "codemirror": "^6.0",
+    "pinia": "^2.2",
+    "vue": "^3.5"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2",
-    "vite": "^6.0"
+    "vite": "^6.0",
+    "vite-plugin-singlefile": "^2.3.3"
   }
 }

@@ -10,14 +10,22 @@ export const useEditorStore = defineStore('editor', {
     searchKeyword: '',
     searchResults: [],
     searchIndex: -1,
+    currentLine: -1,
     showTypeColumn: true,
     syntaxColors: {
-      gCode: '#89b4fa',
-      mCode: '#f38ba8',
-      nBlock: '#cba6f7',
+      G: '#89b4fa',
+      M: '#f38ba8',
+      N: '#cba6f7',
       variable: '#fab387',
       comment: '#6c7086',
-      default: '#cdd6f4'
+      X: '#a6e3a1',
+      Y: '#94e2d5',
+      Z: '#f38ba8',
+      S: '#f9e2af',
+      F: '#fab387',
+      T: '#cba6f7',
+      H: '#89dceb',
+      D: '#eba0ac'
     }
   }),
 
@@ -26,10 +34,24 @@ export const useEditorStore = defineStore('editor', {
     variables: (state) => state.parsed?.variables || [],
     coordinates: (state) => state.parsed?.coordinates || [],
     lines: (state) => state.parsed?.lines || [],
-    blocks: (state) => state.parsed?.blocks || []
+    blocks: (state) => state.parsed?.blocks || [],
+    lineCoords: (state) => state.parsed?.lineCoords || []
   },
 
   actions: {
+    loadFile(file) {
+      this.currentFileName = file.name
+      const reader = new FileReader()
+      reader.onload = () => {
+        this.rawText = reader.result
+        this.parsed = parseNC(this.rawText)
+        this.searchKeyword = ''
+        this.searchResults = []
+        this.searchIndex = -1
+      }
+      reader.readAsText(file, 'utf-8')
+    },
+
     async openFile() {
       return new Promise((resolve) => {
         const input = document.createElement('input')
@@ -38,17 +60,8 @@ export const useEditorStore = defineStore('editor', {
         input.onchange = (e) => {
           const file = e.target.files[0]
           if (!file) return
-          this.currentFileName = file.name
-          const reader = new FileReader()
-          reader.onload = () => {
-            this.rawText = reader.result
-            this.parsed = parseNC(this.rawText)
-            this.searchKeyword = ''
-            this.searchResults = []
-            this.searchIndex = -1
-            resolve()
-          }
-          reader.readAsText(file, 'utf-8')
+          this.loadFile(file)
+          resolve()
         }
         input.click()
       })
@@ -106,11 +119,19 @@ export const useEditorStore = defineStore('editor', {
     nextSearch() {
       if (this.searchResults.length === 0) return
       this.searchIndex = (this.searchIndex + 1) % this.searchResults.length
+      this.currentLine = this.searchResults[this.searchIndex].line
     },
 
     prevSearch() {
       if (this.searchResults.length === 0) return
       this.searchIndex = this.searchIndex <= 0 ? this.searchResults.length - 1 : this.searchIndex - 1
+      this.currentLine = this.searchResults[this.searchIndex].line
+    },
+
+    goToLine(lineIndex) {
+      this.currentLine = lineIndex
+      this.searchResults = [{ line: lineIndex, text: this.lines[lineIndex] }]
+      this.searchIndex = 0
     },
 
     setNav(section) {

@@ -1,6 +1,10 @@
 opencode-sk-*.json
 node_modules
 dist/
+build/
+*.spec
+__pycache__/
+output/
 .superpowers/
 .tools
 
