@@ -226,7 +226,9 @@ function onWheel(e) {
 
 watch(() => store.rawText, () => setTimeout(updateSimulation, 100))
 
-watch([activeBlock, currentPathIndex, selectedCoord], () => { drawPaths() }, { deep: true })
+watch(() => store.currentLine, () => { drawPaths() })
+
+watch(selectedCoord, () => { drawPaths() })
 
 let resizeObserver = null
 
