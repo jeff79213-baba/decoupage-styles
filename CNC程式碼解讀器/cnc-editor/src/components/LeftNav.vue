@@ -15,6 +15,10 @@ const sections = [
 
 <template>
   <div class="left-nav">
+    <div class="active-program">
+      <span class="ap-label">目前程式：</span>
+      <span class="ap-name">{{ store.currentFileName || '未開啟' }}</span>
+    </div>
     <div class="nav-items">
       <div v-for="s in sections" :key="s.key" class="nav-item" :class="{ active: store.selectedNav === s.key }" @click="store.setNav(s.key)">{{ s.label }}</div>
     </div>
@@ -28,6 +32,9 @@ const sections = [
 
 <style scoped>
 .left-nav { width: 420px; min-width: 420px; max-width: 420px; flex-shrink: 0; display: flex; flex-direction: column; border-right: 1px solid #313244; background: #181825; }
+.active-program { display: flex; align-items: center; gap: 4px; padding: 6px 12px; background: #11111b; border-bottom: 1px solid #313244; font-size: 13px; }
+.ap-label { color: #6c7086; }
+.ap-name { color: #89b4fa; font-weight: 600; }
 .nav-items { display: flex; border-bottom: 1px solid #313244; flex-shrink: 0; }
 .nav-item { flex: 1; padding: 10px 0; text-align: center; cursor: pointer; font-size: 13px; color: #6c7086; border-bottom: 2px solid transparent; transition: all 0.15s; }
 .nav-item.active { color: #89b4fa; border-bottom-color: #89b4fa; }
