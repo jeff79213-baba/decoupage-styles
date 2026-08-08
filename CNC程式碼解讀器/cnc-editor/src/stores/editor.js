@@ -3,15 +3,13 @@ import { parseNC } from '../parsers/ncParser'
 
 export const useEditorStore = defineStore('editor', {
   state: () => ({
-    rawText: '',
-    parsed: null,
-    currentFileName: '',
+    files: [],
+    activeFileId: null,
+    nextFileId: 1,
     selectedNav: 'tools',
     searchKeyword: '',
     searchResults: [],
     searchIndex: -1,
-    bookmarks: [],
-    currentLine: -1,
     showTypeColumn: true,
     monochrome: false,
     monoEnabled: {},
@@ -33,19 +31,25 @@ export const useEditorStore = defineStore('editor', {
   }),
 
   getters: {
-    tools: (state) => state.parsed?.tools || [],
-    variables: (state) => state.parsed?.variables || [],
-    coordinates: (state) => state.parsed?.coordinates || [],
-    lines: (state) => state.parsed?.lines || [],
-    blocks: (state) => state.parsed?.blocks || [],
-    lineCoords: (state) => state.parsed?.lineCoords || [],
-    effectiveSyntaxColors: (state) => {
-      if (!state.monochrome) return state.syntaxColors
+    activeFile: (state) => state.files.find(f => f.id === state.activeFileId) || null,
+    fileById: (state) => (id) => state.files.find(f => f.id === id) || null,
+    activeParsed() { return this.activeFile?.parsed || null },
+    tools() { return this.activeParsed?.tools || [] },
+    variables() { return this.activeParsed?.variables || [] },
+    coordinates() { return this.activeParsed?.coordinates || [] },
+    lines() { return this.activeParsed?.lines || [] },
+    blocks() { return this.activeParsed?.blocks || [] },
+    lineCoords() { return this.activeParsed?.lineCoords || [] },
+    currentFileName() { return this.activeFile?.fileName || '' },
+    currentLine() { return this.activeFile?.currentLine ?? -1 },
+    bookmarks() { return this.activeFile?.bookmarks || [] },
+    effectiveSyntaxColors() {
+      if (!this.monochrome) return this.syntaxColors
       const gray = { G: '#6c7086', M: '#6c7086', N: '#6c7086', X: '#6c7086', Y: '#6c7086', Z: '#6c7086', S: '#6c7086', F: '#6c7086', T: '#6c7086', H: '#6c7086', D: '#6c7086', variable: '#6c7086', comment: '#6c7086' }
       const out = { ...gray }
-      for (const key of Object.keys(state.monoEnabled)) {
-        if (state.monoEnabled[key] && state.syntaxColors[key]) {
-          out[key] = state.syntaxColors[key]
+      for (const key of Object.keys(this.monoEnabled)) {
+        if (this.monoEnabled[key] && this.syntaxColors[key]) {
+          out[key] = this.syntaxColors[key]
         }
       }
       return out
@@ -53,18 +57,52 @@ export const useEditorStore = defineStore('editor', {
   },
 
   actions: {
-    loadFile(file) {
-      this.currentFileName = file.name
+    addFile(file) {
+      const id = this.nextFileId++
+      const rec = { id, fileName: file.name, rawText: '', parsed: null, currentLine: -1, bookmarks: [] }
+      this.files.push(rec)
+      this.setActiveFile(id)
       const reader = new FileReader()
       reader.onload = () => {
-      this.rawText = reader.result
-      this.parsed = parseNC(this.rawText)
+        rec.rawText = reader.result
+        rec.parsed = parseNC(reader.result)
+      }
+      reader.readAsText(file, 'utf-8')
+    },
+
+    setActiveFile(id) {
+      if (!this.files.some(f => f.id === id)) return
+      this.activeFileId = id
       this.searchKeyword = ''
       this.searchResults = []
       this.searchIndex = -1
-      this.bookmarks = []
+    },
+
+    removeFile(id) {
+      const idx = this.files.findIndex(f => f.id === id)
+      if (idx < 0) return
+      this.files.splice(idx, 1)
+      if (this.activeFileId === id) {
+        if (this.files.length) {
+          this.setActiveFile(this.files[Math.max(0, idx - 1)].id)
+        } else {
+          this.activeFileId = null
+          this.searchKeyword = ''
+          this.searchResults = []
+          this.searchIndex = -1
+        }
       }
-      reader.readAsText(file, 'utf-8')
+    },
+
+    updateFileText(fileId, text) {
+      const f = this.files.find(f => f.id === fileId)
+      if (!f) return
+      f.rawText = text
+    },
+
+    setCurrentLine(fileId, line) {
+      const f = this.files.find(f => f.id === fileId)
+      if (f) f.currentLine = line
     },
 
     async openFile() {
@@ -75,7 +113,7 @@ export const useEditorStore = defineStore('editor', {
         input.onchange = (e) => {
           const file = e.target.files[0]
           if (!file) return
-          this.loadFile(file)
+          this.addFile(file)
           resolve()
         }
         input.click()
@@ -83,12 +121,13 @@ export const useEditorStore = defineStore('editor', {
     },
 
     saveFile() {
-      if (!this.rawText) return
-      const blob = new Blob([this.rawText], { type: 'text/plain;charset=utf-8' })
+      const f = this.activeFile
+      if (!f || !f.rawText) return
+      const blob = new Blob([f.rawText], { type: 'text/plain;charset=utf-8' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = this.currentFileName || 'program.nc'
+      a.download = f.fileName || 'program.nc'
       a.click()
       URL.revokeObjectURL(url)
     },
@@ -134,37 +173,42 @@ export const useEditorStore = defineStore('editor', {
     nextSearch() {
       if (this.searchResults.length === 0) return
       this.searchIndex = (this.searchIndex + 1) % this.searchResults.length
-      this.currentLine = this.searchResults[this.searchIndex].line
+      const f = this.activeFile
+      if (f) f.currentLine = this.searchResults[this.searchIndex].line
     },
 
     prevSearch() {
       if (this.searchResults.length === 0) return
       this.searchIndex = this.searchIndex <= 0 ? this.searchResults.length - 1 : this.searchIndex - 1
-      this.currentLine = this.searchResults[this.searchIndex].line
+      const f = this.activeFile
+      if (f) f.currentLine = this.searchResults[this.searchIndex].line
     },
 
     goToLine(lineIndex) {
-      this.currentLine = lineIndex
+      const f = this.activeFile
+      if (f) f.currentLine = lineIndex
       this.searchResults = [{ line: lineIndex, text: this.lines[lineIndex] }]
       this.searchIndex = 0
     },
 
     addBookmarks() {
-      if (!this.searchResults.length) return
+      const f = this.activeFile
+      if (!f || !this.searchResults.length) return
       for (const r of this.searchResults) {
-        if (!this.bookmarks.includes(r.line)) {
-          this.bookmarks.push(r.line)
-        }
+        if (!f.bookmarks.includes(r.line)) f.bookmarks.push(r.line)
       }
-      this.bookmarks.sort((a, b) => a - b)
+      f.bookmarks.sort((a, b) => a - b)
     },
 
     removeBookmark(line) {
-      this.bookmarks = this.bookmarks.filter(l => l !== line)
+      const f = this.activeFile
+      if (!f) return
+      f.bookmarks = f.bookmarks.filter(l => l !== line)
     },
 
     clearBookmarks() {
-      this.bookmarks = []
+      const f = this.activeFile
+      if (f) f.bookmarks = []
     },
 
     setNav(section) {
