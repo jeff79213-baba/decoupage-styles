@@ -11,25 +11,18 @@ import SearchBar from './SearchBar.vue'
 import ColorSettings from './ColorSettings.vue'
 
 const setBookmarksEffect = StateEffect.define()
-const bookmarkLinesField = StateField.define({
+const bookmarkPositionsField = StateField.define({
   create: () => [],
-  update(lines, tr) {
-    lines = lines.map(l => tr.changes.mapPos(l, 1))
+  update(positions, tr) {
+    positions = positions.map(p => tr.changes.mapPos(p, 1))
     for (const e of tr.effects) {
-      if (e.is(setBookmarksEffect)) lines = e.value
+      if (e.is(setBookmarksEffect)) positions = e.value
     }
-    return lines
+    return positions
   },
-  provide: (f) => EditorView.decorations.from(f, (lines, view) => {
-    const doc = view.state.doc
-    return Decoration.set(
-      lines.map(lineNum => {
-        const clamped = Math.min(lineNum, doc.lines - 1)
-        const pos = doc.line(clamped + 1).from
-        return Decoration.line({ attributes: { style: 'background: #f9e2af22' } }).range(pos)
-      })
-    )
-  })
+  provide: (f) => EditorView.decorations.from(f, positions => Decoration.set(
+    positions.map(pos => Decoration.line({ attributes: { style: 'background: #f9e2af22' } }).range(pos))
+  ))
 })
 
 const store = useEditorStore()
@@ -47,7 +40,7 @@ let draggingDivider = false
 function buildExtensions() {
   return [
     basicSetup,
-    bookmarkLinesField,
+    bookmarkPositionsField,
     keymap.of([...searchKeymap, indentWithTab]),
     highlightSelectionMatches(),
     buildCncLanguage(store.effectiveSyntaxColors),
@@ -69,6 +62,18 @@ function buildExtensions() {
   ]
 }
 
+function bookmarkPositions(v) {
+  const doc = v.state.doc
+  return store.bookmarks.map(lineNum => {
+    const clamped = Math.min(lineNum, doc.lines - 1)
+    return doc.line(clamped + 1).from
+  })
+}
+
+function applyBookmarks(v) {
+  v.dispatch({ effects: setBookmarksEffect.of(bookmarkPositions(v)) })
+}
+
 function createView(container) {
   const state = EditorState.create({
     doc: store.rawText,
@@ -76,7 +81,7 @@ function createView(container) {
   })
   const v = new EditorView({ state, parent: container })
   if (store.bookmarks.length) {
-    v.dispatch({ effects: setBookmarksEffect.of([...store.bookmarks]) })
+    applyBookmarks(v)
   }
   v.dom.addEventListener('focusin', () => { activeView = v })
   v.dom.addEventListener('pointerdown', () => { activeView = v })
@@ -168,7 +173,7 @@ watch(() => store.rawText, (newVal) => {
 watch(() => store.bookmarks, () => {
   const views = [view, view2].filter(Boolean)
   for (const v of views) {
-    v.dispatch({ effects: setBookmarksEffect.of([...store.bookmarks]) })
+    applyBookmarks(v)
   }
 })
 
