@@ -36,7 +36,7 @@ const coordPaths = computed(() => {
 const coordColors = ['#89b4fa', '#a6e3a1', '#f9e2af', '#f38ba8', '#cba6f7', '#94e2d5', '#fab387', '#eba0ac']
 
 function updateSimulation() {
-  if (!store.rawText || !store.lines.length) { allPaths = []; drawPaths(); return }
+  if (!store.activeFile?.rawText || !store.lines.length) { allPaths = []; drawPaths(); return }
   allPaths = simulatePath(store.lines, store.lineCoords)
   drawPaths()
 }
@@ -224,7 +224,7 @@ function onWheel(e) {
   drawPaths()
 }
 
-watch(() => store.rawText, () => setTimeout(updateSimulation, 100))
+watch(() => store.activeFile?.rawText, () => setTimeout(updateSimulation, 100))
 
 watch(() => store.currentLine, () => { drawPaths() })
 
@@ -252,7 +252,7 @@ onMounted(() => {
     resizeObserver.observe(canvasRef.value.parentElement)
   }
   fitCanvas()
-  if (store.rawText) updateSimulation()
+  if (store.activeFile?.rawText) updateSimulation()
 })
 
 onBeforeUnmount(() => {
