@@ -64,8 +64,10 @@ export const useEditorStore = defineStore('editor', {
       this.setActiveFile(id)
       const reader = new FileReader()
       reader.onload = () => {
-        rec.rawText = reader.result
-        rec.parsed = parseNC(reader.result)
+        const target = this.files.find(f => f.id === id)
+        if (!target) return
+        target.rawText = reader.result
+        target.parsed = parseNC(reader.result)
       }
       reader.readAsText(file, 'utf-8')
     },
