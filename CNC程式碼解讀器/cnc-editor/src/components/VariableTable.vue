@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useEditorStore } from '../stores/editor'
 const store = useEditorStore()
 const emit = defineEmits(['navigate'])
@@ -12,7 +12,9 @@ function onVarClick(v, i) {
 }
 
 function isActive(v, i) {
-  return i === activeIdx.value || (store.currentLine >= 0 && v.line === store.currentLine + 1)
+  if (i === activeIdx.value) return true
+  if (activeIdx.value >= 0) return false
+  return store.currentLine >= 0 && v.line === store.currentLine + 1
 }
 
 function move(e) {
@@ -30,13 +32,12 @@ function move(e) {
 }
 
 const tableRef = ref(null)
-onMounted(() => { tableRef.value?.addEventListener('keydown', move) })
 </script>
 
 <template>
   <div class="var-table">
     <div class="var-header">變數對應表</div>
-    <table v-if="store.variables.length" ref="tableRef" tabindex="0" class="kbd-table">
+    <table v-if="store.variables.length" ref="tableRef" tabindex="0" class="kbd-table" @keydown="move">
       <thead>
         <tr>
           <th>N 區段</th>

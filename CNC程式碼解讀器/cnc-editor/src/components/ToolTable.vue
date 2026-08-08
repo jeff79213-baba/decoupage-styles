@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useEditorStore } from '../stores/editor'
 const store = useEditorStore()
 const emit = defineEmits(['navigate'])
@@ -13,8 +13,10 @@ function onToolClick(t, i) {
 }
 
 function isActive(t, i) {
-  return i === activeIdx.value || (store.currentLine >= 0 && t.block &&
-    store.currentLine >= t.block.startLine - 1 && store.currentLine <= t.block.endLine - 1)
+  if (i === activeIdx.value) return true
+  if (activeIdx.value >= 0) return false
+  return store.currentLine >= 0 && t.block &&
+    store.currentLine >= t.block.startLine - 1 && store.currentLine <= t.block.endLine - 1
 }
 
 function move(e) {
@@ -32,7 +34,6 @@ function move(e) {
 }
 
 const tableRef = ref(null)
-onMounted(() => { tableRef.value?.addEventListener('keydown', move) })
 </script>
 
 <template>
@@ -44,7 +45,7 @@ onMounted(() => { tableRef.value?.addEventListener('keydown', move) })
         顯示加工類型
       </label>
     </div>
-    <table v-if="store.tools.length" ref="tableRef" tabindex="0" class="kbd-table">
+    <table v-if="store.tools.length" ref="tableRef" tabindex="0" class="kbd-table" @keydown="move">
       <thead>
         <tr>
           <th>N 號</th>
