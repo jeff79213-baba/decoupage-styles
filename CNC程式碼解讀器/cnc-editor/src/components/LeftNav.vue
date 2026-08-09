@@ -3,13 +3,15 @@ import { useEditorStore } from '../stores/editor'
 import ToolTable from './ToolTable.vue'
 import VariableTable from './VariableTable.vue'
 import CoordViewer from './CoordViewer.vue'
+import ErrorList from './ErrorList.vue'
 
 const store = useEditorStore()
 const emit = defineEmits(['navigate'])
 const sections = [
   { key: 'tools', label: '刀號' },
   { key: 'variables', label: '變數' },
-  { key: 'coordinates', label: '座標系' }
+  { key: 'coordinates', label: '座標系' },
+  { key: 'errors', label: '錯誤' }
 ]
 </script>
 
@@ -20,12 +22,13 @@ const sections = [
       <span class="ap-name">{{ store.currentFileName || '未開啟' }}</span>
     </div>
     <div class="nav-items">
-      <div v-for="s in sections" :key="s.key" class="nav-item" :class="{ active: store.selectedNav === s.key }" @click="store.setNav(s.key)">{{ s.label }}</div>
+      <div v-for="s in sections" :key="s.key" class="nav-item" :class="{ active: store.selectedNav === s.key }" @click="store.setNav(s.key)">{{ s.key === 'errors' ? `錯誤 ${store.errorCount}` : s.label }}</div>
     </div>
     <div class="nav-content">
       <ToolTable v-if="store.selectedNav === 'tools'" @navigate="emit('navigate', $event)" />
       <VariableTable v-if="store.selectedNav === 'variables'" @navigate="emit('navigate', $event)" />
       <CoordViewer v-if="store.selectedNav === 'coordinates'" />
+      <ErrorList v-if="store.selectedNav === 'errors'" @navigate="emit('navigate', $event)" />
     </div>
   </div>
 </template>
