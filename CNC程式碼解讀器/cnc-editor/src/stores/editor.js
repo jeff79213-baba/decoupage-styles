@@ -6,6 +6,8 @@ export const useEditorStore = defineStore('editor', {
     files: [],
     activeFileId: null,
     nextFileId: 1,
+    splitCount: 0,
+    splitSlotIds: [],
     selectedNav: 'tools',
     searchKeyword: '',
     searchResults: [],
@@ -53,6 +55,14 @@ export const useEditorStore = defineStore('editor', {
         }
       }
       return out
+    },
+    splitSlots() {
+      const out = []
+      for (let i = 0; i < this.splitCount; i++) {
+        const id = this.splitSlotIds[i] ?? null
+        out.push({ id, file: id != null ? this.fileById(id) : null })
+      }
+      return out
     }
   },
 
@@ -68,8 +78,56 @@ export const useEditorStore = defineStore('editor', {
         if (!target) return
         target.rawText = reader.result
         target.parsed = parseNC(reader.result)
+        const emptyIdx = this.splitSlotIds.indexOf(null)
+        if (emptyIdx >= 0) {
+          const arr = this.splitSlotIds.slice()
+          arr[emptyIdx] = id
+          this.splitSlotIds = arr
+        }
       }
       reader.readAsText(file, 'utf-8')
+    },
+
+    setSplit(count) {
+      if (![2, 3].includes(count)) return
+      const arr = this.splitSlotIds.slice(0, count)
+      while (arr.length < count) {
+        const next = this.files.find(f => !arr.includes(f.id))
+        arr.push(next ? next.id : null)
+      }
+      this.splitSlotIds = arr
+      this.splitCount = count
+    },
+
+    exitSplit() {
+      this.splitCount = 0
+      this.splitSlotIds = []
+    },
+
+    setSlot(index, fileId) {
+      if (index < 0 || index >= this.splitSlotIds.length) return
+      if (!this.files.some(f => f.id === fileId)) return
+      const arr = this.splitSlotIds.slice()
+      const dupIdx = arr.indexOf(fileId)
+      if (dupIdx >= 0) arr[dupIdx] = arr[index]
+      arr[index] = fileId
+      this.splitSlotIds = arr
+    },
+
+    closeSlot(index) {
+      if (index < 0 || index >= this.splitSlotIds.length) return
+      const arr = this.splitSlotIds.slice()
+      arr[index] = null
+      this.splitSlotIds = arr
+    },
+
+    moveSlot(from, to) {
+      if (from === to || from < 0 || to < 0) return
+      const arr = this.splitSlotIds.slice()
+      if (from >= arr.length || to >= arr.length) return
+      const [item] = arr.splice(from, 1)
+      arr.splice(to, 0, item)
+      this.splitSlotIds = arr
     },
 
     setActiveFile(id) {
@@ -93,6 +151,12 @@ export const useEditorStore = defineStore('editor', {
           this.searchResults = []
           this.searchIndex = -1
         }
+      }
+      const slotIdx = this.splitSlotIds.indexOf(id)
+      if (slotIdx >= 0) {
+        const arr = this.splitSlotIds.slice()
+        arr[slotIdx] = null
+        this.splitSlotIds = arr
       }
     },
 
