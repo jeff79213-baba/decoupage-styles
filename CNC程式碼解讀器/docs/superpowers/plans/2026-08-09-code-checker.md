@@ -1020,3 +1020,38 @@ git commit -m "feat: CNC 程式碼錯誤偵測完成 - 即時偵測、錯誤分�
 - **共用 repo**：commit 只含 CNC 相關檔案，避免誤 commit 其他專案改動。
 - **debounce 計時器**：`scheduleCheck` 的 timer 存於 store state，多檔同時編輯時後者覆蓋前者；因只顯示 active 檔，可接受。
 
+---
+
+## 附錄 A：Task 1 審查後修正（2026-08-09）
+
+Task 1 review 以**真實 parseNC + 真實 A.NC** 實測發現 23 個誤報。使用者裁決「全部照建議」。以下為 spec 層級變更與引擎修正清單，Task 1 的 codeChecker.js/test.js 以本附錄為準（優先於上方正文）：
+
+### A.1 spec 層級裁決
+
+| 項目 | 原 | 改為 |
+|---|---|---|
+| E-FMT-004 N 段號非遞增 | error | **warning**（FANUC 的 N 號只是標籤不需遞增，A.NC 為 N8→N7→N14→N3 亂序） |
+| E-TOOL-002 標題刀具比對 | error（實作預設） | **warning**；且比對不取「toolName 第一個數字」當刀號（FM-125M 的 125 是直徑非刀號），標題型號（含字母）一律跳過不報，僅當標題能解析出明確刀號（如 `N1(T1)`）才比對 |
+| G99 | 實作從 KNOWN_G_CODES 移除 | **恢復為合法 G 碼**（G99 為 FANUC 每轉進給模式，A.NC L162/L175/L192/L216 實用）。E-FMT-005 測試樣本改用真正未知碼（如 G6） |
+| 缺實作規則 | brief 無 | **補齊 4 條**：E-TOOL-007（H 無 G43→info）、E-STR-007（G#100 動態座標系範圍→warning）、E-MOT-005（Z 進給無 M3/M4→warning）、E-MOT-006（迴圈變數未修改→info） |
+| 整合測試 | 全走 mock helper | **新增**：用真實 `parseNC`（`src/parsers/ncParser.js`）跑 A.NC 樣本確認無誤報 |
+
+### A.2 引擎修正（純邏輯，不改規則等級）
+
+1. **G 碼前導零正規化**：`G00`/`G01` 查表前用 `String(parseInt(num, 10))` 正規化（比照 M 碼），A.NC L89/L93/L158/L213 等 `G00`/`G01` 不再誤報 E-FMT-005。
+2. **E-TOOL-001 剝註解**：掃 M6 前先移除 `(...)` 內容，`(Z0,M6)`（A.NC L173/L207）不再誤報。
+3. **E-TOOL-005 修正**：`definedTools` 併入 `tM6Lines` 收集的刀號（N3 段 `T3M6` 後接 `T0M6` 覆寫 toolNo 問題，A.NC L224→L253）。
+4. **E-MOT-004 剝註解**：coordsUsed 掃描前先剝 `(...)`，`(B3101=A-G54-G59)`（A.NC L3）不再誤報 G54/G59。
+5. **E-STR-004 行號**：GOTO 問題的 line 改為 GOTO 所在實際行號（原 `problem(0, ...)` 違反 1-indexed）。
+6. **G 碼正規化後再比對 KNOWN**：`G#100`、G 碼多位數（E-FMT-009）處理順序保持。
+
+### A.3 新增/修改測試
+
+- E-FMT-005：樣本 `'G99\n'` → `'G6\n'`；另加 `G99` 不觸發 E-FMT-005 的負面測試。
+- E-FMT-004：加型別斷言 `type === 'warning'`。
+- E-TOOL-002：樣本改為標題含明確刀號（如 `N1(T1)\nT2M6` → 觸發），並加「標題型號含字母不誤報」負面測試。
+- 新增 E-TOOL-007 / E-STR-007 / E-MOT-005 / E-MOT-006 觸發 + 不觸發測試。
+- 新增「真實 parseNC + A.NC 樣本（含 G00/G01/G99/註解帶碼/T0M6 結尾/N 號亂序）無 error 誤報」整合測試。
+- 既有 26 個 store 測試維持通過；codeChecker 測試數為 28 + 新增（各規則 + 整合 + 負面）。
+
+
