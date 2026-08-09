@@ -246,3 +246,63 @@ describe('editor store 並排格子', () => {
     expect(store.splitSlotIds[2]).toBe(4)
   })
 })
+
+describe('editor store 錯誤偵測整合', () => {
+  it('scheduleCheck 後 errors getter 有內容', async () => {
+    const store = useEditorStore()
+    store.$patch({
+      files: [{
+        id: 1, fileName: 'BAD.NC',
+        rawText: 'N1(FM-125\nT1M6\nM30\n',
+        parsed: parseNC('N1(FM-125\nT1M6\nM30\n'),
+        currentLine: -1, bookmarks: []
+      }],
+      activeFileId: 1
+    })
+    store.scheduleCheck(1)
+    await new Promise(r => setTimeout(r, 400))
+    expect(store.errors.length).toBeGreaterThan(0)
+    expect(store.errors.some(p => p.code === 'E-FMT-001')).toBe(true)
+  })
+
+  it('errors getter 隨 activeFileId 切換', () => {
+    const store = useEditorStore()
+    store.$patch({
+      files: [
+        { id: 1, fileName: 'A.NC', rawText: 'N1(T1)\nT1M6\n', parsed: parseNC('N1(T1)\nT1M6\n'), currentLine: -1, bookmarks: [] },
+        { id: 2, fileName: 'B.NC', rawText: 'END1\n', parsed: parseNC('END1\n'), currentLine: -1, bookmarks: [] }
+      ],
+      activeFileId: 1,
+      nextFileId: 3
+    })
+    store.runCheck(1)
+    store.runCheck(2)
+    expect(store.errors.length).toBe(0)
+    store.setActiveFile(2)
+    expect(store.errors.some(p => p.code === 'E-STR-002')).toBe(true)
+  })
+
+  it('errorCount 只算 error+warning', () => {
+    const store = useEditorStore()
+    store.$patch({ files: [], activeFileId: null })
+    store.errorsByFile[999] = [
+      { line: 1, column: 1, type: 'error', code: 'X', message: 'a' },
+      { line: 2, column: 1, type: 'warning', code: 'Y', message: 'b' },
+      { line: 3, column: 1, type: 'info', code: 'Z', message: 'c' }
+    ]
+    store.activeFileId = 999
+    expect(store.errorCount).toBe(2)
+  })
+
+  it('updateFileText 觸發 scheduleCheck', async () => {
+    const store = useEditorStore()
+    store.$patch({
+      files: [{ id: 1, fileName: 'A.NC', rawText: 'M30\n', parsed: parseNC('M30\n'), currentLine: -1, bookmarks: [] }],
+      activeFileId: 1,
+      nextFileId: 2
+    })
+    store.updateFileText(1, 'END1\n')
+    await new Promise(r => setTimeout(r, 400))
+    expect(store.errors.some(p => p.code === 'E-STR-002')).toBe(true)
+  })
+})

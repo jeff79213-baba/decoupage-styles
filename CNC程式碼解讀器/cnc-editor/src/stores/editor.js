@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { parseNC } from '../parsers/ncParser'
+import { checkNC } from '../utils/codeChecker'
 
 export const useEditorStore = defineStore('editor', {
   state: () => ({
@@ -12,6 +13,8 @@ export const useEditorStore = defineStore('editor', {
     searchKeyword: '',
     searchResults: [],
     searchIndex: -1,
+    errorsByFile: {},
+    errorDebounceTimer: null,
     showTypeColumn: true,
     monochrome: false,
     monoEnabled: {},
@@ -40,6 +43,8 @@ export const useEditorStore = defineStore('editor', {
     variables() { return this.activeParsed?.variables || [] },
     coordinates() { return this.activeParsed?.coordinates || [] },
     lines() { return this.activeParsed?.lines || [] },
+    errors() { return this.errorsByFile[this.activeFileId] || [] },
+    errorCount() { return this.errors.filter(p => p.type === 'error' || p.type === 'warning').length },
     blocks() { return this.activeParsed?.blocks || [] },
     lineCoords() { return this.activeParsed?.lineCoords || [] },
     currentFileName() { return this.activeFile?.fileName || '' },
@@ -78,6 +83,7 @@ export const useEditorStore = defineStore('editor', {
         if (!target) return
         target.rawText = reader.result
         target.parsed = parseNC(reader.result)
+        this.runCheck(id)
         const emptyIdx = this.splitSlotIds.indexOf(null)
         if (emptyIdx >= 0) {
           const arr = this.splitSlotIds.slice()
@@ -136,12 +142,16 @@ export const useEditorStore = defineStore('editor', {
       this.searchKeyword = ''
       this.searchResults = []
       this.searchIndex = -1
+      this.runCheck(id)
     },
 
     removeFile(id) {
       const idx = this.files.findIndex(f => f.id === id)
       if (idx < 0) return
       this.files.splice(idx, 1)
+      const eb = { ...this.errorsByFile }
+      delete eb[id]
+      this.errorsByFile = eb
       if (this.activeFileId === id) {
         if (this.files.length) {
           this.setActiveFile(this.files[Math.max(0, idx - 1)].id)
@@ -164,6 +174,7 @@ export const useEditorStore = defineStore('editor', {
       const f = this.files.find(f => f.id === fileId)
       if (!f) return
       f.rawText = text
+      this.scheduleCheck(fileId)
     },
 
     setCurrentLine(fileId, line) {
@@ -294,6 +305,31 @@ export const useEditorStore = defineStore('editor', {
     toggleMonoEnabled(category) {
       this.monoEnabled[category] = !this.monoEnabled[category]
       localStorage.setItem('cnc-mono-enabled', JSON.stringify(this.monoEnabled))
+    },
+
+    runCheck(fileId) {
+      const f = this.files.find(f => f.id === fileId)
+      if (!f || !f.rawText) {
+        this.errorsByFile = { ...this.errorsByFile, [fileId]: [] }
+        return
+      }
+      const parsed = f.parsed || parseNC(f.rawText)
+      const problems = checkNC({
+        text: f.rawText,
+        blocks: parsed.blocks || [],
+        tools: parsed.tools || [],
+        variables: parsed.variables || [],
+        lineCoords: parsed.lineCoords || []
+      })
+      this.errorsByFile = { ...this.errorsByFile, [fileId]: problems }
+    },
+
+    scheduleCheck(fileId) {
+      if (this.errorDebounceTimer) clearTimeout(this.errorDebounceTimer)
+      this.errorDebounceTimer = setTimeout(() => {
+        this.runCheck(fileId)
+        this.errorDebounceTimer = null
+      }, 300)
     },
 
     loadSyntaxColors() {
