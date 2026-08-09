@@ -140,19 +140,23 @@ describe('codeChecker 規則偵測', () => {
   })
 
   it('E-FMT-007 行首非法字元', () => {
-    expect(hasCode(run('XYZ\n'), 'E-FMT-007')).toBe(true)
+    expect(hasCode(run('ABC\n'), 'E-FMT-007')).toBe(true)
   })
 
   it('E-FMT-008 座標缺值', () => {
-    expect(hasCode(run('G1X.\n'), 'E-FMT-008')).toBe(true)
+    expect(hasCode(run('G1X,\n'), 'E-FMT-008')).toBe(true)
   })
 
   it('E-FMT-009 G 碼多位數字', () => {
     expect(hasCode(run('G100\n'), 'E-FMT-009')).toBe(true)
   })
 
-  it('E-TOOL-001 T 無 M6', () => {
-    expect(hasCode(run('T5\n'), 'E-TOOL-001')).toBe(true)
+  it('E-TOOL-001 換刀 M6 缺 T 碼', () => {
+    expect(hasCode(run('M6\n'), 'E-TOOL-001')).toBe(true)
+  })
+
+  it('預選刀（獨立 T 無 M6）不報錯', () => {
+    expect(hasCode(run('T5\n'), 'E-TOOL-001')).toBe(false)
   })
 
   it('E-TOOL-002 T 刀號與段標題不符', () => {
@@ -305,7 +309,7 @@ export function checkNC({ text, blocks, tools, variables }) {
       out.push(problem(lineNum, 'E-FMT-007', `行首非法字元「${first}」`))
     }
 
-    if (/G\d+(\.\d+)?(X|Y|Z)[^0-9\-.$]/i.test(trimmed)) {
+    if (/[XYZW](?![-\d.])/i.test(trimmed) && /[XYZW]/i.test(trimmed.replace(/\([^)]*\)/g, ''))) {
       out.push(problem(lineNum, 'E-FMT-008', '座標值缺數字'))
     }
 
@@ -339,12 +343,9 @@ export function checkNC({ text, blocks, tools, variables }) {
   for (const b of blocks) {
     for (let ln = b.startLine; ln <= b.endLine; ln++) {
       const l = lines[ln - 1] || ''
-      const tOnly = l.match(/T(\d+)/)
-      if (tOnly && !/T\d+M6/i.test(l) && !/T\d+M06/i.test(l)) {
-        if (!/T0M6/i.test(l)) out.push(problem(ln, 'E-TOOL-001', `T${tOnly[1]} 缺少 M6`))
-      }
-      if (tOnly && b.toolNo && tOnly[1] !== b.toolNo && !/T\d+M6/i.test(l)) {
-        // T 號與段刀號不同且非換刀行 → 可能是選刀，不報
+      const hasM6 = /M6/i.test(l)
+      if (hasM6 && !/T\d+M6/i.test(l) && !/T\d+M06/i.test(l)) {
+        out.push(problem(ln, 'E-TOOL-001', '換刀指令 M6 缺少 T 碼'))
       }
     }
     if (b.toolNo) {
@@ -355,6 +356,7 @@ export function checkNC({ text, blocks, tools, variables }) {
       }
     }
   }
+
 
   const tM6Lines = []
   for (let i = 0; i < lines.length; i++) {

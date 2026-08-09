@@ -79,14 +79,14 @@
 | E-FMT-005 | 未知 G 碼（不在內建清單） | error |
 | E-FMT-006 | 未知 M 碼（不在內建清單） | error |
 | E-FMT-007 | 行首出現非法字元（不在 N/G/M/T/H/D/X/Y/Z/S/F/#/WHILE/END/GOTO/(/)/%） | error |
-| E-FMT-008 | 座標 X/Y/Z 值缺數字（如 `X.` 或 `X` 後無值） | error |
+| E-FMT-008 | 座標 X/Y/Z 後緊接非數字字元（如 `X,` 或 `X` 後無值） | error |
 | E-FMT-009 | G 碼多位數字（如 G100，超出控制器範圍） | warning |
 
 ### B. 換刀與補正
 
 | code | 檢查 | 判定 |
 |---|---|---|
-| E-TOOL-001 | 段內有 `T(\d+)` 但無 `M6` | error |
+| E-TOOL-001 | 換刀 `M6` 出現但無 `T(\d+)` 搭配 | error |
 | E-TOOL-002 | 段內 `T(\d+)M6` 的刀號與該段 N 標題刀具不相符 | warning |
 | E-TOOL-003 | `H` 號與段內刀號不符 | warning |
 | E-TOOL-004 | `D` 號與段內刀號不符 | warning |
