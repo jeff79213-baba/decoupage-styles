@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive } from 'vue'
 import { useEditorStore } from './stores/editor'
 import EditorPanel from './components/EditorPanel.vue'
 import LeftNav from './components/LeftNav.vue'
