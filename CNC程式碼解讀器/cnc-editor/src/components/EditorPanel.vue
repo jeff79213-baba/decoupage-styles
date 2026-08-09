@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount, computed } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount, computed, nextTick } from 'vue'
 import { EditorView, basicSetup } from 'codemirror'
 import { EditorState, StateEffect, StateField } from '@codemirror/state'
 import { keymap, GutterMarker, lineNumberMarkers } from '@codemirror/view'
@@ -47,8 +47,11 @@ const bookmarkPositionsField = StateField.define({
 })
 
 const editorContainer = ref(null)
+const splitContainer = ref(null)
 let view = null
+let view2 = null
 const showColorSettings = ref(false)
+const splitPane = ref(false)
 
 function buildExtensions() {
   return [
@@ -107,14 +110,34 @@ function initEditor() {
   view = createView(editorContainer.value)
 }
 
+function destroySplit() {
+  view2?.destroy()
+  view2 = null
+  splitPane.value = false
+}
+
+async function toggleSplit() {
+  if (splitPane.value) {
+    destroySplit()
+    return
+  }
+  splitPane.value = true
+  await nextTick()
+  if (splitContainer.value) {
+    view2 = createView(splitContainer.value)
+    if (fileInfo.value?.bookmarks?.length) applyBookmarks(view2)
+  }
+}
+
 function goToLine(lineIndex) {
-  if (!view) return
-  const target = view
-  const pos = target.state.doc.line(lineIndex + 1)
-  target.dispatch({
-    selection: { anchor: pos.from },
-    effects: EditorView.scrollIntoView(pos.from, { y: 'start' })
-  })
+  const views = [view, view2].filter(Boolean)
+  for (const v of views) {
+    const pos = v.state.doc.line(lineIndex + 1)
+    v.dispatch({
+      selection: { anchor: pos.from },
+      effects: EditorView.scrollIntoView(pos.from, { y: 'start' })
+    })
+  }
 }
 
 function onSearchResult(results, index) {
@@ -129,29 +152,41 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   view?.destroy()
+  view2?.destroy()
   view = null
+  view2 = null
 })
 
 watch(() => fileInfo.value?.rawText, (newVal) => {
-  if (view && newVal !== view.state.doc.toString()) {
-    view.dispatch({
-      changes: { from: 0, to: view.state.doc.length, insert: newVal }
-    })
+  const views = [view, view2].filter(Boolean)
+  for (const v of views) {
+    if (newVal !== v.state.doc.toString()) {
+      v.dispatch({
+        changes: { from: 0, to: v.state.doc.length, insert: newVal }
+      })
+    }
   }
 })
 
 watch(() => fileInfo.value?.bookmarks, () => {
-  if (view) applyBookmarks(view)
+  const views = [view, view2].filter(Boolean)
+  for (const v of views) applyBookmarks(v)
 }, { deep: true })
 
 watch(() => store.effectiveSyntaxColors, async () => {
-  if (!view) return
-  const pos = view.state.selection.main.head
-  view.destroy()
+  const pos = view?.state.selection.main.head ?? 0
+  const pos2 = view2?.state.selection.main.head
+  view?.destroy()
+  view2?.destroy()
   view = null
+  view2 = null
   if (editorContainer.value) view = createView(editorContainer.value)
+  if (splitPane.value && splitContainer.value) view2 = createView(splitContainer.value)
   if (pos <= view.state.doc.length) {
     view.dispatch({ selection: { anchor: pos } })
+  }
+  if (view2 && pos2 != null && pos2 <= view2.state.doc.length) {
+    view2.dispatch({ selection: { anchor: pos2 } })
   }
 }, { deep: true })
 
@@ -170,6 +205,7 @@ defineExpose({ onSearchResult, goToLine })
       <span class="file-name">{{ fileInfo?.fileName || '未開啟檔案' }}</span>
       <div class="editor-actions">
         <SearchBar @search="onSearchResult" />
+        <button @click="toggleSplit" :class="{ on: splitPane }">分切</button>
         <button @click="showColorSettings = !showColorSettings">顏色設定</button>
         <template v-if="splitMode">
           <button class="slot-btn" title="替換程式" @click.stop="emit('toggle-dropdown', slotIndex)">▾</button>
@@ -177,7 +213,10 @@ defineExpose({ onSearchResult, goToLine })
         </template>
       </div>
     </div>
-    <div ref="editorContainer" class="editor-body"></div>
+    <div class="editor-body" :class="{ split: splitPane }">
+      <div ref="editorContainer" class="editor-pane"></div>
+      <div v-if="splitPane" ref="splitContainer" class="editor-pane"></div>
+    </div>
     <ColorSettings v-if="showColorSettings" @close="showColorSettings = false" />
   </div>
 </template>
@@ -189,9 +228,12 @@ defineExpose({ onSearchResult, goToLine })
 .file-name { font-size: 13px; color: #a6adc8; font-weight: 600; }
 .editor-panel.active .file-name { color: #89b4fa; font-size: 14px; }
 .editor-actions { display: flex; align-items: center; gap: 6px; }
-.editor-body { flex: 1; overflow: hidden; display: flex; }
-.editor-body :deep(.cm-editor) { height: 100%; flex: 1; }
-.editor-body :deep(.cm-scroller) { overflow: auto; }
+.editor-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.editor-body.split { flex-direction: row; }
+.editor-pane { flex: 1; min-width: 0; overflow: hidden; display: flex; }
+.editor-body.split .editor-pane + .editor-pane { border-left: 1px solid #313244; }
+.editor-pane :deep(.cm-editor) { height: 100%; flex: 1; }
+.editor-pane :deep(.cm-scroller) { overflow: auto; }
 .editor-body :deep(.cm-gutterElement) { position: relative; }
 .editor-body :deep(.cm-bookmark-dot) {
   display: inline-block;
