@@ -12,8 +12,11 @@ import SearchBar from './SearchBar.vue'
 import ColorSettings from './ColorSettings.vue'
 
 const props = defineProps({
-  fileId: { type: Number, default: null }
+  fileId: { type: Number, default: null },
+  splitMode: { type: Boolean, default: false },
+  slotIndex: { type: Number, default: -1 }
 })
+const emit = defineEmits(['close-slot', 'toggle-dropdown'])
 const store = useEditorStore()
 
 const isActive = computed(() => store.activeFileId === props.fileId)
@@ -46,6 +49,8 @@ const bookmarkPositionsField = StateField.define({
 const editorContainer = ref(null)
 let view = null
 const showColorSettings = ref(false)
+const dropActive = ref(false)
+let dragDepth = 0
 
 function buildExtensions() {
   return [
@@ -121,7 +126,7 @@ function onSearchResult(results, index) {
 
 onMounted(() => {
   store.loadSyntaxColors()
-  initEditor()
+  if (fileInfo.value) initEditor()
 })
 
 onBeforeUnmount(() => {
@@ -152,16 +157,66 @@ watch(() => store.effectiveSyntaxColors, async () => {
   }
 }, { deep: true })
 
+function onHeaderDragStart(e) {
+  if (!props.splitMode) return
+  e.dataTransfer.setData('text/slot-from', String(props.slotIndex))
+  e.dataTransfer.effectAllowed = 'move'
+}
+
+function onHeaderDragEnter(e) {
+  if (!props.splitMode) return
+  const types = e.dataTransfer?.types || []
+  if (!types.includes('text/slot-from')) return
+  e.preventDefault()
+  dragDepth++
+  dropActive.value = true
+}
+
+function onHeaderDragOver(e) {
+  if (!props.splitMode) return
+  e.preventDefault()
+  if (e.dataTransfer?.types?.includes('text/slot-from')) {
+    e.dataTransfer.dropEffect = 'move'
+  }
+}
+
+function onHeaderDragLeave(e) {
+  if (!props.splitMode) return
+  if (dragDepth === 0) return
+  dragDepth--
+  if (dragDepth === 0) dropActive.value = false
+}
+
+function onHeaderDrop(e) {
+  if (!props.splitMode) return
+  e.preventDefault()
+  dragDepth = 0
+  dropActive.value = false
+  const types = e.dataTransfer?.types || []
+  if (!types.includes('text/slot-from')) return
+  e.stopPropagation()
+  const from = parseInt(e.dataTransfer.getData('text/slot-from') || '-1', 10)
+  if (!isNaN(from) && from >= 0 && from !== props.slotIndex) {
+    store.moveSlot(from, props.slotIndex)
+  }
+}
+
 defineExpose({ onSearchResult, goToLine })
 </script>
 
 <template>
   <div class="editor-panel" :class="{ active: isActive }">
-    <div class="editor-header">
+    <div class="editor-header" :class="{ draggable: splitMode, 'drop-target': dropActive }" :draggable="splitMode"
+      @dragstart="onHeaderDragStart" @dragenter="onHeaderDragEnter" @dragover="onHeaderDragOver"
+      @dragleave="onHeaderDragLeave" @drop="onHeaderDrop">
       <span class="file-name">{{ fileInfo?.fileName || '未開啟檔案' }}</span>
       <div class="editor-actions">
         <SearchBar @search="onSearchResult" />
         <button @click="showColorSettings = !showColorSettings">顏色設定</button>
+        <template v-if="splitMode">
+          <button class="slot-btn" title="替換程式" @click.stop="emit('toggle-dropdown', slotIndex)">▾</button>
+          <button class="slot-btn" title="關閉此格" @click.stop="emit('close-slot', slotIndex)">×</button>
+        </template>
       </div>
     </div>
     <div ref="editorContainer" class="editor-body"></div>
@@ -189,4 +244,8 @@ defineExpose({ onSearchResult, goToLine })
   background: #f9e2af;
   vertical-align: middle;
 }
+.editor-header.draggable { cursor: grab; }
+.editor-header.draggable:active { cursor: grabbing; }
+.slot-btn { min-width: 24px; padding: 2px 6px; line-height: 1.2; }
+.editor-header.drop-target { box-shadow: inset 0 0 0 2px #89b4fa; }
 </style>
