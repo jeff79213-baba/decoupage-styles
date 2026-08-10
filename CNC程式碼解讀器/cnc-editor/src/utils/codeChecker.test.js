@@ -118,7 +118,18 @@ describe('codeChecker 規則偵測', () => {
   })
 
   it('E-FMT-009 G 碼多位數字', () => {
-    expect(hasCode(run('G100\n'), 'E-FMT-009')).toBe(true)
+    const p = run('G100\n').find(p => p.code === 'E-FMT-009')
+    expect(p).toBeTruthy()
+    expect(p.type).toBe('warning')
+  })
+
+  it('註解內含 M 碼不誤報 E-FMT-006', () => {
+    expect(hasCode(run('(Z-90,M10)\n'), 'E-FMT-006')).toBe(false)
+  })
+
+  it('註解內含 G 碼不誤報 E-FMT-009', () => {
+    expect(hasCode(run('(G101B0;)\n'), 'E-FMT-009')).toBe(false)
+    expect(hasCode(run('(G101B0;)\n'), 'E-FMT-005')).toBe(false)
   })
 
   it('E-TOOL-001 換刀 M6 缺 T 碼', () => {
@@ -140,11 +151,15 @@ describe('codeChecker 規則偵測', () => {
   })
 
   it('E-TOOL-003 H 號與刀號不符', () => {
-    expect(hasCode(run('N1(FM-125)\nT1M6\nG43Z50.H2\n'), 'E-TOOL-003')).toBe(true)
+    const p = run('N1(FM-125)\nT1M6\nG43Z50.H2\n').find(p => p.code === 'E-TOOL-003')
+    expect(p).toBeTruthy()
+    expect(p.type).toBe('warning')
   })
 
   it('E-TOOL-004 D 號與刀號不符', () => {
-    expect(hasCode(run('N1(FM-125)\nT1M6\nG1G42X1.D2\n'), 'E-TOOL-004')).toBe(true)
+    const p = run('N1(FM-125)\nT1M6\nG1G42X1.D2\n').find(p => p.code === 'E-TOOL-004')
+    expect(p).toBeTruthy()
+    expect(p.type).toBe('warning')
   })
 
   it('E-TOOL-005 使用未定義刀具', () => {
@@ -152,7 +167,9 @@ describe('codeChecker 規則偵測', () => {
   })
 
   it('E-TOOL-006 D 無 G41/G42', () => {
-    expect(hasCode(run('N1(FM-125)\nT1M6\nG1X1.D1\n'), 'E-TOOL-006')).toBe(true)
+    const p = run('N1(FM-125)\nT1M6\nG1X1.D1\n').find(p => p.code === 'E-TOOL-006')
+    expect(p).toBeTruthy()
+    expect(p.type).toBe('warning')
   })
 
   it('E-STR-001 WHILE 無 END1', () => {
@@ -169,8 +186,17 @@ describe('codeChecker 規則偵測', () => {
     expect(p.line).toBe(2)
   })
 
+  it('E-STR-004 裸 N 標記可作為 GOTO 目標不報', () => {
+    expect(hasCode(run('N100\nGOTO100\n'), 'E-STR-004')).toBe(false)
+  })
+
   it('E-STR-005 變數未定義即使用', () => {
     expect(hasCode(run('#501=53+#999\n'), 'E-STR-005')).toBe(true)
+  })
+
+  it('E-STR-005 系統變數 #1000/#5000 不誤報', () => {
+    expect(hasCode(run('#1000\n'), 'E-STR-005')).toBe(false)
+    expect(hasCode(run('#5000\n'), 'E-STR-005')).toBe(false)
   })
 
   it('E-STR-006 迴圈變數 #100 未賦值', () => {
@@ -186,11 +212,24 @@ describe('codeChecker 規則偵測', () => {
   })
 
   it('E-MOT-003 M30 前無回原點', () => {
-    expect(hasCode(run('M30\n'), 'E-MOT-003')).toBe(true)
+    const p = run('M30\n').find(p => p.code === 'E-MOT-003')
+    expect(p).toBeTruthy()
+    expect(p.type).toBe('warning')
   })
 
-  it('E-MOT-004 使用 G54 前未設定', () => {
-    expect(hasCode(run('G54\n'), 'E-MOT-004')).toBe(true)
+  it('E-MOT-004 使用 G54 但無設定行', () => {
+    const p = run('G0G90G54X1.\n').find(p => p.code === 'E-MOT-004')
+    expect(p).toBeTruthy()
+    expect(p.line).toBe(1)
+    expect(p.type).toBe('warning')
+  })
+
+  it('E-MOT-004 裸 G54 單獨行視為設定不報', () => {
+    expect(hasCode(run('G54\n'), 'E-MOT-004')).toBe(false)
+  })
+
+  it('E-MOT-004 有設定行後使用不報', () => {
+    expect(hasCode(run('G54\nG0G90G54X1.\n'), 'E-MOT-004')).toBe(false)
   })
 
   it('E-TOOL-007 H 碼無 G43', () => {
@@ -258,7 +297,9 @@ describe('codeChecker 規則偵測', () => {
     expect(KNOWN_M_CODES.length).toBeGreaterThan(10)
     expect(KNOWN_G_CODES).toContain('G54')
     expect(KNOWN_G_CODES).toContain('G99')
+    expect(KNOWN_G_CODES).toContain('G53')
     expect(KNOWN_M_CODES).toContain('M30')
+    expect(KNOWN_M_CODES).toContain('M19')
   })
 })
 

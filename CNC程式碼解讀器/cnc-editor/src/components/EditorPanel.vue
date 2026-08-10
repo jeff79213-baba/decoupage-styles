@@ -122,7 +122,7 @@ function applyBookmarks(v) {
 
 function errorPositions(v) {
   const doc = v.state.doc
-  const errs = store.errors
+  const errs = store.errorsByFile[props.fileId] || []
   const lines = new Map()
   for (const e of errs) {
     const ln = Math.min(e.line - 1, doc.lines - 1)
@@ -146,7 +146,7 @@ function createView(container) {
   if (fileInfo.value?.bookmarks?.length) {
     applyBookmarks(v)
   }
-  if (store.errors.length) applyErrors(v)
+  if (store.errorsByFile[props.fileId]?.length) applyErrors(v)
   v.dom.addEventListener('focusin', () => { store.setActiveFile(props.fileId) })
   v.dom.addEventListener('pointerdown', () => { store.setActiveFile(props.fileId) })
   return v
@@ -220,7 +220,7 @@ watch(() => fileInfo.value?.bookmarks, () => {
   for (const v of views) applyBookmarks(v)
 }, { deep: true })
 
-watch(() => store.errors, () => {
+watch(() => store.errorsByFile[props.fileId], () => {
   const views = [view, view2].filter(Boolean)
   for (const v of views) applyErrors(v)
 }, { deep: true })

@@ -313,7 +313,7 @@ export const useEditorStore = defineStore('editor', {
         this.errorsByFile = { ...this.errorsByFile, [fileId]: [] }
         return
       }
-      const parsed = f.parsed || parseNC(f.rawText)
+      const parsed = parseNC(f.rawText)
       const problems = checkNC({
         text: f.rawText,
         blocks: parsed.blocks || [],

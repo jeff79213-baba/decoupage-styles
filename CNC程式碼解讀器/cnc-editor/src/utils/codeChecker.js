@@ -1,5 +1,5 @@
-export const KNOWN_G_CODES = ['G0','G1','G2','G3','G4','G10','G17','G18','G19','G20','G21','G28','G30','G40','G41','G42','G43','G44','G49','G50','G54','G55','G56','G57','G58','G59','G68','G69','G73','G74','G76','G80','G81','G82','G83','G84','G85','G86','G87','G88','G89','G90','G91','G92','G93','G94','G95','G98','G99']
-export const KNOWN_M_CODES = ['M0','M1','M2','M3','M4','M5','M6','M7','M8','M9','M30','M98','M99']
+export const KNOWN_G_CODES = ['G0','G1','G2','G3','G4','G10','G17','G18','G19','G20','G21','G28','G30','G40','G41','G42','G43','G44','G49','G50','G53','G54','G55','G56','G57','G58','G59','G68','G69','G73','G74','G76','G80','G81','G82','G83','G84','G85','G86','G87','G88','G89','G90','G91','G92','G93','G94','G95','G98','G99']
+export const KNOWN_M_CODES = ['M0','M1','M2','M3','M4','M5','M6','M7','M8','M9','M10','M11','M12','M13','M14','M15','M16','M17','M18','M19','M20','M21','M22','M23','M24','M25','M26','M27','M28','M29','M30','M31','M32','M33','M34','M35','M36','M37','M38','M39','M40','M41','M42','M43','M44','M45','M46','M47','M48','M49','M50','M51','M52','M53','M54','M55','M56','M57','M58','M59','M60','M61','M62','M63','M64','M65','M66','M67','M68','M69','M70','M71','M72','M73','M74','M75','M76','M78','M79','M80','M81','M82','M83','M84','M85','M86','M87','M88','M89','M90','M91','M92','M93','M94','M95','M96','M97','M98','M99']
 
 function problem(line, code, message, type = 'error', column = 1) {
   return { line, column, type, code, message }
@@ -33,18 +33,18 @@ export function checkNC({ text, blocks, tools, variables }) {
     const allN = [...trimmed.matchAll(/N(\d+)/g)].map(m => m[1])
     if (allN.length > 1) out.push(problem(lineNum, 'E-FMT-003', '同一行出現多個 N 段號'))
 
-    const gMatches = [...trimmed.matchAll(/G(\d+(?:\.\d+)?)/g)].map(m => m[1])
+    const gMatches = [...stripComments(trimmed).matchAll(/G(\d+(?:\.\d+)?)/g)].map(m => m[1])
     for (const g of gMatches) {
       const num = g.split('.')[0]
       const norm = String(parseInt(num, 10))
       if (num.length > 2) {
-        out.push(problem(lineNum, 'E-FMT-009', `G 碼 G${num} 超出控制器範圍`))
+        out.push(problem(lineNum, 'E-FMT-009', `G 碼 G${num} 超出控制器範圍`, 'warning'))
       } else if (!KNOWN_G_CODES.includes(`G${norm}`)) {
         out.push(problem(lineNum, 'E-FMT-005', `未知 G 碼 G${num}`))
       }
     }
 
-    const mMatches = [...trimmed.matchAll(/M(\d+)/g)].map(m => m[1])
+    const mMatches = [...stripComments(trimmed).matchAll(/M(\d+)/g)].map(m => m[1])
     for (const m of mMatches) {
       const num = String(parseInt(m, 10))
       if (!KNOWN_M_CODES.includes(`M${num}`)) {
@@ -58,7 +58,7 @@ export function checkNC({ text, blocks, tools, variables }) {
       out.push(problem(lineNum, 'E-FMT-007', `行首非法字元「${first}」`))
     }
 
-    if (!/^WHILE/i.test(trimmed) && /[XYZW](?![-\d.])/i.test(trimmed) && /[XYZW]/i.test(stripComments(trimmed))) {
+    if (!/^WHILE/i.test(trimmed) && /[XYZW](?![-\d.])/i.test(stripComments(trimmed)) && /[XYZW]/i.test(stripComments(trimmed))) {
       out.push(problem(lineNum, 'E-FMT-008', '座標值缺數字'))
     }
 
@@ -141,14 +141,14 @@ export function checkNC({ text, blocks, tools, variables }) {
       if (/^(WHILE|END\d|GOTO)/i.test(l.trim())) continue
       const hMatch = l.match(/H(\d+)/)
       if (hMatch && hMatch[1] !== b.toolNo) {
-        out.push(problem(ln, 'E-TOOL-003', `H${hMatch[1]} 與刀號 T${b.toolNo} 不符`))
+        out.push(problem(ln, 'E-TOOL-003', `H${hMatch[1]} 與刀號 T${b.toolNo} 不符`, 'warning'))
       }
       const dMatch = l.match(/D(\d+)/)
       if (dMatch && dMatch[1] !== b.toolNo) {
-        out.push(problem(ln, 'E-TOOL-004', `D${dMatch[1]} 與刀號 T${b.toolNo} 不符`))
+        out.push(problem(ln, 'E-TOOL-004', `D${dMatch[1]} 與刀號 T${b.toolNo} 不符`, 'warning'))
       }
       if (dMatch && !/G41/.test(l) && !/G42/.test(l) && !/G40/.test(l)) {
-        out.push(problem(ln, 'E-TOOL-006', `D${dMatch[1]} 無 G41/G42 搭配`))
+        out.push(problem(ln, 'E-TOOL-006', `D${dMatch[1]} 無 G41/G42 搭配`, 'warning'))
       }
       if (hMatch && !hSeen) { hSeen = true; hLine = ln }
     }
@@ -195,6 +195,7 @@ export function checkNC({ text, blocks, tools, variables }) {
     const usedVars = [...l.matchAll(/#(\d+)/g)].map(m => m[1])
     const assigned = l.match(/#(\d+)=/)
     for (const uv of usedVars) {
+      if (uv.length >= 4) continue
       if (assigned && assigned[1] === uv) continue
       if (!definedVars.has(uv)) {
         out.push(problem(lineNum, 'E-STR-005', `變數 #${uv} 未定義即使用`))
@@ -223,9 +224,11 @@ export function checkNC({ text, blocks, tools, variables }) {
   }
 
   // E-STR-004: GOTO 目標檢查
+  const allNLabels = new Set(nFulls)
+  for (const m of [...text.matchAll(/\bN(\d+)\b/g)]) allNLabels.add(`N${m[1]}`)
   for (const m of [...text.matchAll(/GOTO(\d+)/gi)]) {
     const g = m[1]
-    if (!nFulls.some(n => n === `N${g}`) && !nList.some(n => String(n.num) === g)) {
+    if (!allNLabels.has(`N${g}`) && !nList.some(n => String(n.num) === g)) {
       const gotoLine = text.slice(0, m.index).split('\n').length
       out.push(problem(gotoLine, 'E-STR-004', `GOTO 目標 N${g} 不存在`))
     }
@@ -239,23 +242,25 @@ export function checkNC({ text, blocks, tools, variables }) {
     const m30Line = fileText.slice(0, lastM.index).split('\n').length
     const afterM30 = fileText.slice(lastM.index + lastM[0].length)
     if (!hasG28) {
-      out.push(problem(m30Line, 'E-MOT-003', 'M30 前未回原點（無 G28）'))
+      out.push(problem(m30Line, 'E-MOT-003', 'M30 前未回原點（無 G28）', 'warning'))
     }
   }
 
-  const codeText = stripComments(text)
-  const coordsUsed = new Set()
-  for (const w of [...codeText.matchAll(/G(5[4-9])\b/g)]) coordsUsed.add(`G${w[1]}`)
   const coordSetLines = []
+  const coordUseLines = new Map()
   for (let i = 0; i < lines.length; i++) {
-    const stripped = stripComments(lines[i])
-    if (/G5[4-9]\s*P\d/i.test(stripped)) {
+    const stripped = stripComments(lines[i]).trim()
+    if (/^G5[4-9]\s*$/i.test(stripped) || /G5[4-9]\s*P\d/i.test(stripped)) {
       coordSetLines.push(i + 1)
+      continue
+    }
+    for (const w of [...stripped.matchAll(/G(5[4-9])(?!\d)/g)]) {
+      if (!coordUseLines.has(`G${w[1]}`)) coordUseLines.set(`G${w[1]}`, i + 1)
     }
   }
-  for (const c of coordsUsed) {
+  for (const [c, ln] of coordUseLines) {
     if (coordSetLines.length === 0) {
-      out.push(problem(1, 'E-MOT-004', `使用座標系 ${c} 但程式未設定`))
+      out.push(problem(ln, 'E-MOT-004', `使用座標系 ${c} 但程式未設定`, 'warning'))
     }
   }
 
