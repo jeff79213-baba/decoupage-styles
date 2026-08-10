@@ -86,10 +86,14 @@ describe('codeChecker 規則偵測', () => {
     expect(hasCode(run('N1(T1)\nN1(T2)\n'), 'E-FMT-003')).toBe(true)
   })
 
-  it('E-FMT-004 N 段號非遞增', () => {
-    const p = run('N5(T1)\nN3(T2)\n').find(p => p.code === 'E-FMT-004')
-    expect(p).toBeTruthy()
-    expect(p.type).toBe('warning')
+  it('N 段號非遞增不報錯（FANUC 允許廠商自定順序）', () => {
+    expect(run('N5(T1)\nN3(T2)\n').some(p => p.code === 'E-FMT-004')).toBe(false)
+  })
+
+  it('問題輸出按行號遞增排序（gutter RangeSet 需要）', () => {
+    const probs = run('N2(FM-125)\nN1(T1)\nG999\nM77\n')
+    const lines = probs.map(p => p.line)
+    expect([...lines].sort((a, b) => a - b)).toEqual(lines)
   })
 
   it('E-FMT-005 未知 G 碼', () => {

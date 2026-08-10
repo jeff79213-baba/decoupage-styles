@@ -50,16 +50,33 @@ describe('editor store 多檔狀態', () => {
     expect(store.bookmarks).toEqual([])
   })
 
-  it('setActiveFile 清空搜尋狀態', () => {
+  it('搜尋狀態按檔案獨立（searchByFile）', () => {
     const store = useEditorStore()
     seed(store)
-    store.searchResults = [{ line: 0 }]
-    store.searchIndex = 0
-    store.searchKeyword = 'M30'
-    store.setActiveFile(2)
-    expect(store.searchResults).toEqual([])
-    expect(store.searchIndex).toBe(-1)
-    expect(store.searchKeyword).toBe('')
+    store.search(1, 'M30')
+    store.search(2, 'T2')
+    expect(store.searchState(1).results.length).toBeGreaterThan(0)
+    expect(store.searchState(1).keyword).toBe('M30')
+    expect(store.searchState(2).keyword).toBe('T2')
+    expect(store.searchState(2).results[0].line).toBe(2)
+    expect(store.searchState(1).results.some(r => r.line === 4)).toBe(true)
+  })
+
+  it('removeFile 清除該檔搜尋狀態', () => {
+    const store = useEditorStore()
+    seed(store)
+    store.search(2, 'T2')
+    store.removeFile(2)
+    expect(store.searchState(2).results).toEqual([])
+  })
+
+  it('addBookmarks 只影響指定檔', () => {
+    const store = useEditorStore()
+    seed(store)
+    store.search(1, 'T1M6')
+    store.addBookmarks(1)
+    expect(store.files.find(f => f.id === 1).bookmarks).toContain(3)
+    expect(store.files.find(f => f.id === 2).bookmarks).toEqual([])
   })
 
   it('removeFile 關閉 active 檔後 active 轉移鄰近檔', () => {
@@ -93,13 +110,19 @@ describe('editor store 多檔狀態', () => {
     expect(store.files.find(f => f.id === 2).currentLine).toBe(5)
   })
 
-  it('addBookmarks 只影響 active 檔', () => {
+  it('nextSearch 在指定檔內循環', () => {
     const store = useEditorStore()
     seed(store)
-    store.searchResults = [{ line: 3 }]
-    store.searchIndex = 0
-    store.addBookmarks()
-    expect(store.files.find(f => f.id === 1).bookmarks).toContain(3)
+    store.search(1, 'M30')
+    store.nextSearch(1)
+    expect(store.files.find(f => f.id === 1).currentLine).toBe(4)
+  })
+
+  it('clearBookmarks 清除指定檔', () => {
+    const store = useEditorStore()
+    seed(store)
+    store.clearBookmarks(1)
+    expect(store.files.find(f => f.id === 1).bookmarks).toEqual([])
     expect(store.files.find(f => f.id === 2).bookmarks).toEqual([])
   })
 

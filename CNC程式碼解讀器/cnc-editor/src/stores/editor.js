@@ -10,9 +10,7 @@ export const useEditorStore = defineStore('editor', {
     splitCount: 0,
     splitSlotIds: [],
     selectedNav: 'tools',
-    searchKeyword: '',
-    searchResults: [],
-    searchIndex: -1,
+    searchByFile: {},
     errorsByFile: {},
     errorDebounceTimer: null,
     showTypeColumn: true,
@@ -139,9 +137,6 @@ export const useEditorStore = defineStore('editor', {
     setActiveFile(id) {
       if (!this.files.some(f => f.id === id)) return
       this.activeFileId = id
-      this.searchKeyword = ''
-      this.searchResults = []
-      this.searchIndex = -1
       this.runCheck(id)
     },
 
@@ -152,14 +147,14 @@ export const useEditorStore = defineStore('editor', {
       const eb = { ...this.errorsByFile }
       delete eb[id]
       this.errorsByFile = eb
+      const sb = { ...this.searchByFile }
+      delete sb[id]
+      this.searchByFile = sb
       if (this.activeFileId === id) {
         if (this.files.length) {
           this.setActiveFile(this.files[Math.max(0, idx - 1)].id)
         } else {
           this.activeFileId = null
-          this.searchKeyword = ''
-          this.searchResults = []
-          this.searchIndex = -1
         }
       }
       const slotIdx = this.splitSlotIds.indexOf(id)
@@ -229,49 +224,62 @@ export const useEditorStore = defineStore('editor', {
       URL.revokeObjectURL(url)
     },
 
-    search(keyword) {
-      this.searchKeyword = keyword
+    search(fileId, keyword) {
+      const st = this.searchByFile[fileId] || { keyword: '', results: [], index: -1 }
+      st.keyword = keyword
       if (!keyword) {
-        this.searchResults = []
-        this.searchIndex = -1
+        st.results = []
+        st.index = -1
+        this.searchByFile[fileId] = st
         return
       }
+      const f = this.fileById(fileId)
+      const lines = f?.parsed?.lines || []
       const results = []
-      const lines = this.lines
       for (let i = 0; i < lines.length; i++) {
         if (lines[i].includes(keyword)) {
           results.push({ line: i, text: lines[i].trim() })
         }
       }
-      this.searchResults = results
-      this.searchIndex = results.length > 0 ? 0 : -1
+      st.results = results
+      st.index = results.length > 0 ? 0 : -1
+      this.searchByFile[fileId] = st
     },
 
-    nextSearch() {
-      if (this.searchResults.length === 0) return
-      this.searchIndex = (this.searchIndex + 1) % this.searchResults.length
-      const f = this.activeFile
-      if (f) f.currentLine = this.searchResults[this.searchIndex].line
+    searchState(fileId) {
+      return this.searchByFile[fileId] || { keyword: '', results: [], index: -1 }
     },
 
-    prevSearch() {
-      if (this.searchResults.length === 0) return
-      this.searchIndex = this.searchIndex <= 0 ? this.searchResults.length - 1 : this.searchIndex - 1
-      const f = this.activeFile
-      if (f) f.currentLine = this.searchResults[this.searchIndex].line
+    nextSearch(fileId) {
+      const st = this.searchState(fileId)
+      if (st.results.length === 0) return
+      st.index = (st.index + 1) % st.results.length
+      const f = this.fileById(fileId)
+      if (f) f.currentLine = st.results[st.index].line
+      this.searchByFile[fileId] = st
+    },
+
+    prevSearch(fileId) {
+      const st = this.searchState(fileId)
+      if (st.results.length === 0) return
+      st.index = st.index <= 0 ? st.results.length - 1 : st.index - 1
+      const f = this.fileById(fileId)
+      if (f) f.currentLine = st.results[st.index].line
+      this.searchByFile[fileId] = st
     },
 
     goToLine(lineIndex) {
       const f = this.activeFile
       if (f) f.currentLine = lineIndex
-      this.searchResults = [{ line: lineIndex, text: this.lines[lineIndex] }]
-      this.searchIndex = 0
+      this.searchByFile[this.activeFileId] = { keyword: '', results: [{ line: lineIndex, text: this.lines[lineIndex] }], index: 0 }
     },
 
-    addBookmarks() {
-      const f = this.activeFile
-      if (!f || !this.searchResults.length) return
-      for (const r of this.searchResults) {
+    addBookmarks(fileId) {
+      const f = this.fileById(fileId)
+      if (!f) return
+      const st = this.searchState(fileId)
+      if (!st.results.length) return
+      for (const r of st.results) {
         if (!f.bookmarks.includes(r.line)) f.bookmarks.push(r.line)
       }
       f.bookmarks.sort((a, b) => a - b)
@@ -283,8 +291,8 @@ export const useEditorStore = defineStore('editor', {
       f.bookmarks = f.bookmarks.filter(l => l !== line)
     },
 
-    clearBookmarks() {
-      const f = this.activeFile
+    clearBookmarks(fileId) {
+      const f = this.fileById(fileId)
       if (f) f.bookmarks = []
     },
 

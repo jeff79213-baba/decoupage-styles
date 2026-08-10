@@ -82,12 +82,6 @@ export function checkNC({ text, blocks, tools, variables }) {
       out.push(problem(nList[i].line, 'E-FMT-003', `N 段號 N${nList[i].num} 重複`))
     }
   }
-  for (let i = 1; i < nList.length; i++) {
-    if (nList[i].num <= nList[i - 1].num) {
-      out.push(problem(nList[i].line, 'E-FMT-004', `N 段號 N${nList[i].num} 未遞增（前一為 N${nList[i-1].num}）`, 'warning'))
-    }
-  }
-
   // 換刀與補正
   for (let i = 0; i < lines.length; i++) {
     const code = stripComments(lines[i])
@@ -310,5 +304,6 @@ export function checkNC({ text, blocks, tools, variables }) {
     }
   }
 
+  out.sort((a, b) => a.line - b.line || (a.column || 1) - (b.column || 1))
   return out
 }

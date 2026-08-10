@@ -130,7 +130,9 @@ function errorPositions(v) {
       lines.set(ln, e.type === 'error' ? 'error' : lines.get(ln) || 'warning')
     }
   }
-  return [...lines.entries()].map(([ln, level]) => ({ pos: doc.line(ln + 1).from, level }))
+  return [...lines.entries()]
+    .map(([ln, level]) => ({ pos: doc.line(ln + 1).from, level }))
+    .sort((a, b) => a.pos - b.pos)
 }
 
 function applyErrors(v) {
@@ -143,12 +145,14 @@ function createView(container) {
     extensions: buildExtensions()
   })
   const v = new EditorView({ state, parent: container })
-  if (fileInfo.value?.bookmarks?.length) {
-    applyBookmarks(v)
-  }
-  if (store.errorsByFile[props.fileId]?.length) applyErrors(v)
   v.dom.addEventListener('focusin', () => { store.setActiveFile(props.fileId) })
   v.dom.addEventListener('pointerdown', () => { store.setActiveFile(props.fileId) })
+  try {
+    if (fileInfo.value?.bookmarks?.length) applyBookmarks(v)
+    if (store.errorsByFile[props.fileId]?.length) applyErrors(v)
+  } catch (e) {
+    console.error('gutter 套用失敗:', e)
+  }
   return v
 }
 
@@ -188,7 +192,7 @@ function goToLine(lineIndex) {
 }
 
 function onSearchResult(results, index) {
-  if (!isActive.value || !view || index < 0 || !results.length) return
+  if (!view || index < 0 || !results.length) return
   goToLine(results[index].line)
 }
 
@@ -248,15 +252,24 @@ function onHeaderDragStart(e) {
   e.dataTransfer.effectAllowed = 'move'
 }
 
+function onDragStart(e) {
+  if (e.target.closest('input, button, select, a')) {
+    e.preventDefault()
+    e.stopPropagation()
+    return
+  }
+  onHeaderDragStart(e)
+}
+
 defineExpose({ onSearchResult, goToLine })
 </script>
 
 <template>
   <div class="editor-panel" :class="{ active: isActive }">
-    <div class="editor-header" :class="{ draggable: splitMode }" :draggable="splitMode" @dragstart="onHeaderDragStart">
+    <div class="editor-header" :class="{ draggable: splitMode }" :draggable="splitMode" @dragstart="onDragStart">
       <span class="file-name">{{ fileInfo?.fileName || '未開啟檔案' }}</span>
       <div class="editor-actions">
-        <SearchBar @search="onSearchResult" />
+        <SearchBar :file-id="props.fileId" @search="onSearchResult" />
         <button @click="toggleSplit" :class="{ on: splitPane }">分切</button>
         <button @click="showColorSettings = !showColorSettings">顏色設定</button>
         <template v-if="splitMode">

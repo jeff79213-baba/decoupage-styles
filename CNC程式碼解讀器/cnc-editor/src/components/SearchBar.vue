@@ -3,37 +3,42 @@ import { ref, computed } from 'vue'
 import { useEditorStore } from '../stores/editor'
 
 const store = useEditorStore()
+const props = defineProps({
+  fileId: { type: Number, required: true }
+})
 const keyword = ref('')
 const emit = defineEmits(['search'])
 
+const st = computed(() => store.searchState(props.fileId))
+
 function doSearch() {
-  store.search(keyword.value)
-  if (store.searchResults.length > 0) {
-    emit('search', store.searchResults, store.searchIndex)
+  store.search(props.fileId, keyword.value)
+  if (st.value.results.length > 0) {
+    emit('search', st.value.results, st.value.index)
   }
 }
 
 function nextResult() {
-  if (!store.searchResults.length && keyword.value) {
+  if (!st.value.results.length && keyword.value) {
     doSearch()
   }
-  if (!store.searchResults.length) return
-  store.nextSearch()
-  emit('search', store.searchResults, store.searchIndex)
+  if (!st.value.results.length) return
+  store.nextSearch(props.fileId)
+  emit('search', st.value.results, st.value.index)
 }
 
 function prevResult() {
-  if (!store.searchResults.length && keyword.value) {
+  if (!st.value.results.length && keyword.value) {
     doSearch()
   }
-  if (!store.searchResults.length) return
-  store.prevSearch()
-  emit('search', store.searchResults, store.searchIndex)
+  if (!st.value.results.length) return
+  store.prevSearch(props.fileId)
+  emit('search', st.value.results, st.value.index)
 }
 
 const resultLabel = computed(() => {
-  if (!store.searchResults.length) return ''
-  return `${store.searchIndex + 1}/${store.searchResults.length}`
+  if (!st.value.results.length) return ''
+  return `${st.value.index + 1}/${st.value.results.length}`
 })
 </script>
 
@@ -44,8 +49,8 @@ const resultLabel = computed(() => {
     <span v-if="resultLabel" class="result-count">{{ resultLabel }}</span>
     <button @click="prevResult">▲</button>
     <button @click="nextResult">▼</button>
-    <button @click="store.addBookmarks" :disabled="!store.searchResults.length">＋標籤</button>
-    <button @click="store.clearBookmarks" :disabled="!store.bookmarks.length">清除標籤</button>
+    <button @click="store.addBookmarks(props.fileId)" :disabled="!st.value.results.length">＋標籤</button>
+    <button @click="store.clearBookmarks(props.fileId)" :disabled="!store.fileById(props.fileId)?.bookmarks?.length">清除標籤</button>
   </div>
 </template>
 
