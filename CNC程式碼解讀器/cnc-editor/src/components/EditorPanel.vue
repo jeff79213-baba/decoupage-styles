@@ -59,7 +59,7 @@ class ErrorDot extends GutterMarker {
 const errorPositionsField = StateField.define({
   create: () => [],
   update(positions, tr) {
-    positions = positions.map(p => tr.changes.mapPos(p, 1))
+    positions = positions.map(p => ({ pos: tr.changes.mapPos(p.pos, 1), level: p.level }))
     for (const e of tr.effects) {
       if (e.is(setErrorsEffect)) positions = e.value
     }
