@@ -46,6 +46,34 @@ const bookmarkPositionsField = StateField.define({
   })
 })
 
+const setErrorsEffect = StateEffect.define()
+class ErrorDot extends GutterMarker {
+  constructor(level) { super(); this.level = level }
+  toDOM() {
+    const span = document.createElement('span')
+    span.className = `cm-error-dot ${this.level}`
+    return span
+  }
+  eq(other) { return other instanceof ErrorDot && other.level === this.level }
+}
+const errorPositionsField = StateField.define({
+  create: () => [],
+  update(positions, tr) {
+    positions = positions.map(p => tr.changes.mapPos(p, 1))
+    for (const e of tr.effects) {
+      if (e.is(setErrorsEffect)) positions = e.value
+    }
+    return positions
+  },
+  provide: (f) => lineNumberMarkers.from(f, positions => {
+    const ranges = positions.map(p => {
+      const level = p.level === 'error' ? 'error' : 'warning'
+      return new ErrorDot(level).range(p.pos)
+    })
+    return RangeSet.of(ranges)
+  })
+})
+
 const editorContainer = ref(null)
 const splitContainer = ref(null)
 let view = null
@@ -57,6 +85,7 @@ function buildExtensions() {
   return [
     basicSetup,
     bookmarkPositionsField,
+    errorPositionsField,
     keymap.of([...searchKeymap, indentWithTab]),
     highlightSelectionMatches(),
     buildCncLanguage(store.effectiveSyntaxColors),
@@ -91,6 +120,23 @@ function applyBookmarks(v) {
   v.dispatch({ effects: setBookmarksEffect.of(bookmarkPositions(v)) })
 }
 
+function errorPositions(v) {
+  const doc = v.state.doc
+  const errs = store.errors
+  const lines = new Map()
+  for (const e of errs) {
+    const ln = Math.min(e.line - 1, doc.lines - 1)
+    if (!lines.has(ln) || lines.get(ln) === 'warning') {
+      lines.set(ln, e.type === 'error' ? 'error' : lines.get(ln) || 'warning')
+    }
+  }
+  return [...lines.entries()].map(([ln, level]) => ({ pos: doc.line(ln + 1).from, level }))
+}
+
+function applyErrors(v) {
+  v.dispatch({ effects: setErrorsEffect.of(errorPositions(v)) })
+}
+
 function createView(container) {
   const state = EditorState.create({
     doc: fileInfo.value?.rawText || '',
@@ -100,6 +146,7 @@ function createView(container) {
   if (fileInfo.value?.bookmarks?.length) {
     applyBookmarks(v)
   }
+  if (store.errors.length) applyErrors(v)
   v.dom.addEventListener('focusin', () => { store.setActiveFile(props.fileId) })
   v.dom.addEventListener('pointerdown', () => { store.setActiveFile(props.fileId) })
   return v
@@ -173,6 +220,11 @@ watch(() => fileInfo.value?.bookmarks, () => {
   for (const v of views) applyBookmarks(v)
 }, { deep: true })
 
+watch(() => store.errors, () => {
+  const views = [view, view2].filter(Boolean)
+  for (const v of views) applyErrors(v)
+}, { deep: true })
+
 watch(() => store.effectiveSyntaxColors, async () => {
   const pos = view?.state.selection.main.head ?? 0
   const pos2 = view2?.state.selection.main.head
@@ -244,6 +296,16 @@ defineExpose({ onSearchResult, goToLine })
   background: #f9e2af;
   vertical-align: middle;
 }
+.editor-pane :deep(.cm-error-dot) {
+  display: inline-block;
+  margin-left: 3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+.editor-pane :deep(.cm-error-dot.error) { background: #f38ba8; }
+.editor-pane :deep(.cm-error-dot.warning) { background: #f9e2af; }
 .editor-header.draggable { cursor: grab; }
 .editor-header.draggable:active { cursor: grabbing; }
 .slot-btn { min-width: 24px; padding: 2px 6px; line-height: 1.2; }
