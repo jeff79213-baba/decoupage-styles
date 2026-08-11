@@ -265,7 +265,7 @@ defineExpose({ onSearchResult, goToLine })
 </script>
 
 <template>
-  <div class="editor-panel" :class="{ active: isActive }">
+  <div class="editor-panel" :class="{ active: isActive }" @pointerdown="store.setActiveFile(props.fileId)">
     <div class="editor-header" :class="{ draggable: splitMode }" :draggable="splitMode" @dragstart="onDragStart">
       <span class="file-name">{{ fileInfo?.fileName || '未開啟檔案' }}</span>
       <div class="editor-actions">
