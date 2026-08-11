@@ -266,9 +266,12 @@ defineExpose({ onSearchResult, goToLine })
 
 <template>
   <div class="editor-panel" :class="{ active: isActive }" @pointerdown="store.setActiveFile(props.fileId)">
-    <div class="editor-header" :class="{ draggable: splitMode }" :draggable="splitMode" @dragstart="onDragStart">
-      <span class="file-name">{{ fileInfo?.fileName || '未開啟檔案' }}</span>
-      <div class="editor-actions">
+    <div class="editor-header">
+      <div class="header-drag" :class="{ draggable: splitMode }" :draggable="splitMode" @dragstart="onDragStart">
+        <span class="file-name">{{ fileInfo?.fileName || '未開啟檔案' }}</span>
+        <span v-if="splitMode" class="drag-hint">⋮⋮ 拖曳換位</span>
+      </div>
+      <div class="editor-actions" @dragstart.stop>
         <SearchBar :file-id="props.fileId" @search="onSearchResult" />
         <button @click="toggleSplit" :class="{ on: splitPane }">分切</button>
         <button @click="showColorSettings = !showColorSettings">顏色設定</button>
@@ -290,7 +293,11 @@ defineExpose({ onSearchResult, goToLine })
 .editor-panel { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
 .editor-header { display: flex; align-items: center; justify-content: space-between; padding: 4px 12px; background: #181825; border-bottom: 1px solid #313244; }
 .editor-panel.active .editor-header { background: #1e1e2e; box-shadow: inset 0 2px 0 #89b4fa; }
-.file-name { font-size: 13px; color: #a6adc8; font-weight: 600; }
+.header-drag { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; padding-right: 8px; }
+.header-drag.draggable { cursor: grab; }
+.header-drag.draggable:active { cursor: grabbing; }
+.drag-hint { font-size: 11px; color: #6c7086; }
+.file-name { font-size: 13px; color: #a6adc8; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .editor-panel.active .file-name { color: #89b4fa; font-size: 14px; }
 .editor-actions { display: flex; align-items: center; gap: 6px; }
 .editor-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
@@ -319,7 +326,5 @@ defineExpose({ onSearchResult, goToLine })
 }
 .editor-pane :deep(.cm-error-dot.error) { background: #f38ba8; }
 .editor-pane :deep(.cm-error-dot.warning) { background: #f9e2af; }
-.editor-header.draggable { cursor: grab; }
-.editor-header.draggable:active { cursor: grabbing; }
 .slot-btn { min-width: 24px; padding: 2px 6px; line-height: 1.2; }
 </style>
