@@ -109,6 +109,11 @@ describe('codeChecker 規則偵測', () => {
     expect(hasCode(run('G00G01X10.\n'), 'E-FMT-009')).toBe(false)
   })
 
+  it('G101（臥式旋轉參數）為合法 G 碼不誤報', () => {
+    expect(hasCode(run('G101\n'), 'E-FMT-005')).toBe(false)
+    expect(hasCode(run('G101\n'), 'E-FMT-009')).toBe(false)
+  })
+
   it('E-FMT-006 未知 M 碼', () => {
     expect(hasCode(run('M77\n'), 'E-FMT-006')).toBe(true)
   })
@@ -174,6 +179,20 @@ describe('codeChecker 規則偵測', () => {
     const p = run('N1(FM-125)\nT1M6\nG1X1.D1\n').find(p => p.code === 'E-TOOL-006')
     expect(p).toBeTruthy()
     expect(p.type).toBe('warning')
+  })
+
+  it('標題括號內 D 碼（提醒補正）不誤報 E-TOOL-004/006', () => {
+    const r = run('N10(D12)\nT12M6\nG1X1.\n')
+    const tool004 = r.find(p => p.code === 'E-TOOL-004')
+    const tool006 = r.find(p => p.code === 'E-TOOL-006')
+    expect(tool004).toBeFalsy()
+    expect(tool006).toBeFalsy()
+  })
+
+  it('一般括號註解內 D 碼不誤報', () => {
+    const r = run('N1(FM-125)\nT1M6\nG1X1.\n(D2皗主軸補正)\n')
+    expect(hasCode(r, 'E-TOOL-004')).toBe(false)
+    expect(hasCode(r, 'E-TOOL-006')).toBe(false)
   })
 
   it('E-STR-001 WHILE 無 END1', () => {
