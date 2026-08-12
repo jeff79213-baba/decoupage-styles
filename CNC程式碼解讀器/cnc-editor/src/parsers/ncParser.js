@@ -89,6 +89,12 @@ export function parseNC(text) {
   if (currentBlock) blocks.push(currentBlock)
 
   for (const b of blocks) {
+    if (!b.toolNo && b.hNo && b.hNo !== '0') {
+      b.toolNo = b.hNo
+    }
+  }
+
+  for (const b of blocks) {
     if (b.toolNo) {
       let type = '其他'
       const upper = (b.toolName || '').toUpperCase()

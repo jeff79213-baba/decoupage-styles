@@ -56,7 +56,7 @@ const tableRef = ref(null)
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(t, i) in store.tools" :key="t.n" class="clickable" :class="{ active: isActive(t, i) }" @click="onToolClick(t, i)">
+        <tr v-for="(t, i) in store.tools" :key="t.n + '-' + (t.block?.startLine ?? i)" class="clickable" :class="{ active: isActive(t, i) }" @click="onToolClick(t, i)">
           <td>T{{ t.toolNo }}</td>
           <td>{{ t.n }}</td>
           <td>{{ t.toolName }}</td>

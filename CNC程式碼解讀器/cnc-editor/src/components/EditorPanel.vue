@@ -265,7 +265,7 @@ defineExpose({ onSearchResult, goToLine })
 </script>
 
 <template>
-  <div class="editor-panel" :class="{ active: isActive }" @pointerdown="store.setActiveFile(props.fileId)">
+  <div class="editor-panel" :class="{ active: isActive, 'split-mode': splitMode }" @pointerdown="store.setActiveFile(props.fileId)">
     <div class="editor-header">
       <div class="header-drag" :class="{ draggable: splitMode }" :draggable="splitMode" @dragstart="onDragStart">
         <span class="file-name">{{ fileInfo?.fileName || '未開啟檔案' }}</span>
@@ -291,15 +291,18 @@ defineExpose({ onSearchResult, goToLine })
 
 <style scoped>
 .editor-panel { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
-.editor-header { display: flex; align-items: center; justify-content: space-between; padding: 4px 12px; background: #181825; border-bottom: 1px solid #313244; }
+.editor-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; row-gap: 2px; padding: 4px 12px; background: #181825; border-bottom: 1px solid #313244; }
 .editor-panel.active .editor-header { background: #1e1e2e; box-shadow: inset 0 2px 0 #89b4fa; }
 .header-drag { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; padding-right: 8px; }
 .header-drag.draggable { cursor: grab; }
 .header-drag.draggable:active { cursor: grabbing; }
-.drag-hint { font-size: 11px; color: #6c7086; }
+.drag-hint { font-size: 11px; color: #6c7086; white-space: nowrap; }
 .file-name { font-size: 13px; color: #a6adc8; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .editor-panel.active .file-name { color: #89b4fa; font-size: 14px; }
-.editor-actions { display: flex; align-items: center; gap: 6px; }
+.editor-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.editor-panel.split-mode .editor-header { position: relative; padding-right: 56px; }
+.editor-panel.split-mode .editor-actions .slot-btn { position: absolute; top: 6px; right: 12px; }
+.editor-panel.split-mode .editor-actions .slot-btn[title="替換程式"] { right: 40px; }
 .editor-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
 .editor-body.split { flex-direction: row; }
 .editor-pane { flex: 1; min-width: 0; overflow: hidden; display: flex; }

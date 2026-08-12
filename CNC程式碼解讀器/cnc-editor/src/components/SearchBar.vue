@@ -55,7 +55,7 @@ const resultLabel = computed(() => {
 </template>
 
 <style scoped>
-.search-bar { display: flex; align-items: center; gap: 4px; }
-.search-bar input { width: 160px; }
+.search-bar { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.search-bar input { width: 160px; flex: 1 1 90px; min-width: 60px; }
 .result-count { font-size: 12px; color: #a6adc8; min-width: 36px; text-align: center; }
 </style>

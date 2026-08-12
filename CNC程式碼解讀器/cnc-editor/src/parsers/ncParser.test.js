@@ -30,4 +30,16 @@ describe('ncParser 刀號解析', () => {
     expect(p.blocks[0].toolNo).toBe('1')
     expect(p.tools.map(t => t.toolNo)).toEqual(['1'])
   })
+
+  it('無 T..M6 但有 H 補正值時以 H 推斷刀號（C.NC 面銑段）', () => {
+    const p = parseNC('%\nN2(FM-435-125-8K)(FMA38.1-45)\nG43Z100.H2\nM30\n%')
+    expect(p.blocks[0].toolNo).toBe('2')
+    expect(p.tools.map(t => t.toolNo)).toEqual(['2'])
+  })
+
+  it('有 H 但已指定 T..M6 時以 T 為準', () => {
+    const p = parseNC('%\nN5(EM-25)(SLA25)\nT5M6\nG43Z150.H5\nM30\n%')
+    expect(p.blocks[0].toolNo).toBe('5')
+    expect(p.tools.map(t => t.toolNo)).toEqual(['5'])
+  })
 })
