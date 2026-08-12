@@ -36,8 +36,8 @@ export function parseNC(text) {
       }
     }
 
-    const tMatch = trimmed.match(/T(\d+)M6/)
-    if (tMatch && currentBlock) {
+    const tMatch = trimmed.match(/T(\d+)M[0O]*6/i)
+    if (tMatch && currentBlock && tMatch[1] !== '0' && currentBlock.toolNo === null) {
       currentBlock.toolNo = tMatch[1]
       currentBlock.hNo = tMatch[1]
       currentBlock.dNo = tMatch[1]

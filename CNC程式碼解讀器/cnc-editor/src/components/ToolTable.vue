@@ -48,6 +48,7 @@ const tableRef = ref(null)
     <table v-if="store.tools.length" ref="tableRef" tabindex="0" class="kbd-table" @keydown="move">
       <thead>
         <tr>
+          <th>刀號</th>
           <th>N 號</th>
           <th>刀具名稱</th>
           <th>刀桿名稱</th>
@@ -56,6 +57,7 @@ const tableRef = ref(null)
       </thead>
       <tbody>
         <tr v-for="(t, i) in store.tools" :key="t.n" class="clickable" :class="{ active: isActive(t, i) }" @click="onToolClick(t, i)">
+          <td>T{{ t.toolNo }}</td>
           <td>{{ t.n }}</td>
           <td>{{ t.toolName }}</td>
           <td>{{ t.holderName }}</td>

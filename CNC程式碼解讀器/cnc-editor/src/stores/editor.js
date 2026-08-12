@@ -207,11 +207,11 @@ export const useEditorStore = defineStore('editor', {
     downloadToolTable() {
       const tools = this.tools
       if (!tools.length) return
-      let text = 'N號\t刀具名稱\t刀桿名稱'
+      let text = '刀號\tN號\t刀具名稱\t刀桿名稱'
       if (this.showTypeColumn) text += '\t加工類型'
       text += '\n' + '='.repeat(60) + '\n'
       for (const t of tools) {
-        text += `${t.n}\t${t.toolName}\t${t.holderName}`
+        text += `T${t.toolNo}\t${t.n}\t${t.toolName}\t${t.holderName}`
         if (this.showTypeColumn) text += `\t${t.type}`
         text += '\n'
       }

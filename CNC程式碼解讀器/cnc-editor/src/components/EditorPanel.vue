@@ -324,7 +324,7 @@ defineExpose({ onSearchResult, goToLine })
   border-radius: 50%;
   vertical-align: middle;
 }
-.editor-pane :deep(.cm-error-dot.error) { background: #f38ba8; }
-.editor-pane :deep(.cm-error-dot.warning) { background: #f9e2af; }
+.editor-pane :deep(.cm-error-dot.error) { background: #ef4444; }
+.editor-pane :deep(.cm-error-dot.warning) { background: #fab387; }
 .slot-btn { min-width: 24px; padding: 2px 6px; line-height: 1.2; }
 </style>
