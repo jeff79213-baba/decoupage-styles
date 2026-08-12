@@ -235,10 +235,12 @@ let resizeObserver = null
 function fitCanvas() {
   const canvas = canvasRef.value
   if (!canvas) return
-  const parent = canvas.parentElement
-  if (!parent) return
-  const w = parent.clientWidth
-  const h = parent.clientHeight
+  const panel = canvas.parentElement
+  if (!panel) return
+  const header = panel.querySelector('.sim-header')?.getBoundingClientRect().height || 0
+  const hint = panel.querySelector('.sim-hint')?.getBoundingClientRect().height || 0
+  const h = Math.max(40, panel.clientHeight - header - hint)
+  const w = panel.clientWidth
   canvas.width = w * devicePixelRatio
   canvas.height = h * devicePixelRatio
   canvas.style.width = w + 'px'
@@ -275,7 +277,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.sim-panel { flex: 0 0 35%; min-height: 150px; border-top: 1px solid #313244; display: flex; flex-direction: column; background: #11111b; }
+.sim-panel { flex: 0 1 35%; min-height: 0; border-top: 1px solid #313244; display: flex; flex-direction: column; background: #11111b; }
 .sim-header { padding: 4px 12px; font-size: 12px; font-weight: 600; background: #181825; border-bottom: 1px solid #313244; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .coord-select { font-size: 12px; padding: 2px 6px; background: #313244; color: #cdd6f4; border: 1px solid #45475a; border-radius: 4px; }
 .sim-canvas { flex: 1; cursor: grab; width: 100%; }
