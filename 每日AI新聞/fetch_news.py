@@ -190,7 +190,7 @@ def merge_agent_items(items):
             continue
         seen.add(link)
         out.append(it)
-    out.sort(key=lambda x: x["time"] or datetime.min.replace(tzinfo=TAIWAN_TZ), reverse=True)
+    out.sort(key=lambda x: x.get("time") or datetime.min.replace(tzinfo=TAIWAN_TZ), reverse=True)
     return out
 
 
@@ -257,11 +257,11 @@ def agent_section_html(items):
     for it in items:
         tags = "".join(f"<span class='brand-tag'>{html.escape(b)}</span>" for b in it.get("brands", []))
         badge = f"<span class='badge'>{html.escape(it.get('source', ''))}</span>"
-        t = fmt_time(it["time"])
+        t = fmt_time(it.get("time"))
         sec.append(
             f"<div class='card'><div class='tags'>{tags}</div>"
-            f"<a href='{html.escape(it['link'])}' target='_blank' rel='noopener'>{html.escape(it['title'])}</a>"
-            f"<div class='summary'>{html.escape(it['summary'])}</div>"
+            f"<a href='{html.escape(it.get('link', ''))}' target='_blank' rel='noopener'>{html.escape(it.get('title', ''))}</a>"
+            f"<div class='summary'>{html.escape(it.get('summary', ''))}</div>"
             f"<div class='meta'>{badge}<span>{t}</span></div></div>"
         )
     return "\n".join(sec)
@@ -274,7 +274,7 @@ def build_page_html(results, agent_items, generated_at):
         items = results.get(name, [])
         if not items:
             continue
-        sec = [f"<section><h2>{name} <span class='count'>({len(items)} 則)</span></h2>"]
+        sec = [f"<section><h2>{html.escape(name)} <span class='count'>({len(items)} 則)</span></h2>"]
         for it in items:
             badge = "<span class='badge'>翻譯</span>" if cards[name]["lang"] == "en" else ""
             t = fmt_time(it["time"])
@@ -301,7 +301,7 @@ def build_page_html(results, agent_items, generated_at):
 <div class="wrap">
 <header>
   <h1>📰 每日 AI 新聞</h1>
-  <div class="date">更新時間：{generated_at}　｜　AI Agent 欄來源：Google News、數位時代 + 品牌關鍵字搜尋</div>
+  <div class="date">更新時間：{html.escape(generated_at)}　｜　AI Agent 欄來源：Google News、數位時代 + 品牌關鍵字搜尋</div>
 </header>
 <div class="tabs">
   <button type="button" class="tab active" data-tab="ai-news" onclick="switchTab('ai-news')">AI 新聞</button>
@@ -338,24 +338,31 @@ def main():
     start = datetime.now(TAIWAN_TZ)
     print(f"[{start.strftime('%Y-%m-%d %H:%M')}] 開始抓取…")
     results = {}
+    source_items = {}
     agent_pool = []
     for feed in FEEDS:
         print(f"▸ 抓取 {feed['name']}…")
         items = fetch_feed(feed)
         results[feed["name"]] = items
+        source_items[feed["name"]] = items
         agent_pool.extend(items)
     for feed in AGENT_FEEDS:
         print(f"▸ 抓取 {feed['name']}…")
-        agent_pool.extend(fetch_feed(feed))
+        items = fetch_feed(feed)
+        source_items[feed["name"]] = items
+        agent_pool.extend(items)
     print("▸ 抓取 Google News 品牌新聞…")
-    agent_pool.extend(fetch_google_news())
+    google_items = fetch_google_news()
+    source_items["Google News"] = google_items
+    agent_pool.extend(google_items)
     agent_items = merge_agent_items(agent_pool)
     generated_at = datetime.now(TAIWAN_TZ).strftime("%Y-%m-%d %H:%M")
     render_html(results, agent_items, generated_at)
 
-    total = sum(len(v) for v in results.values())
-    ok = sum(1 for v in results.values() if v)
-    line = f"[{generated_at}] 完成：{ok}/4 來源成功，共 {total} 則\n"
+    sources = [f["name"] for f in FEEDS] + [f["name"] for f in AGENT_FEEDS] + ["Google News"]
+    ok = sum(1 for name in sources if source_items.get(name))
+    total = sum(len(v) for v in results.values()) + len(agent_items)
+    line = f"[{generated_at}] 完成：{ok}/{len(sources)} 來源成功，共 {total} 則\n"
     with open("run_log.txt", "a", encoding="utf-8") as f:
         f.write(line)
 
