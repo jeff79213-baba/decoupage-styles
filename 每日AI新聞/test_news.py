@@ -68,6 +68,8 @@ class TestAgentQuery(unittest.TestCase):
         self.assertIn("ChatGPT", q)
         self.assertIn("Claude", q)
         self.assertIn(" OR ", q)
+        self.assertNotIn('"其他"', q)
+        self.assertIn("deepseek", q.lower())
 
 
 if __name__ == "__main__":

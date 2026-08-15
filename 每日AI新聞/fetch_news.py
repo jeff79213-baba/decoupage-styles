@@ -74,7 +74,13 @@ def match_brands(title, summary=""):
 
 
 def agent_query():
-    return " OR ".join(f'"{label}"' for label, _ in BRANDS)
+    parts = []
+    for label, kws in BRANDS:
+        if label == "其他":
+            parts.extend(kws)
+        else:
+            parts.append(label)
+    return " OR ".join(f'"{p}"' for p in parts)
 
 
 def google_translate(text, src="en", dst="zh-TW"):
