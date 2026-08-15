@@ -72,5 +72,27 @@ class TestAgentQuery(unittest.TestCase):
         self.assertIn("deepseek", q.lower())
 
 
+class TestBuildPageHtml(unittest.TestCase):
+    def test_page_has_tabs_and_agent_badges(self):
+        results = {
+            "iThome": [{"title": "一般新聞", "link": "http://a", "summary": "", "time": None,
+                        "source": "iThome", "brands": []}],
+        }
+        agent = [{"title": "Gemini 更新", "link": "http://b", "summary": "", "time": None,
+                  "brands": ["Gemini"], "source": "Google News"}]
+        html = fn.build_page_html(results, agent, "2026-08-15 00:00")
+        self.assertIn('data-tab="ai-news"', html)
+        self.assertIn('data-tab="ai-agent"', html)
+        self.assertIn("switchTab('ai-news')", html)
+        self.assertIn("brand-tag", html)
+        self.assertIn("Gemini", html)
+        self.assertIn("Google News", html)
+        self.assertIn("一般新聞", html)
+
+    def test_empty_agent_message(self):
+        html = fn.build_page_html({}, [], "2026-08-15 00:00")
+        self.assertIn("今天沒有抓到品牌 AI 新聞", html)
+
+
 if __name__ == "__main__":
     unittest.main()

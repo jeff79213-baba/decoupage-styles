@@ -42,6 +42,38 @@ AGENT_FEEDS = [
     {"name": "數位時代", "lang": "zh", "url": "https://rss.bnextmedia.com.tw/feed/bnext"},
 ]
 
+CSS = """
+    :root{--bg:#f4f6fb;--card:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;
+          --accent:#2563eb;--tag:#eef2ff;--tag-ink:#4338ca;}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:"Microsoft JhengHei","PingFang TC",system-ui,sans-serif;background:var(--bg);
+         color:var(--ink);line-height:1.6;padding:32px 16px}
+    .wrap{max-width:860px;margin:0 auto}
+    header{margin-bottom:28px}
+    h1{font-size:26px;letter-spacing:.5px}
+    .date{color:var(--muted);font-size:14px;margin-top:6px}
+    section{margin-bottom:34px}
+    h2{font-size:18px;color:var(--accent);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--line)}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+          padding:16px 18px;margin-bottom:12px;transition:box-shadow .15s}
+    .card:hover{box-shadow:0 4px 14px rgba(31,36,48,.08)}
+    .card a{text-decoration:none;color:var(--ink);font-weight:600;font-size:16px}
+    .card a:hover{color:var(--accent)}
+    .summary{color:var(--muted);font-size:14px;margin-top:6px}
+    .meta{display:flex;gap:10px;align-items:center;margin-top:8px;font-size:12px;color:var(--muted)}
+    .badge{background:var(--tag);color:var(--tag-ink);padding:2px 8px;border-radius:99px;font-size:11px}
+    .count{font-size:13px;color:var(--muted)}
+    .tabs{display:flex;gap:10px;margin-bottom:24px}
+    .tab{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:8px 22px;font-size:15px;cursor:pointer;color:var(--muted);font-family:inherit;transition:all .15s}
+    .tab:hover{border-color:var(--accent);color:var(--accent)}
+    .tab.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+    .panel{display:none}
+    .panel.active{display:block}
+    .tags{margin-bottom:6px}
+    .brand-tag{background:#ecfdf5;color:#047857;padding:2px 9px;border-radius:99px;font-size:11px;margin-right:6px;display:inline-block}
+    footer{color:var(--muted);font-size:12px;text-align:center;margin-top:40px}
+    """
+
 UA = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                   "(KHTML, like Gecko) Chrome/126.0 Safari/537.36"
@@ -218,32 +250,26 @@ def fmt_time(dt):
     return dt.strftime("%m/%d %H:%M") if dt else ""
 
 
-def render_html(results, generated_at):
-    css = """
-    :root{--bg:#f4f6fb;--card:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;
-          --accent:#2563eb;--tag:#eef2ff;--tag-ink:#4338ca;}
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:"Microsoft JhengHei","PingFang TC",system-ui,sans-serif;background:var(--bg);
-         color:var(--ink);line-height:1.6;padding:32px 16px}
-    .wrap{max-width:860px;margin:0 auto}
-    header{margin-bottom:28px}
-    h1{font-size:26px;letter-spacing:.5px}
-    .date{color:var(--muted);font-size:14px;margin-top:6px}
-    section{margin-bottom:34px}
-    h2{font-size:18px;color:var(--accent);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--line)}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
-          padding:16px 18px;margin-bottom:12px;transition:box-shadow .15s}
-    .card:hover{box-shadow:0 4px 14px rgba(31,36,48,.08)}
-    .card a{text-decoration:none;color:var(--ink);font-weight:600;font-size:16px}
-    .card a:hover{color:var(--accent)}
-    .summary{color:var(--muted);font-size:14px;margin-top:6px}
-    .meta{display:flex;gap:10px;align-items:center;margin-top:8px;font-size:12px;color:var(--muted)}
-    .badge{background:var(--tag);color:var(--tag-ink);padding:2px 8px;border-radius:99px;font-size:11px}
-    .count{font-size:13px;color:var(--muted)}
-    footer{color:var(--muted);font-size:12px;text-align:center;margin-top:40px}
-    """
+def agent_section_html(items):
+    if not items:
+        return "<p>今天沒有抓到品牌 AI 新聞，請稍後再試。</p>"
+    sec = [f"<h2>🤖 AI Agent 品牌新聞 <span class='count'>({len(items)} 則)</span></h2>"]
+    for it in items:
+        tags = "".join(f"<span class='brand-tag'>{html.escape(b)}</span>" for b in it.get("brands", []))
+        badge = f"<span class='badge'>{html.escape(it.get('source', ''))}</span>"
+        t = fmt_time(it["time"])
+        sec.append(
+            f"<div class='card'><div class='tags'>{tags}</div>"
+            f"<a href='{html.escape(it['link'])}' target='_blank' rel='noopener'>{html.escape(it['title'])}</a>"
+            f"<div class='summary'>{html.escape(it['summary'])}</div>"
+            f"<div class='meta'>{badge}<span>{t}</span></div></div>"
+        )
+    return "\n".join(sec)
+
+
+def build_page_html(results, agent_items, generated_at):
     cards = {f["name"]: f for f in FEEDS}
-    body = []
+    general = []
     for name in [f["name"] for f in FEEDS]:
         items = results.get(name, [])
         if not items:
@@ -259,33 +285,52 @@ def render_html(results, generated_at):
                 f"<div class='meta'>{badge}<span>{t}</span></div></div>"
             )
         sec.append("</section>")
-        body.append("\n".join(sec))
-
-    if not body:
-        body = ["<p>今天沒有抓到新聞，請稍後再試。</p>"]
-
+        general.append("\n".join(sec))
+    if not general:
+        general = ["<p>今天沒有抓到新聞，請稍後再試。</p>"]
+    agent = agent_section_html(agent_items)
     page = f"""<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>每日 AI 新聞</title>
-<style>{css}</style>
+<style>{CSS}</style>
 </head>
 <body>
 <div class="wrap">
 <header>
   <h1>📰 每日 AI 新聞</h1>
-  <div class="date">更新時間：{generated_at}　｜　來源：iThome、科技新報、TechCrunch AI、MIT Technology Review</div>
+  <div class="date">更新時間：{generated_at}　｜　AI Agent 欄來源：Google News、數位時代 + 品牌關鍵字搜尋</div>
 </header>
-{''.join(body)}
+<div class="tabs">
+  <button type="button" class="tab active" data-tab="ai-news" onclick="switchTab('ai-news')">AI 新聞</button>
+  <button type="button" class="tab" data-tab="ai-agent" onclick="switchTab('ai-agent')">AI Agent</button>
+</div>
+<div id="ai-news" class="panel active">
+{''.join(general)}
+</div>
+<div id="ai-agent" class="panel">
+<section>{agent}</section>
+</div>
 <footer>由 fetch_news.py 自動產生　・　每日自動更新</footer>
 </div>
+<script>
+function switchTab(id){{
+  document.querySelectorAll('.tab').forEach(function(b){{b.classList.toggle('active', b.dataset.tab===id);}});
+  document.querySelectorAll('.panel').forEach(function(p){{p.classList.toggle('active', p.id===id);}});
+}}
+</script>
 </body>
 </html>"""
+    return page
+
+
+def render_html(results, agent_items, generated_at):
+    page = build_page_html(results, agent_items, generated_at)
     with open(OUT_FILE, "w", encoding="utf-8") as f:
         f.write(page)
-    total = sum(len(v) for v in results.values())
+    total = sum(len(v) for v in results.values()) + len(agent_items)
     print(f"✔ 已生成 {OUT_FILE}（共 {total} 則）")
 
 
