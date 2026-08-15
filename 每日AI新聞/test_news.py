@@ -61,5 +61,14 @@ class TestMergeAgentItems(unittest.TestCase):
         self.assertEqual(fn.merge_agent_items([it]), [])
 
 
+class TestAgentQuery(unittest.TestCase):
+    def test_contains_brand_keywords(self):
+        q = fn.agent_query()
+        self.assertIn("Gemini", q)
+        self.assertIn("ChatGPT", q)
+        self.assertIn("Claude", q)
+        self.assertIn(" OR ", q)
+
+
 if __name__ == "__main__":
     unittest.main()

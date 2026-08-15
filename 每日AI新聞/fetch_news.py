@@ -7,6 +7,7 @@ import sys
 import time
 import html
 import re
+from urllib.parse import urlencode
 from datetime import datetime, timedelta, timezone
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -35,6 +36,10 @@ FEEDS = [
     {"name": "科技新報",      "lang": "zh", "url": "https://technews.tw/category/ai/feed/"},
     {"name": "TechCrunch AI", "lang": "en", "url": "https://techcrunch.com/category/artificial-intelligence/feed/"},
     {"name": "MIT Technology Review", "lang": "en", "url": "https://www.technologyreview.com/feed/"},
+]
+
+AGENT_FEEDS = [
+    {"name": "數位時代", "lang": "zh", "url": "https://rss.bnextmedia.com.tw/feed/bnext"},
 ]
 
 UA = {
@@ -66,6 +71,10 @@ def match_brands(title, summary=""):
         if any(re.search(re.escape(kw), text, re.IGNORECASE) for kw in kws):
             matched.append(label)
     return matched
+
+
+def agent_query():
+    return " OR ".join(f'"{label}"' for label, _ in BRANDS)
 
 
 def google_translate(text, src="en", dst="zh-TW"):
@@ -112,7 +121,8 @@ def fetch_feed(feed):
         published = parse_time(entry)
         if published and published < cutoff:
             continue
-        items.append({"title": title, "link": link, "summary": summary, "time": published})
+        items.append({"title": title, "link": link, "summary": summary, "time": published,
+                      "source": name, "brands": match_brands(title, summary)})
 
     items.sort(key=lambda x: x["time"] or datetime.min.replace(tzinfo=TAIWAN_TZ), reverse=True)
     items = items[:MAX_PER_FEED]
@@ -144,6 +154,58 @@ def merge_agent_items(items):
         out.append(it)
     out.sort(key=lambda x: x["time"] or datetime.min.replace(tzinfo=TAIWAN_TZ), reverse=True)
     return out
+
+
+def fetch_google_news():
+    """用品牌關鍵字查 Google News RSS（中文 + 英文），回傳已配對品牌的 item 清單。"""
+    configs = [
+        {"hl": "zh-TW", "gl": "TW", "ceid": "TW:zh-Hant", "lang": "zh"},
+        {"hl": "en-US", "gl": "US", "ceid": "US:en", "lang": "en"},
+    ]
+    all_items = []
+    q = agent_query()
+    for cfg in configs:
+        url = "https://news.google.com/rss/search?" + urlencode(
+            {"q": q, "hl": cfg["hl"], "gl": cfg["gl"], "ceid": cfg["ceid"]}
+        )
+        try:
+            d = feedparser.parse(url, request_headers=UA)
+        except Exception as e:
+            print(f"  [Google News {cfg['hl']}] 抓取失敗: {e}")
+            continue
+        if not d.entries:
+            print(f"  [Google News {cfg['hl']}] 0 則")
+            continue
+        now = datetime.now(TAIWAN_TZ)
+        cutoff = now - timedelta(hours=HOURS_WINDOW)
+        items = []
+        for entry in d.entries[:30]:
+            title = strip_html(entry.get("title", "")).strip()
+            if not title:
+                continue
+            link = entry.get("link", "")
+            summary = summarize(entry.get("summary") or entry.get("description") or "")
+            published = parse_time(entry)
+            if published and published < cutoff:
+                continue
+            brands = match_brands(title, summary)
+            if not brands:
+                continue
+            items.append({"title": title, "link": link, "summary": summary, "time": published,
+                          "source": "Google News", "brands": brands})
+        items.sort(key=lambda x: x["time"] or datetime.min.replace(tzinfo=TAIWAN_TZ), reverse=True)
+        items = items[:MAX_PER_FEED]
+        if cfg["lang"] == "en":
+            print(f"  [Google News {cfg['hl']}] {len(items)} 則（翻譯中…）")
+            for it in items:
+                it["title"] = google_translate(it["title"]) or it["title"]
+                if it["summary"]:
+                    it["summary"] = google_translate(it["summary"]) or it["summary"]
+                time.sleep(0.6)
+        else:
+            print(f"  [Google News {cfg['hl']}] {len(items)} 則")
+        all_items.extend(items)
+    return all_items
 
 
 def fmt_time(dt):
@@ -225,11 +287,20 @@ def main():
     start = datetime.now(TAIWAN_TZ)
     print(f"[{start.strftime('%Y-%m-%d %H:%M')}] 開始抓取…")
     results = {}
+    agent_pool = []
     for feed in FEEDS:
         print(f"▸ 抓取 {feed['name']}…")
-        results[feed["name"]] = fetch_feed(feed)
+        items = fetch_feed(feed)
+        results[feed["name"]] = items
+        agent_pool.extend(items)
+    for feed in AGENT_FEEDS:
+        print(f"▸ 抓取 {feed['name']}…")
+        agent_pool.extend(fetch_feed(feed))
+    print("▸ 抓取 Google News 品牌新聞…")
+    agent_pool.extend(fetch_google_news())
+    agent_items = merge_agent_items(agent_pool)
     generated_at = datetime.now(TAIWAN_TZ).strftime("%Y-%m-%d %H:%M")
-    render_html(results, generated_at)
+    render_html(results, agent_items, generated_at)
 
     total = sum(len(v) for v in results.values())
     ok = sum(1 for v in results.values() if v)
