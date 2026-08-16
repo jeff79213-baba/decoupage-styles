@@ -205,7 +205,16 @@
     try {
       const raw = localStorage.getItem(KEY);
       const arr = raw ? JSON.parse(raw) : [];
-      return Array.isArray(arr) ? arr.filter(n => Number.isInteger(n)) : [];
+      if (!Array.isArray(arr)) return [];
+      const seen = new Set();
+      const valid = [];
+      arr.forEach(n => {
+        if (Number.isInteger(n) && n >= 0 && n < TOTAL && !seen.has(n)) {
+          seen.add(n);
+          valid.push(n);
+        }
+      });
+      return valid;
     } catch (e) {
       return [];
     }
