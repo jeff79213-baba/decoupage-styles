@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Agent 課程規劃｜學習清單</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", system-ui, sans-serif;
+    background: #f5f7fa;
+    color: #2d3436;
+    line-height: 1.7;
+    padding: 24px 16px 48px;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; }
+
+  /* 頁首 */
+  header {
+    background: linear-gradient(135deg, #2c3e50, #3498db);
+    color: #fff;
+    border-radius: 16px;
+    padding: 36px 28px;
+    text-align: center;
+  }
+  header h1 { font-size: 30px; margin-bottom: 8px; }
+  header p { font-size: 16px; opacity: .92; }
+
+  /* 進度條 */
+  .progress-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .progress-label { font-size: 15px; font-weight: 600; white-space: nowrap; }
+  .progress-track {
+    flex: 1;
+    min-width: 180px;
+    height: 14px;
+    background: #e9ecef;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #27ae60, #2ecc71);
+    border-radius: 999px;
+    transition: width .3s ease;
+  }
+
+  /* 學習路徑圖 */
+  .path {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  }
+  .path h2 { font-size: 18px; margin-bottom: 16px; }
+  .path-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .path-node {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #3498db;
+    color: #fff;
+    font-weight: 700;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  .path-node.done { background: #27ae60; }
+  .path-node.last { background: #e67e22; }
+  .path-arrow { color: #bdc3c7; font-size: 22px; font-weight: 700; }
+
+  /* 章節卡片 */
+  .chapters h2 { font-size: 20px; margin-bottom: 12px; }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: background .2s;
+  }
+  .card:hover { background: #fafcff; }
+  .card.done { background: #f0faf2; }
+  .card .num {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #ecf0f1;
+    color: #2c3e50;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card.done .num { background: #d5f5e3; color: #1e8449; }
+  .card .info { flex: 1; }
+  .card .info .ch-title { font-size: 16px; font-weight: 600; }
+  .card .info .ch-link {
+    font-size: 13px;
+    color: #3498db;
+    text-decoration: none;
+    word-break: break-all;
+  }
+  .card .info .ch-link:hover { text-decoration: underline; }
+
+  /* 勾選框 */
+  .card input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    accent-color: #27ae60;
+    cursor: pointer;
+  }
+
+  footer {
+    text-align: center;
+    color: #95a5a6;
+    font-size: 14px;
+    margin-top: 32px;
+  }
+
+  @media (max-width: 560px) {
+    header h1 { font-size: 24px; }
+    .path-node { width: 42px; height: 42px; font-size: 16px; }
+    .path-arrow { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 頁首 -->
+  <header>
+    <h1>AI Agent 課程規劃</h1>
+    <p>從零開始，一步一步讓 AI 成為你的員工。</p>
+  </header>
+
+  <!-- 進度 -->
+  <div class="progress-box">
+    <span class="progress-label" id="progress-label">完成 0/9 章</span>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+  </div>
+
+  <!-- 學習路徑圖 0→8 -->
+  <section class="path">
+    <h2>學習路徑圖</h2>
+    <div class="path-row" id="path-row"></div>
+  </section>
+
+  <!-- 章節清單 -->
+  <section class="chapters">
+    <h2>章節清單</h2>
+    <div id="chapter-list"></div>
+  </section>
+
+  <footer>
+    全部看完、勾完，你就是會用 AI 完成專案的人！<br>
+    進度會自動儲存在你瀏覽器的 localStorage，重新整理不會消失。
+  </footer>
+</div>
+
+<script>
+  const KEY = "aiagent-progress";
+
+  const CHAPTERS = [
+    { id: 0, title: "認識 AI Agent（AI 是你的員工）",   file: "00_認識AI_Agent.txt" },
+    { id: 1, title: "安裝 Node 與 Git（地基與時光機）", file: "01_安裝Node與Git.txt" },
+    { id: 2, title: "安裝 opencode（AI 助理本體，主角登場）", file: "02_安裝opencode.txt" },
+    { id: 3, title: "專案工作流程（AI 怎麼跟我合作做一個專案）", file: "03_專案工作流程.txt" },
+    { id: 4, title: "第一次合作：讓 AI 幫你做第一個小網頁", file: "04_第一次合作.txt" },
+    { id: 5, title: "認識 Skill：AI 的「SOP 說明書」", file: "05_認識Skill.txt" },
+    { id: 6, title: "動手做自己的第一個 Skill",           file: "06_動手做Skill.txt" },
+    { id: 7, title: "上傳部署：讓全世界看到你的作品",     file: "07_上傳部署.txt" },
+    { id: 8, title: "結業專案：把前面 8 章串成一個作品",   file: "08_結業專案.txt" }
+  ];
+  const TOTAL = CHAPTERS.length;
+
+  // ---- 讀取 / 儲存進度 ----
+  function loadProgress() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr.filter(n => Number.isInteger(n)) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveProgress(done) {
+    try {
+      localStorage.setItem(KEY, JSON.stringify(done));
+    } catch (e) {
+      /* localStorage 不可用時靜默失敗，勾選仍可用，只是不會保存 */
+    }
+  }
+
+  // ---- 渲染學習路徑圖 ----
+  function renderPath(doneSet) {
+    const row = document.getElementById("path-row");
+    row.innerHTML = "";
+    CHAPTERS.forEach((ch, i) => {
+      const node = document.createElement("span");
+      node.className = "path-node";
+      node.textContent = ch.id;
+      if (doneSet.has(ch.id)) node.classList.add("done");
+      if (ch.id === 8) node.classList.add("last");
+      row.appendChild(node);
+      if (i < CHAPTERS.length - 1) {
+        const arrow = document.createElement("span");
+        arrow.className = "path-arrow";
+        arrow.textContent = "→";
+        row.appendChild(arrow);
+      }
+    });
+  }
+
+  // ---- 渲染章節卡片 ----
+  function renderCards(doneSet) {
+    const list = document.getElementById("chapter-list");
+    list.innerHTML = "";
+    CHAPTERS.forEach(ch => {
+      const card = document.createElement("label");
+      card.className = "card";
+      if (doneSet.has(ch.id)) card.classList.add("done");
+
+      const num = document.createElement("span");
+      num.className = "num";
+      num.textContent = ch.id;
+
+      const info = document.createElement("span");
+      info.className = "info";
+      const t = document.createElement("div");
+      t.className = "ch-title";
+      t.textContent = ch.title;
+      const a = document.createElement("a");
+      a.className = "ch-link";
+      a.href = "課程教材/" + ch.file;
+      a.textContent = "課程教材/" + ch.file;
+      info.appendChild(t);
+      info.appendChild(a);
+
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = doneSet.has(ch.id);
+      cb.addEventListener("change", () => onToggle(ch.id, cb.checked));
+
+      card.appendChild(num);
+      card.appendChild(info);
+      card.appendChild(cb);
+      list.appendChild(card);
+    });
+  }
+
+  // ---- 更新進度條 ----
+  function updateProgress(done) {
+    const n = done.length;
+    document.getElementById("progress-label").textContent = "完成 " + n + "/" + TOTAL + " 章";
+    document.getElementById("progress-fill").style.width = (n / TOTAL * 100) + "%";
+  }
+
+  // ---- 勾選事件 ----
+  function onToggle(id, checked) {
+    const done = loadProgress();
+    const idx = done.indexOf(id);
+    if (checked && idx === -1) done.push(id);
+    if (!checked && idx !== -1) done.splice(idx, 1);
+    saveProgress(done);
+    refresh();
+  }
+
+  function refresh() {
+    const done = loadProgress();
+    const doneSet = new Set(done);
+    renderPath(doneSet);
+    renderCards(doneSet);
+    updateProgress(done);
+  }
+
+  // ---- 啟動 ----
+  refresh();
+</script>
+</body>
+</html>
