@@ -430,6 +430,67 @@ body[data-theme="dark"] {
         <p class="module-desc">章節模組將在接下來的版本陸續加入。</p>
       </div>
     </div>
+
+    <div class="module" id="mod0">
+      <div class="module-header">
+        <div class="module-badge">第 0 章</div>
+        <h1 class="module-title">認識 AI Agent</h1>
+        <p class="module-desc">AI 是你的員工：AI 是聰明但需要你交代的員工，Agent 是會自己動手做完的員工。</p>
+      </div>
+      <div class="bento">
+        <div class="bento-card">
+          <h3><span class="icon icon-green">💡</span> 核心概念</h3>
+          <div class="concept"><h4>AI 是什麼？</h4><p>AI 是「會回答問題的聰明機器」。就像一個<a>很聰明但需要你交代的員工</a>——你問它，它回答。</p></div>
+          <div class="concept"><h4>AI Agent 是什麼？</h4><p>Agent 是「會自己動手把事做完」的員工。你交代一句話，它會自己規劃、動手、檢查、交差。</p></div>
+        </div>
+        <div class="bento-card">
+          <h3><span class="icon icon-dark">🏢</span> 員工對比</h3>
+          <table class="compare-table">
+            <thead><tr><th>比較</th><th>AI（一般）</th><th>AI Agent</th></tr></thead>
+            <tbody>
+              <tr><td><strong>你問它</strong></td><td>回答你</td><td>回答你，還動手做</td></tr>
+              <tr><td><strong>需要你</strong></td><td>每一步都要交代</td><td>交代一句，自己完成</td></tr>
+              <tr><td><strong>舉例</strong></td><td>「蘋果是什麼？」</td><td>「幫我做一個自我介紹網頁」</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-green">✏️</span> 小測驗</h3>
+          <div class="quiz-q" data-answer="2">
+            <p><span class="q-num">1</span>AI 和 AI Agent 最大的差別是什麼？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 一個要錢一個免費</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. AI 會寫程式，Agent 不會</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. Agent 會自己動手做完，AI 通常只回答</button>
+            </div>
+            <div class="quiz-explain">AI Agent 除了回答，還會自己動手把整件事做完。</div>
+          </div>
+          <div class="quiz-q" data-answer="1">
+            <p><span class="q-num">2</span>把 AI Agent 想成員工，什麼行為最像？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 客戶問一句，員工只回答一句</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 老闆交代一句，員工自己規劃、動手、交差</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 員工拒絕上班</button>
+            </div>
+            <div class="quiz-explain">Agent 會自己規劃步驟、動手做、檢查結果，就像能幹的員工。</div>
+          </div>
+          <div class="quiz-q" data-answer="0">
+            <p><span class="q-num">3</span>「幫我做一個自我介紹網頁」這種指令，交給誰最適合？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. AI Agent</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 一般 AI 問答</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 算命機</button>
+            </div>
+            <div class="quiz-explain">這是一個「要動手做」的需求，正是 Agent 的強項。</div>
+          </div>
+          <div class="quiz-score" id="score0"></div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-orange">📌</span> 本節重點</h3>
+          <div class="concept"><p>AI Agent 是會幫你「動手做事」的工具，不是只會回答問題。接下來的課程，你要學的就是怎麼當一個好老闆，把工作交代給它。</p></div>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -466,6 +527,34 @@ function toggleTree(el) {
   el.classList.toggle('open');
   var children = el.parentElement.querySelector(':scope > .tree-children');
   if (children) children.classList.toggle('collapsed');
+}
+function checkQuiz(btn) {
+  var q = btn.closest('.quiz-q');
+  var opts = q.querySelectorAll('.quiz-opt');
+  var correct = parseInt(q.getAttribute('data-answer'), 10);
+  for (var i = 0; i < opts.length; i++) opts[i].disabled = true;
+  for (var i = 0; i < opts.length; i++) {
+    if (i === correct) opts[i].classList.add('correct');
+  }
+  if (btn !== opts[correct]) btn.classList.add('wrong');
+  var explain = q.querySelector('.quiz-explain');
+  if (explain) explain.classList.add('show');
+  var module = btn.closest('.module');
+  if (module) updateModuleScore(module);
+}
+function updateModuleScore(module) {
+  var qs = module.querySelectorAll('.quiz-q');
+  var correct = 0;
+  for (var i = 0; i < qs.length; i++) {
+    var opts = qs[i].querySelectorAll('.quiz-opt');
+    var ci = parseInt(qs[i].getAttribute('data-answer'), 10);
+    if (opts[ci] && opts[ci].classList.contains('correct')) correct++;
+  }
+  var scoreEl = module.querySelector('.quiz-score');
+  if (!scoreEl) return;
+  scoreEl.classList.add('show');
+  var r = AILearn.scoreResult(correct, qs.length);
+  scoreEl.textContent = '得分：' + correct + '/' + qs.length + '（' + r.pct + '%）— ' + r.label;
 }
 
 initTheme();
