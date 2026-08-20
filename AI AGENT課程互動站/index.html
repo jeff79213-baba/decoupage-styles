@@ -301,6 +301,14 @@ body[data-theme="dark"] {
 }
 .cheat-label { font-weight: 600; font-size: 14px; }
 .cheat-desc { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+.copy-btn {
+  position: absolute; top: 14px; right: 14px;
+  background: var(--primary); color: #fff; border: none;
+  padding: 6px 14px; border-radius: var(--radius-pill);
+  font-family: inherit; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; z-index: 1;
+}
+.copy-btn:hover { background: var(--primary-dark); transform: scale(1.03); }
 
 /* ── FLOW VISUAL ── */
 .flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; justify-content: center; padding: 16px 0; }
@@ -922,6 +930,98 @@ body[data-theme="dark"] {
         </div>
       </div>
     </div>
+
+    <div class="module" id="mod6">
+      <div class="module-header">
+        <div class="module-badge">第 6 章</div>
+        <h1 class="module-title">動手做 Skill</h1>
+        <p class="module-desc">把公司的 SOP 寫成文件：動手做第一個 Skill——「早安問候」。做完你就會懂：Skill 一點都不難，它就是「寫文件」而已。</p>
+      </div>
+      <div class="bento">
+        <div class="bento-card">
+          <h3><span class="icon icon-green">🗺️</span> 建置步驟</h3>
+          <p style="font-size:14px;color:var(--text-secondary);margin-bottom:8px;">點一下任一步驟，看它亮了就代表你做到這裡。</p>
+          <div class="flow">
+            <div class="flow-step" onclick="flowActive(this)"><div class="step-icon">📁</div><div class="step-label">建資料夾</div><div class="step-sub">蓋好放文件的櫃子</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step" onclick="flowActive(this)"><div class="step-icon">📝</div><div class="step-label">frontmatter</div><div class="step-sub">貼上封面標籤</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step" onclick="flowActive(this)"><div class="step-icon">🗝️</div><div class="step-label">觸發關鍵字</div><div class="step-sub">告訴 AI 聽到什麼要翻書</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step" onclick="flowActive(this)"><div class="step-icon">📜</div><div class="step-label">SOP 內容</div><div class="step-sub">寫下固定回覆格式</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step" onclick="flowActive(this)"><div class="step-icon">✅</div><div class="step-label">測試觸發</div><div class="step-sub">喊「早安」看 AI 回應</div></div>
+          </div>
+        </div>
+        <div class="bento-card">
+          <h3><span class="icon icon-orange">📋</span> 範例 SKILL.md（可複製）</h3>
+          <div class="cheat-grid">
+            <div class="cheat-item" style="position:relative;">
+              <div class="cheat-label">📄 SKILL.md — 「早安問候」完整內容</div>
+              <div class="cheat-desc">整份複製，貼進 .opencode/skills/早安問候/SKILL.md 存檔即可。</div>
+              <code>---
+name: 早安問候
+description: 使用者說「早安」或「早上好」時，用固定格式問候回覆
+---
+
+## 觸發
+- 使用者說「**早安**」或「**早上好**」→ 用下方的「問候格式」回覆
+
+## 問候格式
+1. 第一句說：早安！新的一天開始囉！
+2. 第二句說：今天也要一起加油喔！
+3. 第三句說：需要我幫你安排今天的工作清單嗎？</code>
+              <button type="button" class="copy-btn" onclick="copySkill(this)">📋 複製</button>
+            </div>
+          </div>
+        </div>
+        <div class="bento-card">
+          <h3><span class="icon icon-blue">🖥️</span> 模擬：一步步建 Skill</h3>
+          <div class="sim-container" id="sim6"></div>
+          <div class="sim-btn-row">
+            <button class="sim-btn" id="sim6b1" onclick="sim6Step(1)">① 建資料夾</button>
+            <button class="sim-btn" id="sim6b2" onclick="sim6Step(2)" disabled>② 寫 frontmatter</button>
+            <button class="sim-btn" id="sim6b3" onclick="sim6Step(3)" disabled>③ 寫觸發</button>
+            <button class="sim-btn" id="sim6b4" onclick="sim6Step(4)" disabled>④ 測試「早安」</button>
+          </div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-green">✏️</span> 小測驗</h3>
+          <div class="quiz-q" data-answer="0">
+            <p><span class="q-num">1</span>Skill 的資料夾要放在哪？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. .opencode/skills/ 裡面</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 桌面上隨便建一個</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 電腦 C 槽的根目錄</button>
+            </div>
+            <div class="quiz-explain">Skill 一定要放在專案資料夾的 <code>.opencode/skills/</code> 裡，AI 才看得到這本說明書，才會在關鍵字觸發時自動翻開。</div>
+          </div>
+          <div class="quiz-q" data-answer="1">
+            <p><span class="q-num">2</span>frontmatter 寫錯會怎樣？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 沒關係，AI 照樣讀得懂</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. Skill 沒被載入，AI 不會觸發</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 電腦會直接當機</button>
+            </div>
+            <div class="quiz-explain">frontmatter 是封面標籤。格式寫錯（少了 ---、忘了冒號等），AI 就認不得這本書、不把它當 Skill 載入，喊關鍵字自然不會觸發。</div>
+          </div>
+          <div class="quiz-q" data-answer="2">
+            <p><span class="q-num">3</span>觸發關鍵字設「早安」這類詞要注意什麼？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 沒有要注意的，亂設就好</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 字越短越好，方便好記</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 太普通容易被誤觸發</button>
+            </div>
+            <div class="quiz-explain">「早安」算特別，但像「好」「嗨」「你」這種太常見的字，AI 幾乎每句話都會誤觸發。關鍵字越明確，誤觸發越少。</div>
+          </div>
+          <div class="quiz-score" id="score6"></div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-orange">📌</span> 本節重點</h3>
+          <div class="concept"><p><strong>會做 Skill = 你能教 AI 你的工作習慣。</strong>今天你教它「怎麼說早安」，明天你就能教它「怎麼幫你處理報價單、怎麼寫報告、怎麼整理訂單」——你的 SOP 寫得越多，AI 就越像你專屬的好員工。只要記住三步：<strong>建資料夾</strong>（.opencode/skills/你的skill名稱/SKILL.md）→ <strong>寫 frontmatter + 觸發關鍵字</strong> → <strong>寫清楚 SOP 內容並測試</strong>。</p></div>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -1148,6 +1248,53 @@ function showSimPreview(box) {
   wrap.appendChild(bar);
   wrap.appendChild(page);
   box.appendChild(wrap);
+}
+
+var sim6Lines = [
+  ['$ mkdir -p .opencode/skills/早安問候', 'cmd'],
+  ['✔ 資料夾建好了：.opencode/skills/早安問候/', 'success'],
+  ['$ touch .opencode/skills/早安問候/SKILL.md', 'cmd'],
+  ['✔ 空白 SKILL.md 建立完成', 'success'],
+  ['📝 寫 frontmatter（封面標籤）', 'comment'],
+  ['---', 'file'],
+  ['name: 早安問候', 'file'],
+  ['description: 使用者說「早安」或「早上好」時，用固定格式問候回覆', 'file'],
+  ['---', 'file'],
+  ['✔ 封面標籤寫好，AI 認得這本書了', 'success'],
+  ['📝 寫「## 觸發」關鍵字', 'comment'],
+  ['## 觸發', 'file'],
+  ['- 使用者說「**早安**」或「**早上好**」→ 用下方的「問候格式」回覆', 'file'],
+  ['✔ 觸發關鍵字寫好：講到「早安」就翻這本書', 'success'],
+  ['你：早安！', 'cmd'],
+  ['AI：（載入「早安問候」這份說明書）', 'comment'],
+  ['AI：早安！新的一天開始囉！', 'success'],
+  ['AI：今天也要一起加油喔！', 'success'],
+  ['AI：需要我幫你安排今天的工作清單嗎？', 'success'],
+  ['✔ 固定格式回應！你的第一個 Skill 做成功了！', 'success']
+];
+function sim6Step(n) {
+  var box = document.getElementById('sim6');
+  if (n === 1) box.innerHTML = '';
+  if (n === 1) showSim(box, sim6Lines.slice(0, 4));
+  if (n === 2) showSim(box, sim6Lines.slice(0, 10));
+  if (n === 3) showSim(box, sim6Lines.slice(0, 14));
+  if (n === 4) showSim(box, sim6Lines.slice(0, 20));
+  var nb = document.getElementById('sim6b' + (n + 1));
+  if (nb) nb.disabled = false;
+}
+function copySkill(btn) {
+  var old = btn.textContent;
+  var text = btn.previousElementSibling.textContent;
+  function done(msg) {
+    btn.textContent = msg;
+    setTimeout(function () { btn.textContent = old; }, 2000);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function () { done('已複製 ✓'); })
+      .catch(function () { done('複製失敗'); });
+  } else {
+    done('複製失敗');
+  }
 }
 
 initTheme();
