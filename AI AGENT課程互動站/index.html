@@ -1307,21 +1307,24 @@ opencode-sk-*.json</code>
 
 <script src="app-logic.js"></script>
 <script>
+function syncThemeBtns(name) {
+  var btns = document.querySelectorAll('.theme-switch button');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.toggle('active', btns[i].getAttribute('data-theme') === name);
+  }
+}
 function setTheme(name) {
   var vars = AILearn.themeVars(name);
   var root = document.documentElement;
   for (var k in vars) { root.style.setProperty(k, vars[k]); }
   document.body.setAttribute('data-theme', name);
+  syncThemeBtns(name);
   try { localStorage.setItem('ailearn-theme', name); } catch (e) {}
 }
 function initTheme() {
   var saved = 'green';
   try { saved = localStorage.getItem('ailearn-theme') || 'green'; } catch (e) {}
   setTheme(saved);
-  var btns = document.querySelectorAll('.theme-switch button');
-  for (var i = 0; i < btns.length; i++) {
-    btns[i].classList.toggle('active', btns[i].getAttribute('data-theme') === saved);
-  }
 }
 function toggleTree(el) {
   el.classList.toggle('open');
@@ -1461,6 +1464,7 @@ function sim3Play() {
       box.appendChild(div);
     }, i * 350);
   });
+  setTimeout(function () { if (btn) btn.disabled = false; }, sim3Lines.length * 350 + 100);
 }
 
 var sim4Lines = [
@@ -1489,13 +1493,18 @@ function sim4Step(n) {
   if (n === 4) showSim(box, sim4Lines.slice(0, 14));
   if (n === 5) {
     showSim(box, sim4Lines.slice(0, 15));
-    setTimeout(function () { showSimPreview(box); }, 15 * 250 + 150);
+    setTimeout(function () {
+      var prev = box.querySelector('.sim-preview');
+      if (prev) prev.remove();
+      showSimPreview(box);
+    }, 15 * 250 + 150);
   }
   var nb = document.getElementById('sim4b' + (n + 1));
   if (nb) nb.disabled = false;
 }
 function showSimPreview(box) {
   var wrap = document.createElement('div');
+  wrap.className = 'sim-preview';
   wrap.style.cssText = 'margin-top:14px;border-radius:12px;overflow:hidden;border:1px solid #45475A;background:#fff;color:#333;';
   var bar = document.createElement('div');
   bar.style.cssText = 'background:#313244;color:#CDD6F4;font-size:11px;padding:7px 12px;display:flex;align-items:center;gap:8px;font-family:Inter,sans-serif;';
@@ -1622,7 +1631,13 @@ function initGraduate() {
   var module = document.getElementById('mod8');
   if (!module) return;
   var saved = [];
-  try { saved = JSON.parse(localStorage.getItem('ailearn-progress') || '[]'); } catch (e) {}
+  try {
+    saved = JSON.parse(localStorage.getItem('ailearn-progress') || '[]');
+    if (!Array.isArray(saved)) {
+      try { localStorage.removeItem('ailearn-progress'); } catch (e) {}
+      saved = [];
+    }
+  } catch (e) { saved = []; }
   var boxes = module.querySelectorAll('.check-item input[type=checkbox]');
   for (var i = 0; i < boxes.length; i++) {
     boxes[i].checked = saved.indexOf(i) !== -1;
@@ -1697,6 +1712,8 @@ function backToSettings() {
 }
 document.addEventListener('keydown', function (e) {
   if (getComputedStyle(document.getElementById('slideView')).display === 'none') return;
+  var t = e.target;
+  if (t && (t.tagName === 'SELECT' || t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
   if (e.key === 'ArrowLeft') goPrev();
   else if (e.key === 'ArrowRight') goNext();
 });
