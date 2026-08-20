@@ -561,6 +561,74 @@ body[data-theme="dark"] {
         </div>
       </div>
     </div>
+
+    <div class="module" id="mod2">
+      <div class="module-header">
+        <div class="module-badge">第 2 章</div>
+        <h1 class="module-title">安裝 opencode</h1>
+        <p class="module-desc">主角登場：僱用你的第一個 AI 員工。安裝 = 把員工帶進公司，設定 API 金鑰 = 給員工發薪帳戶。</p>
+      </div>
+      <div class="bento">
+        <div class="bento-card">
+          <h3><span class="icon icon-green">🏢</span> 僱用員工的第一天</h3>
+          <div class="concept"><h4>安裝 = 把員工帶進公司</h4><p>輸入 <code>npm install -g opencode-ai</code>，把 opencode 裝進電腦，就像跟員工喊一聲「今天開始你來上班」，員工就正式入職了。</p></div>
+          <div class="concept"><h4>設定 = 給員工發薪帳戶</h4><p>執行 <code>opencode auth login</code>，貼上你的 API 金鑰。opencode 的「大腦」在雲端，沒有這張識別證，AI 助理只會發呆。</p></div>
+          <div class="concept"><h4>⏸ 授權點</h4><p>API 金鑰必須由你<strong>親手</strong>提供——AI 不能幫你申請、也不可以亂猜。</p></div>
+        </div>
+        <div class="bento-card">
+          <h3><span class="icon icon-blue">🖥️</span> 模擬：安裝並啟動</h3>
+          <div class="sim-container" id="sim2"></div>
+          <div class="sim-btn-row">
+            <button class="sim-btn" id="sim2b1" onclick="sim2Step(1)">① 安裝 opencode</button>
+            <button class="sim-btn" id="sim2b2" onclick="sim2Step(2)" disabled>② 驗證版本</button>
+            <button class="sim-btn" id="sim2b3" onclick="sim2Step(3)" disabled>③ 設定 API 金鑰</button>
+            <button class="sim-btn" id="sim2b4" onclick="sim2Step(4)" disabled>④ 第一次對話</button>
+          </div>
+        </div>
+        <div class="bento-card">
+          <h3><span class="icon icon-orange">🔑</span> API 金鑰 ⏸ 授權點</h3>
+          <div class="concept" style="background:#FFFBEB;border-left:4px solid #F59E0B;">
+            <h4 style="color:#92400E;">這一步，AI 不能代替你</h4>
+            <p>API 金鑰是你的<strong>私密資料</strong>，AI 不能幫你申請、也不可以亂猜。必須由你本人到提供者網站（例如 OpenRouter、NVIDIA）申請一組金鑰，再親手貼給 opencode。</p>
+          </div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-green">✏️</span> 小測驗</h3>
+          <div class="quiz-q" data-answer="1">
+            <p><span class="q-num">1</span>安裝 opencode 的指令是？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. opencode install</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. npm install -g opencode-ai</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. node install opencode</button>
+            </div>
+            <div class="quiz-explain">用「應用程式商店」npm 安裝名為 opencode-ai 的全域工具，裝好後在任何資料夾都能呼叫它。</div>
+          </div>
+          <div class="quiz-q" data-answer="2">
+            <p><span class="q-num">2</span>API key 應該怎麼處理？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 叫 AI 幫我申請</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 貼在筆記本裡公開分享</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 自己申請後貼上，它是私密資料</button>
+            </div>
+            <div class="quiz-explain">API 金鑰是你的私密資料，必須由你本人申請後親手貼給 opencode，AI 不能代辦。</div>
+          </div>
+          <div class="quiz-q" data-answer="0">
+            <p><span class="q-num">3</span>opencode 是整個系統的什麼角色？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 主角 AI 助理本體</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 一個備份工具</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 一個算術計算機</button>
+            </div>
+            <div class="quiz-explain">opencode 就是「AI 助理本體」，你打字它做事，是整個課程的主角與靈魂。</div>
+          </div>
+          <div class="quiz-score" id="score2"></div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-orange">📌</span> 本節重點</h3>
+          <div class="concept"><p>opencode 是「AI 助理本體」，是整個系統的<strong>主角</strong>——Node.js、npm 都是為了讓它跑起來，其他工具也都是為了讓它更強才存在的。裝好它、貼上你自己的 API 金鑰，你就有第一個會動手做事的 AI 員工了。</p></div>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -662,6 +730,29 @@ function showSim(box, lines) {
       box.appendChild(div);
     }, i * 250);
   });
+}
+
+var sim2Lines = [
+  ['$ npm install -g opencode-ai', 'cmd'],
+  ['✔ added 1 package，員工正式入職！', 'success'],
+  ['$ opencode --version', 'cmd'],
+  ['1.16.2', 'file'],
+  ['$ opencode auth login', 'cmd'],
+  ['? 選擇提供者（openrouter / nvidia）', 'comment'],
+  ['⏸ 授權點：請停下來，貼上你自己申請的 API 金鑰', 'comment'],
+  ['✔ API 金鑰設定完成，連上雲端大腦！', 'success'],
+  ['$ opencode', 'cmd'],
+  ['你：你好，請幫我介紹一下你自己，我是完全沒寫過程式的新手。', 'file'],
+  ['AI：你好！我是 opencode，你的 AI 助理。我可以聽懂你的需求，幫你讀寫檔案、執行指令，甚至建立整個專案。你不用寫程式，只要用白話跟我說想做的，我就動手做。', 'success']
+];
+function sim2Step(n) {
+  var box = document.getElementById('sim2');
+  if (n === 1) box.innerHTML = '';
+  if (n >= 1 && n <= 2) showSim(box, sim2Lines.slice(0, 4));
+  if (n === 3) showSim(box, sim2Lines.slice(0, 8));
+  if (n === 4) showSim(box, sim2Lines.slice(0, 11));
+  var nb = document.getElementById('sim2b' + (n + 1));
+  if (nb) nb.disabled = false;
 }
 
 initTheme();
