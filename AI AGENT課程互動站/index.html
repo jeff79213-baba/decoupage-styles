@@ -239,6 +239,10 @@ body[data-theme="dark"] {
 .sim-line .success { color: #A6E3A1; }
 .sim-line .file { color: #F9E2AF; }
 .sim-line .highlight { color: #F38BA8; font-weight: 700; }
+.sim-line .highlight.cmd { color: #89B4FA; }
+.sim-line .highlight.success { color: #A6E3A1; }
+.sim-line .highlight.file { color: #F9E2AF; }
+.sim-line .highlight.comment { color: #6C7086; }
 .sim-btn-row { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
 .sim-btn {
   background: var(--primary); color: #fff; border: none;
@@ -491,6 +495,72 @@ body[data-theme="dark"] {
         </div>
       </div>
     </div>
+
+    <div class="module" id="mod1">
+      <div class="module-header">
+        <div class="module-badge">第 1 章</div>
+        <h1 class="module-title">安裝 Node 與 Git</h1>
+        <p class="module-desc">先打好地基，才能蓋 AI 大樓。裝好 Node.js、npm 與 Git，後面的 AI 課程才走得下去。</p>
+      </div>
+      <div class="bento">
+        <div class="bento-card">
+          <h3><span class="icon icon-green">🏭</span> 為什麼先裝 Node</h3>
+          <div class="concept"><h4>Node.js：電腦裡的小型工廠</h4><p>讓 AI 工具跑起來的底層引擎。就像一座<strong>小型工廠</strong>，所有 AI 程式都要站在它上面才開得了機。</p></div>
+          <div class="concept"><h4>npm：應用程式商店</h4><p>跟著 Node.js 一起裝好的「<strong>應用程式商店</strong>」，負責下載、安裝 AI 工具，跟手機裝 App 一樣。裝完 Node，商店也自動開張了。</p></div>
+        </div>
+        <div class="bento-card">
+          <h3><span class="icon icon-blue">🖥️</span> 模擬：安裝 Node.js</h3>
+          <div class="sim-container" id="sim1"></div>
+          <div class="sim-btn-row">
+            <button class="sim-btn" id="sim1b1" onclick="sim1Step(1)">① 安裝 Node.js</button>
+            <button class="sim-btn" id="sim1b2" onclick="sim1Step(2)" disabled>② 驗證 node --version</button>
+            <button class="sim-btn" id="sim1b3" onclick="sim1Step(3)" disabled>③ 驗證 npm --version</button>
+            <button class="sim-btn" id="sim1b4" onclick="sim1Step(4)" disabled>④ 安裝 Git</button>
+            <button class="sim-btn" id="sim1b5" onclick="sim1Step(5)" disabled>⑤ 驗證 git --version</button>
+          </div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-purple">⏳</span> Git 的價值</h3>
+          <div class="concept"><h4>Git：時光機 + 檔案保險箱</h4><p>每次改動都存一個備份點（Commit），做壞了可以<strong>回到過去</strong>任何一次的狀態，改壞的檔案回不去？不存在的。</p></div>
+          <div class="concept"><p>用蓋房子來比喻：先打地基（Node.js），再架鋼骨（Git），後面才有能力裝上 AI Agent 跟各種輔助工具。</p></div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-green">✏️</span> 小測驗</h3>
+          <div class="quiz-q" data-answer="1">
+            <p><span class="q-num">1</span>Node.js 在整個系統裡的角色？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 只是一個文字編輯器</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 像一座小型工廠，是 AI 工具運行的地基</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 像一個瀏覽器，用來上網</button>
+            </div>
+            <div class="quiz-explain">Node.js 是「電腦裡的小型工廠」，所有 AI 工具都要站在它上面才跑得起來，沒有它任何 AI 程式都開不了機。</div>
+          </div>
+          <div class="quiz-q" data-answer="0">
+            <p><span class="q-num">2</span>npm 像什麼？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 應用程式商店，下載安裝工具的地方</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 一座發電廠，負責供應電力</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 一個記事本，專門寫筆記</button>
+            </div>
+            <div class="quiz-explain">npm 跟著 Node.js 一起裝好，負責下載、安裝 AI 工具，就像手機的應用程式商店。</div>
+          </div>
+          <div class="quiz-q" data-answer="2">
+            <p><span class="q-num">3</span>Git 的「時光機」比喻是指？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. Git 可以讓電腦跑得更快</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. Git 可以自動備份到雲端硬碟</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 可以回到任何一次 Commit 的狀態</button>
+            </div>
+            <div class="quiz-explain">Git 每次改動都存一個備份點（Commit），做壞了可以倒回任何一次的狀態，就像坐上時光機回到過去。</div>
+          </div>
+          <div class="quiz-score" id="score1"></div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-orange">📌</span> 本節重點</h3>
+          <div class="concept"><p>Node 是 AI 的地基，裝完它「應用程式商店」npm 也跟著有了；Git 是保險箱 + 時光機，改壞了可以倒回。驗證三連招 <code>node --version</code>、<code>npm --version</code>、<code>git --version</code>，看到版本號就是成功。</p></div>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -555,6 +625,43 @@ function updateModuleScore(module) {
   scoreEl.classList.add('show');
   var r = AILearn.scoreResult(correct, qs.length);
   scoreEl.textContent = '得分：' + correct + '/' + qs.length + '（' + r.pct + '%）— ' + r.label;
+}
+
+var sim1Lines = [
+  ['$ winget install OpenJS.NodeJS.LTS', 'cmd'],
+  ['✔ 安裝完成 Node.js', 'success'],
+  ['$ node --version', 'cmd'],
+  ['v26.1.0', 'file'],
+  ['$ npm --version', 'cmd'],
+  ['11.13.0', 'file'],
+  ['$ winget install Git.Git', 'cmd'],
+  ['✔ 安裝完成 Git', 'success'],
+  ['$ git --version', 'cmd'],
+  ['git version 2.54.0', 'file']
+];
+function sim1Step(n) {
+  var box = document.getElementById('sim1');
+  if (n === 1) box.innerHTML = '';
+  if (n >= 1 && n <= 2) showSim(box, sim1Lines.slice(0, 4));
+  if (n === 3) showSim(box, sim1Lines.slice(0, 6));
+  if (n === 4) showSim(box, sim1Lines.slice(0, 8));
+  if (n === 5) showSim(box, sim1Lines.slice(0, 10));
+  var nb = document.getElementById('sim1b' + (n + 1));
+  if (nb) nb.disabled = false;
+}
+function showSim(box, lines) {
+  box.innerHTML = '';
+  lines.forEach(function (l, i) {
+    setTimeout(function () {
+      var div = document.createElement('div');
+      div.className = 'sim-line show';
+      var span = document.createElement('span');
+      span.className = 'highlight ' + l[1];
+      span.textContent = l[0];
+      div.appendChild(span);
+      box.appendChild(div);
+    }, i * 250);
+  });
 }
 
 initTheme();
