@@ -1696,7 +1696,7 @@ function backToSettings() {
   syncSettingsBoxes();
 }
 document.addEventListener('keydown', function (e) {
-  if (document.getElementById('slideView').style.display === 'none') return;
+  if (getComputedStyle(document.getElementById('slideView')).display === 'none') return;
   if (e.key === 'ArrowLeft') goPrev();
   else if (e.key === 'ArrowRight') goNext();
 });
@@ -1713,6 +1713,8 @@ if (savedSel && savedSel.length) {
     showSlide(slideState.list[0]);
     document.getElementById('settingsView').style.display = 'none';
     document.getElementById('slideView').style.display = 'block';
+  } else {
+    try { localStorage.removeItem('ailearn-selected'); } catch (e) {}
   }
 }
 
