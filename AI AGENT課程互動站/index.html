@@ -629,6 +629,85 @@ body[data-theme="dark"] {
         </div>
       </div>
     </div>
+
+    <div class="module" id="mod3">
+      <div class="module-header">
+        <div class="module-badge">第 3 章</div>
+        <h1 class="module-title">專案工作流程</h1>
+        <p class="module-desc">AI 怎麼跟我合作做一個專案：從提出需求、開會確認、寫文件計劃，到動手做、測試、上傳部署的完整 SOP。</p>
+      </div>
+      <div class="bento">
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-green">🗺️</span> 6 步流程圖</h3>
+          <p style="font-size:14px;color:var(--text-secondary);margin-bottom:8px;">點一下任一步驟，看它亮了就代表 AI 現在走到這裡。</p>
+          <div class="flow">
+            <div class="flow-step" onclick="flowActive(this)"><div class="step-icon">📝</div><div class="step-label">提出需求</div><div class="step-sub">你告訴 AI 想做什麼</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step" onclick="flowActive(this)"><div class="step-icon">🗣️</div><div class="step-label">AI 反問釐清</div><div class="step-sub">開會確認需求</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step" onclick="flowActive(this)"><div class="step-icon">📄</div><div class="step-label">寫設計文件</div><div class="step-sub">白紙黑字給你過目</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step" onclick="flowActive(this)"><div class="step-icon">🗓️</div><div class="step-label">寫實作計劃</div><div class="step-sub">拆成一條條小任務</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step" onclick="flowActive(this)"><div class="step-icon">🔧</div><div class="step-label">動手做+測試</div><div class="step-sub">邊做邊驗收</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step" onclick="flowActive(this)"><div class="step-icon">🚀</div><div class="step-label">上傳部署</div><div class="step-sub">成品送上網路</div></div>
+          </div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-blue">🎬</span> 劇本對話模擬</h3>
+          <div class="sim-container" id="sim3"></div>
+          <div class="sim-btn-row">
+            <button class="sim-btn" id="sim3PlayBtn" onclick="sim3Play()">▶ 播放完整對話</button>
+          </div>
+        </div>
+        <div class="bento-card">
+          <h3><span class="icon icon-orange">💬</span> 為什麼要一步一步確認</h3>
+          <div class="concept"><h4>brainstorming = 開會確認需求</h4><p>AI 是你的員工，你請它做專案就像請員工接大案子。專業員工不會一拿到案子就悶頭亂做，而是先<strong>開會</strong>反覆問你「要做給誰？要什麼功能？長什麼樣子？」，確保雙方想的是同一件事。</p></div>
+          <div class="concept"><h4>好的專案 = 清楚的需求 + 一步一步的確認</h4><p>講得越清楚，AI 越不容易猜錯。AI 拿設計文件、計劃給你看時，花 10 秒讀一下，回一句「OK」或「這裡要改」——你越認真確認，後面越不會做錯方向白費工。</p></div>
+        </div>
+        <div class="bento-card">
+          <h3><span class="icon icon-dark">🧠</span> 陷阱提醒</h3>
+          <div class="concept"><h4>⚠️ 沒講清楚需求就喊「全自動」</h4><p>只丟一句「幫我做一個點餐網站」就希望 AI 一次做對？這就像去餐廳只說「隨便」，廚師只能亂猜，端出來的往往不是你要的。需求不清楚沒關係，AI 會反問你，照實回答就好。</p></div>
+          <div class="concept"><h4>⚠️ 跳過確認一路喊「快點做」</h4><p>AI 把文件拿給你看時，不理它或直接說「好好好快做」，就像開會時老闆不表示意見，最後交出來的東西跟你想的完全不一樣。</p></div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-green">✏️</span> 小測驗</h3>
+          <div class="quiz-q" data-answer="1">
+            <p><span class="q-num">1</span>專案一開始，AI 反問你問題的階段叫什麼？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 直接施工（埋頭就做）</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. brainstorming（開會確認需求）</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 交貨收工（做完就閃）</button>
+            </div>
+            <div class="quiz-explain">brainstorming 就是「開會確認需求」：AI 先反問你細節，確保雙方想的是同一件事，才不會做錯方向。</div>
+          </div>
+          <div class="quiz-q" data-answer="2">
+            <p><span class="q-num">2</span>為什麼要讓 AI 寫設計文件和計劃？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 為了拖時間多收錢</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 寫好看的，其實沒用</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 先確認方向，才不會做錯方向白費工</button>
+            </div>
+            <div class="quiz-explain">設計文件和計劃就像員工的企劃書、時程表，白紙黑字讓你先確認再施工，確認過後才不會白做工。</div>
+          </div>
+          <div class="quiz-q" data-answer="0">
+            <p><span class="q-num">3</span>正確的專案流程順序是？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 需求→反問→設計→計劃→執行→測試→部署</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 部署→需求→計劃→反問→執行</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 執行→部署→設計→反問→測試→需求→計劃</button>
+            </div>
+            <div class="quiz-explain">完整 SOP：提出專案 → brainstorming 提問 → 寫設計報告 → 寫實作計劃 → 執行 → 測試 → 上傳部署。</div>
+          </div>
+          <div class="quiz-score" id="score3"></div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-orange">📌</span> 本節重點</h3>
+          <div class="concept"><p>好的專案 = <strong>清楚的需求</strong> + <strong>一步一步的確認</strong>。跟 AI 合作的完整 SOP 是：提出需求 → 反問釐清 → 寫設計文件 → 寫實作計劃 → 動手做＋測試 → 上傳部署。AI 不會不問就亂做，也不會做完就交差——你只要把需求講清楚、每步認真確認，它就是你最可靠的員工。</p></div>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -753,6 +832,52 @@ function sim2Step(n) {
   if (n === 4) showSim(box, sim2Lines.slice(0, 11));
   var nb = document.getElementById('sim2b' + (n + 1));
   if (nb) nb.disabled = false;
+}
+
+function flowActive(el) {
+  var group = el.parentElement;
+  var steps = group.querySelectorAll('.flow-step');
+  for (var i = 0; i < steps.length; i++) steps[i].classList.remove('active');
+  el.classList.add('active');
+}
+
+var sim3Lines = [
+  ['你：AI，我想做一個網站，讓客人可以線上點餐。', 'prompt'],
+  ['AI：好的！動手之前，我先跟你開個會確認需求，這樣做出來的才是你真正想要的。我想先問幾個問題：', 'cmd'],
+  ['AI：① 這個網站是給客人自己用手機點，還是店員在櫃台幫客人點？', 'comment'],
+  ['AI：② 需要線上付款，還是現場再付錢？', 'comment'],
+  ['AI：③ 結完帳需要自動印出一張單子給廚房嗎？', 'comment'],
+  ['你：給客人自己用手機點，現場付錢就好，結完帳要印單給廚房。', 'prompt'],
+  ['AI：了解！我先把結論整理成一份設計文件給你看。', 'cmd'],
+  ['AI：【設計文件】目的：客人手機線上點餐｜使用者：客人（不用註冊）｜畫面：選單、購物車、結帳、印單通知｜付款：現場付', 'file'],
+  ['AI：請你看一下，有沒有漏掉或想改的地方？', 'cmd'],
+  ['你：看起來 OK，但飲料可以選冰塊和甜度。', 'prompt'],
+  ['AI：好的，我補上「飲料客製化」。接著我把設計拆成實作計劃：', 'cmd'],
+  ['AI：【實作計劃】①選單畫面（含飲料客製）→②點餐按鈕與購物車→③結帳畫面（算總金額）→④印單通知→⑤測試所有流程', 'file'],
+  ['AI：沒問題的話，我就照這個計劃開始做囉。', 'cmd'],
+  ['你：沒問題，開始吧。', 'prompt'],
+  ['AI：開始動工！⋯⋯每完成一部份，我都會自己跑測試，通過才做下一步。', 'cmd'],
+  ['AI：選單畫面完成，測試通過！購物車完成，測試通過！結帳、印單完成，整體測試全數通過！', 'success'],
+  ['AI：全部完成了！現在喊一聲「上傳部署」，我就把成品送上網路。', 'cmd'],
+  ['你：上傳部署。', 'prompt'],
+  ['AI：上傳完成！網址在這裡：https://你的專案.web.app — 手機打開就能用，也可以分享給朋友！', 'success']
+];
+function sim3Play() {
+  var box = document.getElementById('sim3');
+  box.innerHTML = '';
+  var btn = document.getElementById('sim3PlayBtn');
+  if (btn) btn.disabled = true;
+  sim3Lines.forEach(function (l, i) {
+    setTimeout(function () {
+      var div = document.createElement('div');
+      div.className = 'sim-line show';
+      var span = document.createElement('span');
+      span.className = l[1] === 'prompt' ? 'prompt' : 'highlight ' + l[1];
+      span.textContent = l[0];
+      div.appendChild(span);
+      box.appendChild(div);
+    }, i * 350);
+  });
 }
 
 initTheme();
