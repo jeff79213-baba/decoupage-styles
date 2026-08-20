@@ -811,6 +811,117 @@ body[data-theme="dark"] {
         </div>
       </div>
     </div>
+
+    <div class="module" id="mod5">
+      <div class="module-header">
+        <div class="module-badge">第 5 章</div>
+        <h1 class="module-title">認識 Skill</h1>
+        <p class="module-desc">給 AI 的 SOP 說明書：Skill 長什麼樣、放在哪裡、怎麼被觸發，以及這台電腦上已經裝了哪些「現成的 SOP 手冊」。</p>
+      </div>
+      <div class="bento">
+        <div class="bento-card">
+          <h3><span class="icon icon-green">🌳</span> SKILL.md 結構樹</h3>
+          <p style="font-size:14px;color:var(--text-secondary);margin-bottom:12px;">這是這台電腦上真實存在的「上傳 SOP」說明書，點 ▶ 把它展開看看（<code>.opencode/skills/deploy-workflow/SKILL.md</code>）。</p>
+          <div class="tree" id="tree5">
+            <div class="tree-item folder">
+              <span class="tree-toggle" onclick="toggleTree(this)">📁 .opencode/</span>
+              <div class="tree-children">
+                <div class="tree-item folder">
+                  <span class="tree-toggle" onclick="toggleTree(this)">📁 skills/</span>
+                  <div class="tree-children">
+                    <div class="tree-item folder">
+                      <span class="tree-toggle" onclick="toggleTree(this)">📁 deploy-workflow/</span>
+                      <div class="tree-children">
+                        <div class="tree-item file">
+                          <span class="tree-toggle" onclick="toggleTree(this)">📄 SKILL.md</span>
+                          <div class="tree-children collapsed">
+                            <div class="tree-item"><span class="label">name: deploy-workflow</span></div>
+                            <div class="tree-item"><span class="label">description: 使用者說「上傳部署」時執行完整部署流程…</span></div>
+                            <div class="tree-item folder">
+                              <span class="tree-toggle" onclick="toggleTree(this)">## 觸發</span>
+                              <div class="tree-children collapsed">
+                                <div class="tree-item"><span class="label">「上傳部署」→ 執行完整部署流程（GitHub + Pages + Firebase）</span></div>
+                                <div class="tree-item"><span class="label">「本機預覽」→ 只提供本機網址，不做部署</span></div>
+                                <div class="tree-item"><span class="label">開發迭代期間 → 改完直接告知本機預覽網址</span></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bento-card">
+          <h3><span class="icon icon-blue">🎯</span> 怎麼觸發</h3>
+          <div class="concept"><h4>關鍵字 = 翻書的開關</h4><p>Skill 不需要你手動打開。只要在對話中講到關鍵字，AI 就會<strong>自動翻開</strong>對應的說明書照著做——就像你跟員工說「客人點了一杯多多綠」，員工自己就會照 SOP 去搖飲料。</p></div>
+          <div class="concept"><h4>你喊「上傳部署」</h4><p>→ AI 自動載入 <strong>deploy-workflow</strong> 這本「上傳 SOP」，開始執行完整的部署流程（GitHub + Pages + Firebase）。</p></div>
+          <div class="concept"><h4>你喊「需要設計感」</h4><p>→ AI 自動載入 <strong>hallmark</strong> 這本「設計規範」，照規範幫你做出不「AI 味」的頁面。</p></div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-orange">📚</span> 17 個 Skill 清單</h3>
+          <p style="font-size:14px;color:var(--text-secondary);margin-bottom:14px;">這台電腦全環境一共有 <strong>17 個 Skill</strong>，分成三類，你不需要背名字，先知道「有這三類」就好：</p>
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="info-icon">📘</div>
+              <div class="info-title">superpowers × 14</div>
+              <div class="info-desc">AI 的職場 SOP 手冊：教 AI 有紀律地陪你做專案</div>
+              <div style="margin-top:10px;text-align:left;font-size:12px;line-height:1.9;color:var(--text-secondary);">brainstorming、writing-plans、test-driven-development、systematic-debugging、verification-before-completion、using-superpowers、using-git-worktrees、subagent-driven-development、executing-plans、dispatching-parallel-agents、writing-skills、requesting-code-review、receiving-code-review、finishing-a-development-branch</div>
+            </div>
+            <div class="info-item">
+              <div class="info-icon">🎨</div>
+              <div class="info-title">自訂 Skill × 2</div>
+              <div class="info-desc">你（或 AI）自己寫的說明書</div>
+              <div style="margin-top:10px;text-align:left;font-size:12px;line-height:1.9;color:var(--text-secondary);"><strong>hallmark</strong>＝AI 的設計總監（設計規範）<br><strong>deploy-workflow</strong>＝AI 的上傳 SOP（上傳部署）</div>
+            </div>
+            <div class="info-item">
+              <div class="info-icon">⚙️</div>
+              <div class="info-title">內建 Skill × 1</div>
+              <div class="info-desc">工具本身附帶的自我設定說明書</div>
+              <div style="margin-top:10px;text-align:left;font-size:12px;line-height:1.9;color:var(--text-secondary);"><strong>customize-opencode</strong>＝AI 的自我設定說明書</div>
+            </div>
+          </div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-green">✏️</span> 小測驗</h3>
+          <div class="quiz-q" data-answer="2">
+            <p><span class="q-num">1</span>Skill 是什麼？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 一串要背起來的魔法咒語</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 一種可以刪掉的暫存檔</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 給 AI 的 SOP 說明書，關鍵字觸發自動套用</button>
+            </div>
+            <div class="quiz-explain">Skill = 給 AI 的「SOP 說明書」：你平常會做的流程，事先寫成一步一步的說明書放好，AI 遇到對應的關鍵字就自動翻開照著做。不是咒語，是白紙黑字的流程。</div>
+          </div>
+          <div class="quiz-q" data-answer="0">
+            <p><span class="q-num">2</span>deploy-workflow 是幹嘛的？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 你說「上傳部署」它就自動跑 GitHub + Firebase 流程</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 它是設計網頁樣式的說明書</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 它是設定 opencode 的說明書</button>
+            </div>
+            <div class="quiz-explain">deploy-workflow 就是「上傳 SOP」：你喊「上傳部署」，AI 就自動載入它，跑完整的 GitHub + Pages + Firebase 部署流程，再把網址回報給你。</div>
+          </div>
+          <div class="quiz-q" data-answer="1">
+            <p><span class="q-num">3</span>全環境有幾個 skill？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 2 個（只有 hallmark 和 deploy-workflow）</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 17 個（14+2+1）</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 100 個</button>
+            </div>
+            <div class="quiz-explain">superpowers 14 個（AI 的職場 SOP 手冊）+ 自訂 2 個（hallmark、deploy-workflow）+ 內建 1 個（customize-opencode）＝ 剛好 17 個。</div>
+          </div>
+          <div class="quiz-score" id="score5"></div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-orange">📌</span> 本節重點</h3>
+          <div class="concept"><p><strong>Skill = 把「你常做的流程」打包成 AI 的自動 SOP。</strong>放在專案資料夾的 <code>.opencode/skills/</code>（每份叫 <code>SKILL.md</code>），靠關鍵字自動觸發——說「上傳部署」跑 deploy-workflow、說「需要設計感」載入 hallmark。這台電腦全環境有 17 個（superpowers 14 + 自訂 2 + 內建 1）。記住：它不是咒語，沒有寫說明書、放對位置，喊關鍵字也沒用。</p></div>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>
