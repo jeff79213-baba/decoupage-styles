@@ -93,6 +93,16 @@ body[data-theme="dark"] {
 }
 .nav-logo span { color: var(--accent); }
 
+/* ── NAV BUTTON ── */
+.nav-btn {
+  margin-left: 16px;
+  color: #fff; background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15); border-radius: var(--radius-pill);
+  padding: 8px 16px; font-family: inherit; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.nav-btn:hover { background: rgba(255,255,255,0.18); transform: scale(1.03); }
+
 /* ── THEME SWITCH ── */
 .theme-switch {
   margin-left: auto; display: flex; gap: 8px;
@@ -177,6 +187,8 @@ body[data-theme="dark"] {
 }
 .chapter-option .ch-name { font-weight: 600; font-size: 15px; }
 .chapter-option .ch-desc { font-size: 12px; color: var(--text-secondary); }
+.settings-actions { display: flex; gap: 10px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
+.settings-actions .sim-btn { font-size: 15px; padding: 12px 24px; }
 
 /* ── BENTO GRID ── */
 .bento {
@@ -472,6 +484,7 @@ body[data-theme="dark"] {
 <!-- ══════ NAV ══════ -->
 <nav class="nav">
   <div class="nav-logo">🤖 <span>AI Agent</span> 課堂</div>
+  <button type="button" class="nav-btn" title="回到設定面板" onclick="backToSettings()">⚙ 設定</button>
   <div class="theme-switch" id="themeSwitch">
     <button type="button" data-theme="green" title="草綠風" onclick="setTheme('green')">🌿</button>
     <button type="button" data-theme="dark" title="科技暗色" onclick="setTheme('dark')">🌃</button>
@@ -489,6 +502,58 @@ body[data-theme="dark"] {
       <div class="module-badge">課前準備</div>
       <h1 class="module-title">選擇今天要教的章節</h1>
       <p class="module-desc">勾選這次課程要講的章節，進入課堂後只顯示選中的章節，就像簡報一樣一頁一頁切換。</p>
+      <div style="text-align:left;margin-top:24px;">
+        <label class="chapter-option">
+          <input type="checkbox" value="0">
+          <span class="ch-index">CH0</span>
+          <span class="ch-name">認識 AI Agent</span>
+        </label>
+        <label class="chapter-option">
+          <input type="checkbox" value="1">
+          <span class="ch-index">CH1</span>
+          <span class="ch-name">安裝 Node 與 Git</span>
+        </label>
+        <label class="chapter-option">
+          <input type="checkbox" value="2">
+          <span class="ch-index">CH2</span>
+          <span class="ch-name">安裝 opencode</span>
+        </label>
+        <label class="chapter-option">
+          <input type="checkbox" value="3">
+          <span class="ch-index">CH3</span>
+          <span class="ch-name">專案工作流程</span>
+        </label>
+        <label class="chapter-option">
+          <input type="checkbox" value="4">
+          <span class="ch-index">CH4</span>
+          <span class="ch-name">第一次合作</span>
+        </label>
+        <label class="chapter-option">
+          <input type="checkbox" value="5">
+          <span class="ch-index">CH5</span>
+          <span class="ch-name">認識 Skill</span>
+        </label>
+        <label class="chapter-option">
+          <input type="checkbox" value="6">
+          <span class="ch-index">CH6</span>
+          <span class="ch-name">動手做 Skill</span>
+        </label>
+        <label class="chapter-option">
+          <input type="checkbox" value="7">
+          <span class="ch-index">CH7</span>
+          <span class="ch-name">上傳部署</span>
+        </label>
+        <label class="chapter-option">
+          <input type="checkbox" value="8">
+          <span class="ch-index">CH8</span>
+          <span class="ch-name">結業專案</span>
+        </label>
+      </div>
+      <div class="settings-actions">
+        <button type="button" class="sim-btn secondary" onclick="checkAll(true)">全選</button>
+        <button type="button" class="sim-btn secondary" onclick="checkAll(false)">全不選</button>
+        <button type="button" class="sim-btn" id="enterBtn" onclick="enterClassroom()">🚀 進入課堂</button>
+      </div>
     </div>
   </div>
 
@@ -1563,6 +1628,92 @@ function initGraduate() {
     boxes[i].checked = saved.indexOf(i) !== -1;
   }
   if (boxes[0]) updateGraduate(boxes[0]);
+}
+
+/* ── 課堂導覽（Task 12） ── */
+var slideState = { list: [], index: 0 };
+
+function setNavEnabled(on) {
+  document.getElementById('prevBtn').disabled = !on;
+  document.getElementById('nextBtn').disabled = !on;
+  document.getElementById('chapterSelect').disabled = !on;
+}
+function checkAll(checked) {
+  var boxes = document.querySelectorAll('#settingsView .chapter-option input');
+  for (var i = 0; i < boxes.length; i++) boxes[i].checked = checked;
+}
+function syncSettingsBoxes() {
+  var boxes = document.querySelectorAll('#settingsView .chapter-option input');
+  for (var i = 0; i < boxes.length; i++) {
+    boxes[i].checked = slideState.list.indexOf(parseInt(boxes[i].value, 10)) !== -1;
+  }
+}
+function enterClassroom() {
+  var boxes = document.querySelectorAll('#settingsView .chapter-option input');
+  var sel = [];
+  for (var i = 0; i < boxes.length; i++) {
+    if (boxes[i].checked) sel.push(parseInt(boxes[i].value, 10));
+  }
+  if (sel.length === 0) { alert('請至少選擇一章'); return; }
+  try { localStorage.setItem('ailearn-selected', JSON.stringify(sel)); } catch (e) {}
+  slideState.list = AILearn.filterSelected([0,1,2,3,4,5,6,7,8], sel);
+  slideState.index = 0;
+  setNavEnabled(true);
+  showSlide(slideState.list[slideState.index]);
+  document.getElementById('settingsView').style.display = 'none';
+  document.getElementById('slideView').style.display = 'block';
+}
+function goNext() { slideState.index = slideState.list.indexOf(AILearn.pageNext(slideState.list[slideState.index], slideState.list)); showSlide(slideState.list[slideState.index]); }
+function goPrev() { slideState.index = slideState.list.indexOf(AILearn.pagePrev(slideState.list[slideState.index], slideState.list)); showSlide(slideState.list[slideState.index]); }
+function showSlide(id) {
+  var mods = document.querySelectorAll('#slideView .module');
+  for (var i = 0; i < mods.length; i++) mods[i].classList.toggle('active', mods[i].id === 'mod' + id);
+  var m = slideState.list.length;
+  var pos = slideState.list.indexOf(id) + 1;
+  document.getElementById('slideIndicator').textContent = '第 ' + pos + '/' + m + ' 章';
+  var sel = document.getElementById('chapterSelect');
+  sel.innerHTML = '';
+  slideState.list.forEach(function (cid) {
+    var opt = document.createElement('option');
+    opt.value = cid;
+    opt.textContent = '第 ' + cid + ' 章';
+    if (cid === id) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  var pct = Math.round((pos / m) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  window.scrollTo(0, 0);
+}
+function onChapterSelect() {
+  var cid = parseInt(document.getElementById('chapterSelect').value, 10);
+  slideState.index = slideState.list.indexOf(cid);
+  showSlide(cid);
+}
+function backToSettings() {
+  document.getElementById('slideView').style.display = 'none';
+  document.getElementById('settingsView').style.display = 'block';
+  setNavEnabled(false);
+  syncSettingsBoxes();
+}
+document.addEventListener('keydown', function (e) {
+  if (document.getElementById('slideView').style.display === 'none') return;
+  if (e.key === 'ArrowLeft') goPrev();
+  else if (e.key === 'ArrowRight') goNext();
+});
+
+/* 初次載入：記住上次選的章節與主題 */
+var savedSel = null;
+try { savedSel = JSON.parse(localStorage.getItem('ailearn-selected') || 'null'); } catch (e) {}
+if (savedSel && savedSel.length) {
+  var resumeList = AILearn.filterSelected([0,1,2,3,4,5,6,7,8], savedSel);
+  if (resumeList.length) {
+    slideState.list = resumeList;
+    slideState.index = 0;
+    setNavEnabled(true);
+    showSlide(slideState.list[0]);
+    document.getElementById('settingsView').style.display = 'none';
+    document.getElementById('slideView').style.display = 'block';
+  }
 }
 
 initTheme();
