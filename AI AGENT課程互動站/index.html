@@ -387,6 +387,45 @@ body[data-theme="dark"] {
 .info-item .info-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
 .info-item .info-desc { font-size: 13px; color: var(--text-secondary); }
 
+/* ── GRADUATION CHECKLIST ── */
+.check-list { display: flex; flex-direction: column; gap: 10px; }
+.check-item {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg); border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm); padding: 12px 16px;
+  cursor: pointer; transition: all 0.2s;
+}
+.check-item:hover { border-color: var(--primary); background: var(--primary-light); }
+.check-item input[type="checkbox"] {
+  width: 18px; height: 18px; accent-color: var(--primary);
+  flex-shrink: 0; cursor: pointer;
+}
+.check-item .check-title { font-weight: 600; font-size: 14px; flex: 1; line-height: 1.5; }
+.check-item .check-tag {
+  font-size: 11px; font-weight: 700; color: var(--primary-dark);
+  background: var(--primary-light); border-radius: var(--radius-pill);
+  padding: 4px 12px; white-space: nowrap; flex-shrink: 0;
+}
+.grad-progress {
+  background: var(--bg); border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill); height: 18px; overflow: hidden;
+}
+.grad-fill {
+  height: 100%; width: 0%; background: var(--primary); border-radius: var(--radius-pill);
+  transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+.grad-label {
+  margin-top: 12px; font-size: 15px; font-weight: 700;
+  color: var(--text); text-align: center;
+}
+.grad-done {
+  display: none; margin-top: 14px; text-align: center;
+  background: var(--primary-light); border: 1px solid var(--primary);
+  border-radius: var(--radius-sm); padding: 18px 20px;
+  font-size: 18px; font-weight: 800; color: var(--primary-dark);
+  animation: fadeIn 0.5s;
+}
+
 /* ── SLIDE NAV (BOTTOM) ── */
 .slide-nav {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
@@ -1116,6 +1155,77 @@ opencode-sk-*.json</code>
         </div>
       </div>
     </div>
+
+    <div class="module" id="mod8">
+      <div class="module-header">
+        <div class="module-badge">第 8 章</div>
+        <h1 class="module-title">結業專案</h1>
+        <p class="module-desc">畢業挑戰：獨立完成一個完整專案。前 7 章你學會了所有工具，這一章沒有課本照著做——把前面學的全部串起來，挑一個小題目，從零到有做出並公開一個作品。</p>
+      </div>
+      <div class="bento">
+        <div class="bento-card">
+          <h3><span class="icon icon-green">✅</span> 結業檢查清單</h3>
+          <p style="font-size:14px;color:var(--text-secondary);margin-bottom:12px;">照著 8 步走一遍，就是完成一個完整專案。勾完一步，就回顧對應章節複習一次。</p>
+          <div class="check-list">
+            <label class="check-item">
+              <input type="checkbox" onchange="updateGraduate(this)">
+              <span class="check-title">提出需求：對 AI 說出你想做什麼，用一句話就好</span>
+              <span class="check-tag">回顧第 0 章</span>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" onchange="updateGraduate(this)">
+              <span class="check-title">讓 AI 反問：不急著動手，先開會確認需求</span>
+              <span class="check-tag">回顧第 3 章</span>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" onchange="updateGraduate(this)">
+              <span class="check-title">確認設計：讀一下設計文件與實作計劃，回一句「OK」</span>
+              <span class="check-tag">回顧第 3 章</span>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" onchange="updateGraduate(this)">
+              <span class="check-title">做：點頭之後，AI 開始寫程式、建檔案</span>
+              <span class="check-tag">回顧第 4 章</span>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" onchange="updateGraduate(this)">
+              <span class="check-title">本機看：開瀏覽器輸入 http://localhost:3000 檢查成品</span>
+              <span class="check-tag">回顧第 4 章</span>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" onchange="updateGraduate(this)">
+              <span class="check-title">建立 skill 加速：把「每次都照同一套做」的事寫成 skill</span>
+              <span class="check-tag">回顧第 5-6 章</span>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" onchange="updateGraduate(this)">
+              <span class="check-title">上傳部署：對 AI 說「上傳部署」，送上 GitHub 和 Firebase</span>
+              <span class="check-tag">回顧第 7 章</span>
+            </label>
+            <label class="check-item">
+              <input type="checkbox" onchange="updateGraduate(this)">
+              <span class="check-title">拿到網址：把公開網址分享給朋友、家人</span>
+              <span class="check-tag">回顧第 7 章</span>
+            </label>
+          </div>
+        </div>
+        <div class="bento-card">
+          <h3><span class="icon icon-purple">🎓</span> 總進度</h3>
+          <div class="progress grad-progress"><div class="grad-fill" id="gradProgressFill"></div></div>
+          <p class="grad-label" id="gradLabel">完成 0/8 項（0%）</p>
+          <div class="grad-done" id="gradDone">🎉 你畢業了！</div>
+        </div>
+        <div class="bento-card">
+          <h3><span class="icon icon-orange">⚠️</span> 陷阱提醒</h3>
+          <div class="concept"><h4>想一次做太大</h4><p>畢業了很興奮，想一口氣做出「很像大公司網站」的作品，結果做了兩天做不完、越做越亂。解法：<strong>先做「小」的</strong>——題目小、功能少、一個畫面搞定最好，先讓它「上線」最重要，做完之後隨時可以加功能。</p></div>
+          <div class="concept"><h4>不檢查就上傳</h4><p>做完就急著喊「上傳部署」，結果朋友打開網址一看：字疊在一起、按鈕按不動。解法：<strong>上傳之前先「本機看」一遍</strong>（清單第 5 步），自己先當第一個使用者，把明顯的問題叫 AI 修好，再上傳。</p></div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-orange">📌</span> 本節重點</h3>
+          <div class="concept"><p>這一章不教新工具，而是把第 0～7 章全部串起來：<strong>獨立完成一個「從零到有」的完整專案</strong>。結業檢查清單 8 大步，每一步都是你學過的能力；成功的關鍵不是「大」，而是「完成＋上線」。你已經會用 AI Agent 從零到有做出並公開一個作品——記住：AI Agent 是員工，你是老闆，學會下指令、會確認、會驗收，你就能做出任何你想要的作品。</p></div>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -1427,7 +1537,36 @@ function sim7Step(n) {
   if (nb) nb.disabled = false;
 }
 
+function updateGraduate(cb) {
+  var module = cb.closest('.module');
+  var boxes = module.querySelectorAll('.check-item input[type=checkbox]');
+  var done = [];
+  for (var i = 0; i < boxes.length; i++) {
+    if (boxes[i].checked) done.push(i);
+  }
+  try { localStorage.setItem('ailearn-progress', JSON.stringify(done)); } catch (e) {}
+  var pct = AILearn.progressPct([0,1,2,3,4,5,6,7], done);
+  var bar = module.querySelector('#gradProgressFill');
+  var label = module.querySelector('#gradLabel');
+  if (bar) bar.style.width = pct + '%';
+  if (label) label.textContent = '完成 ' + done.length + '/8 項（' + pct + '%）';
+  var doneMsg = module.querySelector('#gradDone');
+  if (doneMsg) doneMsg.style.display = (done.length === 8) ? 'block' : 'none';
+}
+function initGraduate() {
+  var module = document.getElementById('mod8');
+  if (!module) return;
+  var saved = [];
+  try { saved = JSON.parse(localStorage.getItem('ailearn-progress') || '[]'); } catch (e) {}
+  var boxes = module.querySelectorAll('.check-item input[type=checkbox]');
+  for (var i = 0; i < boxes.length; i++) {
+    boxes[i].checked = saved.indexOf(i) !== -1;
+  }
+  if (boxes[0]) updateGraduate(boxes[0]);
+}
+
 initTheme();
+initGraduate();
 </script>
 </body>
 </html>
