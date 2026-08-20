@@ -1022,6 +1022,100 @@ description: 使用者說「早安」或「早上好」時，用固定格式問�
         </div>
       </div>
     </div>
+
+    <div class="module" id="mod7">
+      <div class="module-header">
+        <div class="module-badge">第 7 章</div>
+        <h1 class="module-title">上傳部署</h1>
+        <p class="module-desc">讓全世界看到你的作品：用 GitHub 管版本、用 Firebase 上線，把作品從自家客廳搬上網路的展示間。</p>
+      </div>
+      <div class="bento">
+        <div class="bento-card">
+          <h3><span class="icon icon-green">🗺️</span> 部署 5 步流程</h3>
+          <p style="font-size:14px;color:var(--text-secondary);margin-bottom:8px;">點一下任一步驟，看它亮了就代表流程走到這裡。</p>
+          <div class="flow">
+            <div class="flow-step" onclick="flowActive(this)"><div class="step-icon">📦</div><div class="step-label">建 GitHub repo</div><div class="step-sub">gh repo create 開倉庫</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step" onclick="flowActive(this)"><div class="step-icon">💾</div><div class="step-label">commit+push</div><div class="step-sub">把作品搬進倉庫</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step" onclick="flowActive(this)"><div class="step-icon">🌐</div><div class="step-label">GitHub Pages</div><div class="step-sub">變成公開網頁</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step" onclick="flowActive(this)"><div class="step-icon">🔥</div><div class="step-label">firebase deploy</div><div class="step-sub">掛上網路展示間</div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step" onclick="flowActive(this)"><div class="step-icon">🔗</div><div class="step-label">拿到網址</div><div class="step-sub">分享給全世界</div></div>
+          </div>
+        </div>
+        <div class="bento-card">
+          <h3><span class="icon icon-blue">🖥️</span> 模擬：完整部署</h3>
+          <div class="sim-container" id="sim7"></div>
+          <div class="sim-btn-row">
+            <button class="sim-btn" id="sim7b1" onclick="sim7Step(1)">① gh repo create</button>
+            <button class="sim-btn" id="sim7b2" onclick="sim7Step(2)" disabled>② git commit+push</button>
+            <button class="sim-btn" id="sim7b3" onclick="sim7Step(3)" disabled>③ GitHub Pages 啟用</button>
+            <button class="sim-btn" id="sim7b4" onclick="sim7Step(4)" disabled>④ firebase deploy</button>
+            <button class="sim-btn" id="sim7b5" onclick="sim7Step(5)" disabled>⑤ 顯示 https://你的專案.web.app</button>
+          </div>
+        </div>
+        <div class="bento-card">
+          <h3><span class="icon icon-orange">🔒</span> 安全檢查清單</h3>
+          <div class="cheat-grid">
+            <div class="cheat-item">
+              <div class="cheat-label">🔒 金鑰不能上傳</div>
+              <div class="cheat-desc">service account 金鑰就像倉庫的「保險箱鑰匙」，誰拿到誰就能讀改你的資料，嚴禁上傳 GitHub。</div>
+              <code>*-adminsdk-*.json 嚴禁上傳</code>
+            </div>
+            <div class="cheat-item">
+              <div class="cheat-label">📝 .gitignore 要有</div>
+              <div class="cheat-desc">Git 的黑名單：把不想上傳的檔案寫進去，它就會自動跳過，永遠不會不小心上傳。</div>
+              <code>.env
+node_modules
+opencode-sk-*.json</code>
+            </div>
+            <div class="cheat-item">
+              <div class="cheat-label">🏷️ site 名稱規則</div>
+              <div class="cheat-desc">Firebase 展示間名字全世界獨一無二，格式用「{英文縮寫}-sk」，新專案不拿舊名字重複用。</div>
+              <code>{縮寫}-sk，不重複</code>
+            </div>
+          </div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-green">✏️</span> 小測驗</h3>
+          <div class="quiz-q" data-answer="0">
+            <p><span class="q-num">1</span>GitHub 跟 Firebase 的分工是？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. GitHub 管版本，Firebase 管上線</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 兩者都一樣，隨便用哪個都行</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. GitHub 管上線，Firebase 管版本</button>
+            </div>
+            <div class="quiz-explain">GitHub 是作品的「倉庫＋履歷」，負責管好版本的歷史；Firebase 是把作品「掛上網路的展示間」，負責上線給全世界看。兩者合作，作品才會被看到。</div>
+          </div>
+          <div class="quiz-q" data-answer="1">
+            <p><span class="q-num">2</span>哪個東西絕對不能上傳？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 網頁程式裡的 Firebase API key（AIza⋯⋯）</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. service account 金鑰 json</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. index.html</button>
+            </div>
+            <div class="quiz-explain">service account 金鑰（檔名像 *-adminsdk-*.json）等同倉庫保險箱的鑰匙，誰拿到誰就能讀改你的資料，絕對不能上傳 GitHub。反過來說，前端網頁的 Firebase API key 出現是正常的，真正保護你的是安全規則。</div>
+          </div>
+          <div class="quiz-q" data-answer="2">
+            <p><span class="q-num">3</span>.gitignore 是做什麼的？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 讓 Git 跑得更快的設定檔</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 記錄所有 commit 歷史的檔案</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 設定哪些檔案不要上傳，例如金鑰和 node_modules</button>
+            </div>
+            <div class="quiz-explain">.gitignore 是 Git 的「黑名單」：把不想上傳的東西寫進去，Git 就會自動跳過它們，例如 .env、service account 金鑰、opencode-sk-*.json、node_modules。</div>
+          </div>
+          <div class="quiz-score" id="score7"></div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-orange">📌</span> 本節重點</h3>
+          <div class="concept"><p><strong>GitHub 管版本、Firebase 管上線，合作讓你的作品被全世界看到。</strong>上傳部署 5 大步：建 repo（gh repo create）→ commit+push → 啟用 GitHub Pages → firebase deploy --only hosting → 拿到網址分享，而你只要說「上傳部署」，AI 就會自動跑完整個流程，你只需要在 GitHub / Google 兩個「授權點」配合登入。</p></div>
+          <div class="concept"><p><strong>安全第一：</strong>service account 金鑰、opencode-sk-*.json 等機密檔案絕對不能上傳 GitHub，靠 .gitignore 這份「黑名單」自動擋住。之後每一次修改，AI 都會自動 commit+push（自動部署原則），你的作品永遠保持最新，每一版都有時光機紀錄可以倒回。</p></div>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -1295,6 +1389,42 @@ function copySkill(btn) {
   } else {
     done('複製失敗');
   }
+}
+
+var sim7Lines = [
+  ['你：上傳部署。', 'prompt'],
+  ['AI：好，我來把作品送上網路！先檢查一下有沒有機密檔案會被上傳⋯⋯', 'cmd'],
+  ['⚠️ 安全檢查：確認 .gitignore 存在、沒有 service account 金鑰（*-adminsdk-*.json）', 'comment'],
+  ['AI：確認完畢，開始囉！第一步，在 GitHub 建立倉庫：', 'cmd'],
+  ['$ gh repo create 我的自我介紹 --public --source=. --remote=origin', 'cmd'],
+  ['✔ 倉庫建立完成！', 'success'],
+  ['AI：現在把作品搬進倉庫⋯⋯', 'cmd'],
+  ['$ git add .', 'cmd'],
+  ['$ git commit -m "第一次上傳：我的自我介紹網頁"', 'cmd'],
+  ['$ git push', 'cmd'],
+  ['✔ 作品已經搬進 GitHub 倉庫了！', 'success'],
+  ['AI：接著啟用 GitHub Pages，讓作品變成公開網頁⋯⋯', 'cmd'],
+  ['$ gh api repos/你的帳號/我的自我介紹/pages -X POST', 'cmd'],
+  ['✔ 啟用完成！網址：https://你的帳號.github.io/我的自我介紹/', 'success'],
+  ['AI：最後用 Firebase 上架到展示間，先建好 firebase.json 指定 site⋯⋯', 'cmd'],
+  ['firebase.json → "site": "自我介紹-sk"', 'file'],
+  ['$ firebase deploy --only hosting', 'cmd'],
+  ['✔ 部署成功！', 'success'],
+  ['AI：上傳部署完成！網址整理給你：', 'cmd'],
+  ['GitHub：https://github.com/你的帳號/我的自我介紹', 'file'],
+  ['Firebase：https://自我介紹-sk.web.app', 'file'],
+  ['✔ 網址已存進「網址.txt」，把 Firebase 網址貼給朋友吧！', 'success']
+];
+function sim7Step(n) {
+  var box = document.getElementById('sim7');
+  if (n === 1) box.innerHTML = '';
+  if (n === 1) showSim(box, sim7Lines.slice(0, 5));
+  if (n === 2) showSim(box, sim7Lines.slice(0, 10));
+  if (n === 3) showSim(box, sim7Lines.slice(0, 13));
+  if (n === 4) showSim(box, sim7Lines.slice(0, 17));
+  if (n === 5) showSim(box, sim7Lines.slice(0, 22));
+  var nb = document.getElementById('sim7b' + (n + 1));
+  if (nb) nb.disabled = false;
 }
 
 initTheme();
