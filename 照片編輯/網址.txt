@@ -1,0 +1,7 @@
+照片編輯 - AutoCAD 工具列手機照片編輯
+
+Firebase Hosting: https://photo-edit-sk.web.app
+GitHub: （本專案位於 firebase雲端資料夾 主 repo 內，共用部署）
+
+功能：裁切、旋轉／翻轉、文字、塗鴉、馬賽克、多圖排列（網格／自由）、輸出 JPG/PNG/WebP + 品質與尺寸縮放
+特色：下方 AutoCAD 式按鍵列、橫直式自適應、全螢幕、雙擊不放大、可加到手機桌面

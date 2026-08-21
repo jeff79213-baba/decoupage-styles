@@ -1,0 +1,8 @@
+{
+  "projects": { "default": "opencode-sk" },
+  "targets": {
+    "opencode-sk": {
+      "hosting": { "photo-edit-sk": ["photo-edit-sk"] }
+    }
+  }
+}

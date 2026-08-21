@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="照片編輯">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f0f0f">
+<link rel="manifest" href="manifest.json">
+<title>照片編輯 - AutoCAD 工具列</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;width:100%;height:100%;overscroll-behavior:none;touch-action:manipulation;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+body{font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","Microsoft JhengHei",sans-serif;background:#0f0f0f;color:#e8e8e8;display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden}
+canvas{touch-action:none}
+/* Top bar */
+.topbar{height:44px;min-height:44px;background:#1a1a1a;border-bottom:1px solid #2a2a2a;display:flex;align-items:center;justify-content:space-between;padding:0 10px;gap:8px}
+.topbar-left{display:flex;align-items:center;gap:8px}
+.topbar h1{font-size:15px;font-weight:700;margin:0;letter-spacing:1px}
+.topbar-right{display:flex;gap:6px;align-items:center}
+.btn-sm{border:1px solid #333;background:#222;color:#ccc;border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer}
+.btn-sm:active{background:#333}
+.btn-sm:disabled{opacity:.35}
+.btn-primary{border:none;background:#0ea5e9;color:#fff;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer}
+.btn-primary:active{background:#0284c7}
+/* Stage */
+#stage{flex:1;position:relative;overflow:hidden;background:#111;display:flex;align-items:center;justify-content:center;padding:8px}
+#canvasWrap{position:relative;max-width:100%;max-height:100%;box-shadow:0 8px 32px rgba(0,0,0,.6);background:#222;border-radius:4px;overflow:hidden}
+#mainCanvas{display:block;max-width:100%;max-height:100%;background:#fff}
+#overlayCanvas{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+#cropBox{position:absolute;border:2px dashed #0ea5e9;background:rgba(14,165,233,.12);display:none;pointer-events:none}
+.handle{position:absolute;width:16px;height:16px;background:#0ea5e9;border:2px solid #fff;border-radius:50%;pointer-events:auto}
+.empty-hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#888;text-align:center;padding:20px}
+.empty-hint .big{font-size:44px}
+.empty-hint p{margin:0;font-size:14px;line-height:1.5}
+.empty-hint button{border:none;background:#0ea5e9;color:#fff;padding:10px 22px;border-radius:999px;font-size:14px;font-weight:700;cursor:pointer}
+/* Sub bar */
+#subBar{min-height:0;background:#1e1e1e;border-top:1px solid #2a2a2a;display:none;flex-wrap:wrap;gap:8px;padding:8px 10px;align-items:center}
+#subBar.show{display:flex}
+#subBar label{font-size:12px;color:#aaa}
+#subBar input[type=color]{width:32px;height:32px;border:none;border-radius:6px;padding:0;background:transparent;cursor:pointer}
+#subBar input[type=range]{width:110px}
+#subBar select{border:1px solid #333;background:#222;color:#e8e8e8;border-radius:6px;padding:6px 8px;font-size:13px}
+#subBar input[type=text]{border:1px solid #333;background:#111;color:#e8e8e8;border-radius:6px;padding:6px 10px;font-size:14px;min-width:140px}
+/* Bottom toolbar - AutoCAD style */
+#toolBar{background:#181818;border-top:1px solid #2a2a2a;padding:6px 6px calc(6px + env(safe-area-inset-bottom));display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-content:flex-start;max-height:46%;overflow-y:auto}
+.tool-btn{flex:0 0 calc(25% - 6px);min-width:0;height:62px;border:1px solid #2a2a2a;background:#222;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;position:relative;padding:4px 2px}
+.tool-btn:active{background:#2a2a2a}
+.tool-btn.active{border-color:#0ea5e9;background:#0ea5e9;color:#fff}
+.tool-btn.active .tool-icon{filter:none}
+.tool-btn:disabled{opacity:.35;pointer-events:none}
+.tool-icon{font-size:20px;line-height:1}
+.tool-label{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-align:center}
+.tool-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:#22c55e;display:none}
+.tool-btn.has-content .tool-dot{display:block}
+/* Landscape */
+@media (orientation: landscape) and (max-height: 500px){
+  #toolBar{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;justify-content:flex-start;gap:6px;padding-bottom:6px}
+  .tool-btn{flex:0 0 78px}
+  #stage{padding:4px}
+}
+/* Portrait larger screens keep 4 cols, small screens also 4 */
+@media (min-width: 500px) and (orientation: portrait){
+  .tool-btn{flex:0 0 calc(16.66% - 6px)}
+}
+/* Modal */
+.modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal-mask.show{display:flex}
+.modal{background:#1e1e1e;border:1px solid #333;border-radius:16px;max-width:520px;width:100%;max-height:88vh;overflow:auto;padding:16px}
+.modal h3{margin:0 0 10px;font-size:16px}
+.modal p{margin:0 0 12px;color:#aaa;font-size:13px;line-height:1.5}
+.grid-pick{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:8px 0}
+.pick-card{border:2px solid #333;border-radius:12px;padding:10px;background:#222;cursor:pointer;text-align:center}
+.pick-card.selected{border-color:#0ea5e9;background:#0f2a3a}
+.pick-card .prev{height:72px;background:#111;border-radius:8px;display:flex;gap:2px;padding:4px;margin-bottom:6px}
+.pick-card .prev div{flex:1;background:#444;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#aaa}
+.pick-card h4{margin:0;font-size:13px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
+.range-val{font-size:12px;color:#0ea5e9;min-width:36px;text-align:right}
+#toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(20px);background:#222;border:1px solid #333;color:#fff;padding:8px 14px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:99;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-left">
+    <div style="width:28px;height:28px;border-radius:7px;background:#0ea5e9;display:flex;align-items:center;justify-content:center;font-size:16px">✦</div>
+    <h1>照片編輯</h1>
+    <span id="sizeLabel" style="font-size:11px;color:#777;margin-left:4px"></span>
+  </div>
+  <div class="topbar-right">
+    <button class="btn-sm" id="btnUndo" disabled>↩ 上一步</button>
+    <button class="btn-sm" id="btnRedo" disabled>↪ 重做</button>
+    <button class="btn-sm" id="btnReset">重置</button>
+    <button class="btn-primary" id="btnExportTop">輸出</button>
+  </div>
+</div>
+
+<div id="stage">
+  <div id="canvasWrap">
+    <canvas id="mainCanvas" width="800" height="600"></canvas>
+    <canvas id="overlayCanvas"></canvas>
+    <div id="cropBox"><div class="handle" data-dir="nw" style="left:-8px;top:-8px"></div><div class="handle" data-dir="ne" style="right:-8px;top:-8px"></div><div class="handle" data-dir="sw" style="left:-8px;bottom:-8px"></div><div class="handle" data-dir="se" style="right:-8px;bottom:-8px"></div></div>
+    <div class="empty-hint" id="emptyHint">
+      <div class="big">🖼️</div>
+      <p>點下方「載入照片」開始<br><span style="color:#666;font-size:12px">支援多張一次選取，可做拼貼／自由排列</span></p>
+      <button id="btnPickEmpty">載入照片</button>
+    </div>
+  </div>
+</div>
+
+<div id="subBar"></div>
+
+<div id="toolBar">
+  <button class="tool-btn" data-tool="load"><span class="tool-icon">📁</span><span class="tool-label">載入照片</span></button>
+  <button class="tool-btn" data-tool="crop"><span class="tool-icon">✂️</span><span class="tool-label">裁切</span></button>
+  <button class="tool-btn" data-tool="rotate"><span class="tool-icon">↻</span><span class="tool-label">旋轉翻轉</span></button>
+  <button class="tool-btn" data-tool="text"><span class="tool-icon">🔤</span><span class="tool-label">文字</span></button>
+  <button class="tool-btn" data-tool="brush"><span class="tool-icon">✏️</span><span class="tool-label">塗鴉</span></button>
+  <button class="tool-btn" data-tool="mosaic"><span class="tool-icon">▦</span><span class="tool-label">馬賽克</span></button>
+  <button class="tool-btn" data-tool="layout"><span class="tool-icon">⊞</span><span class="tool-label">多圖排列</span></button>
+  <button class="tool-btn" data-tool="export"><span class="tool-icon">💾</span><span class="tool-label">輸出</span><span class="tool-dot"></span></button>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" multiple style="display:none">
+
+<!-- Layout modal -->
+<div class="modal-mask" id="layoutModal">
+  <div class="modal">
+    <h3>多張照片排列</h3>
+    <p>偵測到 <span id="layoutCount">0</span> 張照片，請選擇排列方式：</p>
+    <div style="display:flex;gap:8px;margin:8px 0">
+      <button class="btn-primary" id="btnFreeMode" style="flex:1">自由排列</button>
+      <button class="btn-primary" id="btnGridMode" style="flex:1;background:#334155">網格拼貼</button>
+    </div>
+    <div id="gridTemplates" style="display:none">
+      <p style="margin-top:10px">選擇網格範本：</p>
+      <div class="grid-pick" id="gridPick"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-sm" id="btnLayoutCancel">取消</button>
+      <button class="btn-primary" id="btnLayoutConfirm">確定建立</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export modal -->
+<div class="modal-mask" id="exportModal">
+  <div class="modal">
+    <h3>輸出設定</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
+      <label style="flex:1;min-width:120px">格式
+        <select id="expFormat" style="width:100%;margin-top:4px;border:1px solid #333;background:#111;color:#e8e8e8;border-radius:8px;padding:8px">
+          <option value="image/jpeg">JPG</option>
+          <option value="image/png">PNG</option>
+          <option value="image/webp">WebP</option>
+        </select>
+      </label>
+      <label style="flex:1;min-width:120px">品質 <span id="qVal" class="range-val">92%</span>
+        <input type="range" id="expQuality" min="10" max="100" value="92" style="width:100%">
+      </label>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0">
+      <label style="flex:1">尺寸縮放 <span id="sVal" class="range-val">100%</span>
+        <input type="range" id="expScale" min="10" max="200" value="100" style="width:100%">
+      </label>
+    </div>
+    <div style="background:#111;border-radius:8px;padding:8px 10px;font-size:12px;color:#aaa" id="expInfo">—</div>
+    <div class="modal-actions">
+      <button class="btn-sm" id="btnExpCancel">取消</button>
+      <button class="btn-primary" id="btnDoDownload">下載儲存</button>
+      <button class="btn-sm" id="btnDoShare" style="display:none">分享</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(()=>{ 
+const $ = s=>document.querySelector(s);
+const main = $('#mainCanvas'), ocan = $('#overlayCanvas');
+const ctx = main.getContext('2d');
+const octx = ocan.getContext('2d');
+const wrap = $('#canvasWrap'), stage = $('#stage'), subBar = $('#subBar'), emptyHint = $('#emptyHint');
+const fileInput = $('#fileInput');
+let hasImage=false, history=[], histIdx=-1, currentTool=null;
+let pendingImages=[]; // Image elements for multi
+let selectedLayout='grid', selectedTemplate=null;
+let brush = {color:'#ff3b30', size:8, drawing:false, pts:[]};
+let mosaic = {size:16, drawing:false, pts:[]};
+let textState = {text:'HELLO', font:'Noto Sans TC', size:48, color:'#ffffff', stroke:'#000000', strokeW:4, x:0, y:0, dragging:false, placed:false};
+let cropState = {active:false, x:40,y:40,w:0,h:0, drag:null};
+let scaleToFit = 1;
+
+// Toast
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800)}
+
+// Prevent double-tap zoom + context menu
+let lastTouchEnd=0;
+document.addEventListener('touchend',e=>{
+  const now=Date.now();
+  if(now-lastTouchEnd<=300) e.preventDefault();
+  lastTouchEnd=now;
+},{passive:false});
+document.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('gesturestart',e=>e.preventDefault());
+
+// History
+function pushHistory(){
+  try{
+    const url = main.toDataURL('image/png');
+    history = history.slice(0, histIdx+1);
+    history.push(url);
+    histIdx = history.length-1;
+    if(history.length>30){history.shift();histIdx--;}
+    updateUndo();
+  }catch{}
+}
+function updateUndo(){
+  $('#btnUndo').disabled = histIdx<=0;
+  $('#btnRedo').disabled = histIdx>=history.length-1;
+}
+function restoreHistory(idx){
+  if(idx<0||idx>=history.length) return;
+  histIdx=idx;
+  const img=new Image();
+  img.onload=()=>{
+    const dpr = Math.min(2, window.devicePixelRatio||1);
+    // keep canvas size as image size, but wrap scales via CSS
+    main.width=img.width; main.height=img.height;
+    ocan.width=img.width; ocan.height=img.height;
+    fitCanvas();
+    ctx.clearRect(0,0,main.width,main.height);
+    ctx.drawImage(img,0,0);
+    updateUndo(); updateSizeLabel(); renderTextOverlay();
+  };
+  img.src=history[idx];
+}
+$('#btnUndo').onclick=()=>{ if(histIdx>0) restoreHistory(histIdx-1)};
+$('#btnRedo').onclick=()=>{ if(histIdx<history.length-1) restoreHistory(histIdx+1)};
+$('#btnReset').onclick=()=>{
+  if(!hasImage) return;
+  if(confirm('確定重置回最初載入的狀態？')) restoreHistory(0);
+};
+
+function updateSizeLabel(){
+  $('#sizeLabel').textContent = hasImage? `${main.width} × ${main.height}` : '';
+}
+function fitCanvas(){
+  if(!hasImage) return;
+  // wrap CSS sizing: JS sets canvas CSS max
+  requestAnimationFrame(()=>{
+    const availW = stage.clientWidth - 16;
+    const availH = stage.clientHeight - 16;
+    const r = Math.min(availW / main.width, availH / main.height, 1);
+    const w = Math.round(main.width * r);
+    const h = Math.round(main.height * r);
+    wrap.style.width = w+'px';
+    wrap.style.height = h+'px';
+    // overlay size already in px via width/height attrs; CSS via absolute
+    ocan.style.width = '100%'; ocan.style.height='100%';
+  });
+}
+window.addEventListener('resize', fitCanvas);
+
+// Helpers
+function fileToImage(file){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>{
+      const img=new Image();
+      img.onload=()=>res(img);
+      img.onerror=rej;
+      img.src=r.result;
+    };
+    r.onerror=rej;
+    r.readAsDataURL(file);
+  });
+}
+async function handleFiles(files){
+  if(!files||!files.length) return;
+  const imgs=[];
+  for(let f of files){
+    if(!f.type.startsWith('image/')) continue;
+    try{ imgs.push(await fileToImage(f)); }catch{}
+  }
+  if(!imgs.length){ toast('未讀到圖片'); return; }
+  if(imgs.length>1){
+    pendingImages=imgs;
+    openLayoutModal();
+  } else {
+    loadSingleImage(imgs[0]);
+  }
+}
+function loadSingleImage(img){
+  hasImage=true;
+  emptyHint.style.display='none';
+  // limit max dimension to 2400 for performance but keep aspect
+  let w=img.width, h=img.height;
+  const max=2600;
+  if(w>max||h>max){
+    const r=Math.min(max/w, max/h);
+    w=Math.round(w*r); h=Math.round(h*r);
+  }
+  main.width=w; main.height=h;
+  ocan.width=w; ocan.height=h;
+  ctx.clearRect(0,0,w,h);
+  ctx.drawImage(img,0,0,w,h);
+  fitCanvas(); updateSizeLabel(); pushHistory();
+  toast('已載入');
+}
+$('#btnPickEmpty').onclick=()=> fileInput.click();
+fileInput.onchange = e=> handleFiles(e.target.files);
+stage.addEventListener('dragover',e=>{e.preventDefault()});
+stage.addEventListener('drop',e=>{e.preventDefault(); handleFiles(e.dataTransfer.files)});
+
+// Bottom toolbar
+const toolBtns=[...document.querySelectorAll('.tool-btn')];
+function setTool(t){
+  // load is not a persistent tool
+  if(t==='load'){ fileInput.click(); return; }
+  if(t==='export'){ openExport(); return; }
+  if(!hasImage && t!=='load' && t!=='layout'){ toast('請先載入照片'); return; }
+  if(currentTool===t){ currentTool=null; renderSubBar(); updateToolActive(); hideCrop(); return; }
+  currentTool=t;
+  renderSubBar(); updateToolActive();
+  if(t==='crop') initCrop();
+  else hideCrop();
+  if(t==='text') renderTextOverlay();
+}
+toolBtns.forEach(b=> b.addEventListener('click',()=> setTool(b.dataset.tool)));
+function updateToolActive(){
+  toolBtns.forEach(b=> b.classList.toggle('active', b.dataset.tool===currentTool));
+}
+
+function renderSubBar(){
+  if(!currentTool){ subBar.classList.remove('show'); subBar.innerHTML=''; return; }
+  subBar.classList.add('show');
+  if(currentTool==='crop'){
+    subBar.innerHTML = `<span style="font-size:13px;color:#aaa">拖動選框或白點調整，選好後按確定</span><div style="margin-left:auto;display:flex;gap:6px"><button class="btn-sm" id="cropCancel">取消</button><button class="btn-primary" id="cropOk">確定裁切</button></div>
+    <div style="width:100%;display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+      <button class="btn-sm" data-ratio="free">自由</button>
+      <button class="btn-sm" data-ratio="1">1:1</button>
+      <button class="btn-sm" data-ratio="1.333">4:3</button>
+      <button class="btn-sm" data-ratio="0.75">3:4</button>
+      <button class="btn-sm" data-ratio="1.777">16:9</button>
+      <button class="btn-sm" data-ratio="0.5625">9:16</button>
+    </div>`;
+    subBar.querySelector('#cropOk').onclick=doCrop;
+    subBar.querySelector('#cropCancel').onclick=()=>{hideCrop(); currentTool=null; renderSubBar(); updateToolActive();};
+    subBar.querySelectorAll('[data-ratio]').forEach(b=> b.onclick=()=>{
+      const r=b.dataset.ratio;
+      if(r==='free') return;
+      const ratio=parseFloat(r);
+      const cw=main.width, ch=main.height;
+      let w,h;
+      if(cw/ch > ratio){ h=ch*0.72; w=h*ratio; } else { w=cw*0.72; h=w/ratio; }
+      cropState.w=w; cropState.h=h;
+      cropState.x=(cw-w)/2; cropState.y=(ch-h)/2;
+      updateCropBox();
+    });
+  } else if(currentTool==='rotate'){
+    subBar.innerHTML = `<button class="btn-sm" id="rotL">↺ 90° 左轉</button><button class="btn-sm" id="rotR">↻ 90° 右轉</button><button class="btn-sm" id="flipH">⇔ 水平翻轉</button><button class="btn-sm" id="flipV">⇕ 垂直翻轉</button>`;
+    $('#rotL').onclick=()=> rotate(-90);
+    $('#rotR').onclick=()=> rotate(90);
+    $('#flipH').onclick=()=> flip('h');
+    $('#flipV').onclick=()=> flip('v');
+  } else if(currentTool==='text'){
+    subBar.innerHTML = `
+      <input type="text" id="txtInput" placeholder="輸入文字" value="${textState.text}">
+      <select id="txtFont">
+        <option value="Noto Sans TC">黑體</option>
+        <option value="serif">明體</option>
+        <option value="monospace">等寬</option>
+        <option value="cursive">手寫</option>
+      </select>
+      <label>大小 <input type="range" id="txtSize" min="12" max="140" value="${textState.size}"></label>
+      <input type="color" id="txtColor" value="${textState.color}">
+      <label>描邊 <input type="range" id="txtStroke" min="0" max="12" value="${textState.strokeW}"></label>
+      <input type="color" id="txtStrokeC" value="${textState.stroke}">
+      <button class="btn-sm" id="txtAdd">放置文字</button>
+      <button class="btn-primary" id="txtCommit">確定合併</button>
+    `;
+    const inp=$('#txtInput'), f=$('#txtFont'), sz=$('#txtSize'), c=$('#txtColor'), st=$('#txtStroke'), sc=$('#txtStrokeC');
+    f.value=textState.font;
+    const upd=()=>{ textState.text=inp.value; textState.font=f.value; textState.size=parseInt(sz.value); textState.color=c.value; textState.strokeW=parseInt(st.value); textState.stroke=sc.value; if(!textState.placed){ textState.x=main.width/2; textState.y=main.height/2; } renderTextOverlay(); };
+    [inp,f,sz,c,st,sc].forEach(e=> e.addEventListener('input',upd));
+    $('#txtAdd').onclick=()=>{ textState.placed=true; textState.x=main.width/2; textState.y=main.height/2; renderTextOverlay(); toast('拖曳可移動文字'); };
+    $('#txtCommit').onclick=commitText;
+  } else if(currentTool==='brush'){
+    subBar.innerHTML = `<label>顏色 <input type="color" id="brColor" value="${brush.color}"></label><label>粗細 <input type="range" id="brSize" min="2" max="40" value="${brush.size}"><span class="range-val" id="brVal">${brush.size}px</span></label><button class="btn-sm" id="brClear">復原筆跡</button><span style="font-size:12px;color:#777">在畫布上拖曳塗鴉</span>`;
+    $('#brColor').oninput=e=> brush.color=e.target.value;
+    $('#brSize').oninput=e=>{ brush.size=parseInt(e.target.value); $('#brVal').textContent=brush.size+'px'};
+    $('#brClear').onclick=()=>{ 
+      // clear last brush strokes by restoring history
+      if(histIdx>0) restoreHistory(histIdx-1); 
+      else toast('沒有可復原的筆跡');
+    };
+  } else if(currentTool==='mosaic'){
+    subBar.innerHTML = `<label>強度 <input type="range" id="moSize" min="6" max="36" value="${mosaic.size}"><span class="range-val" id="moVal">${mosaic.size}px</span></label><span style="font-size:12px;color:#777">在需要遮擋處拖曳塗抹</span><button class="btn-sm" id="moUndo">復原</button>`;
+    $('#moSize').oninput=e=>{ mosaic.size=parseInt(e.target.value); $('#moVal').textContent=mosaic.size+'px'};
+    $('#moUndo').onclick=()=>{ if(histIdx>0) restoreHistory(histIdx-1); };
+  } else if(currentTool==='layout'){
+    subBar.innerHTML = `<span style="font-size:12px;color:#aaa">需重新載入多張照片才會出現拼貼選項</span><button class="btn-sm" id="btnRepick">重新選擇照片</button>`;
+    $('#btnRepick').onclick=()=> fileInput.click();
+  }
+}
+
+// Text overlay render
+function renderTextOverlay(){
+  if(currentTool!=='text'){ octx.clearRect(0,0,ocan.width,ocan.height); return; }
+  octx.clearRect(0,0,ocan.width,ocan.height);
+  const s=textState;
+  if(!s.text) return;
+  octx.save();
+  octx.textAlign='center'; octx.textBaseline='middle';
+  octx.font=`700 ${s.size}px "${s.font}", sans-serif`;
+  octx.lineJoin='round';
+  // shadow for visibility
+  octx.shadowColor='rgba(0,0,0,.4)'; octx.shadowBlur=6;
+  if(s.strokeW>0){ octx.strokeStyle=s.stroke; octx.lineWidth=s.strokeW*2; octx.strokeText(s.text, s.x, s.y); }
+  octx.fillStyle=s.color; octx.fillText(s.text, s.x, s.y);
+  octx.restore();
+  // draw handle box
+  octx.save();
+  octx.strokeStyle='#0ea5e9'; octx.setLineDash([6,4]); octx.lineWidth=2;
+  const m=octx.measureText(s.text);
+  const tw=m.width, th=s.size*1.1;
+  octx.strokeRect(s.x-tw/2-8, s.y-th/2-6, tw+16, th+12);
+  octx.restore();
+}
+function commitText(){
+  if(!textState.text){ toast('請輸入文字'); return; }
+  pushHistory();
+  ctx.save();
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.font=`700 ${textState.size}px "${textState.font}", sans-serif`;
+  ctx.lineJoin='round';
+  if(textState.strokeW>0){ ctx.strokeStyle=textState.stroke; ctx.lineWidth=textState.strokeW*2; ctx.strokeText(textState.text, textState.x, textState.y); }
+  ctx.fillStyle=textState.color; ctx.fillText(textState.text, textState.x, textState.y);
+  ctx.restore();
+  octx.clearRect(0,0,ocan.width,ocan.height);
+  textState.placed=false;
+  pushHistory(); // second push after commit? actually we pushed before, push after too so redo works? keep one.
+  // remove duplicate: we pushed before draw, so history already has prior; after draw we push again for new state, but we pushed before so need keep after as well — do extra push only if needed. Let's just update undo without extra push.
+  // Fix: we already pushed before; after draw we need to update history top
+  history[histIdx]=main.toDataURL('image/png'); // replace last pushed with prior state? Actually pushHistory added prior state, now overwrite last with new? Simplify: keep as new entry
+  history.push(main.toDataURL('image/png')); histIdx=history.length-1; updateUndo();
+  toast('文字已合併');
+}
+
+// Pointer handling for brush/mosaic/text drag/crop
+let activePointer=null;
+function canvasPoint(e){
+  const rect = main.getBoundingClientRect();
+  const scaleX = main.width / rect.width;
+  const scaleY = main.height / rect.height;
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top) * scaleY;
+  return {x,y};
+}
+ocan.style.pointerEvents='none';
+function enableOverlayEvents(on){ ocan.style.pointerEvents = on ? 'auto' : 'none'; }
+
+main.addEventListener('pointerdown', onPointerDown);
+main.addEventListener('pointermove', onPointerMove);
+window.addEventListener('pointerup', onPointerUp);
+ocan.addEventListener('pointerdown', onPointerDown);
+ocan.addEventListener('pointermove', onPointerMove);
+
+function onPointerDown(e){
+  if(!hasImage) return;
+  if(currentTool==='brush'){
+    enableOverlayEvents(true);
+    const p=canvasPoint(e);
+    brush.drawing=true; brush.pts=[p];
+    pushHistory();
+    e.preventDefault(); main.setPointerCapture?.(e.pointerId);
+  } else if(currentTool==='mosaic'){
+    enableOverlayEvents(true);
+    const p=canvasPoint(e);
+    mosaic.drawing=true; mosaic.pts=[p];
+    pushHistory();
+    e.preventDefault();
+  } else if(currentTool==='text'){
+    const p=canvasPoint(e);
+    // hit test text
+    octx.font=`700 ${textState.size}px "${textState.font}", sans-serif`;
+    const m=octx.measureText(textState.text);
+    const tw=m.width, th=textState.size*1.1;
+    const bx=textState.x-tw/2-10, by=textState.y-th/2-8, bw=tw+20, bh=th+16;
+    if(p.x>=bx && p.x<=bx+bw && p.y>=by && p.y<=by+bh){
+      textState.dragging=true;
+      activePointer={dx:p.x-textState.x, dy:p.y-textState.y};
+      enableOverlayEvents(true);
+    }
+  } else if(currentTool==='crop'){
+    const p=canvasPoint(e);
+    // check handle
+    const handles=[$('#cropBox').querySelectorAll('.handle')];
+    // simple: if near crop edge, drag rect
+    const r=cropState;
+    if(p.x>=r.x && p.x<=r.x+r.w && p.y>=r.y && p.y<=r.y+r.h){
+      r.drag={type:'move', sx:p.x, sy:p.y, ox:r.x, oy:r.y};
+      enableOverlayEvents(true);
+    }
+  }
+}
+function onPointerMove(e){
+  if(!hasImage) return;
+  const p=canvasPoint(e);
+  if(currentTool==='brush' && brush.drawing){
+    brush.pts.push(p);
+    // draw segment on main directly for live feedback
+    ctx.strokeStyle=brush.color; ctx.lineWidth=brush.size; ctx.lineCap='round'; ctx.lineJoin='round';
+    if(brush.pts.length>=2){
+      const a=brush.pts[brush.pts.length-2], b=brush.pts[brush.pts.length-1];
+      ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.arc(p.x,p.y,brush.size/2,0,Math.PI*2); ctx.fillStyle=brush.color; ctx.fill();
+    }
+    e.preventDefault();
+  } else if(currentTool==='mosaic' && mosaic.drawing){
+    mosaic.pts.push(p);
+    applyMosaicAt(p.x,p.y, mosaic.size);
+    e.preventDefault();
+  } else if(currentTool==='text' && textState.dragging){
+    textState.x=p.x-activePointer.dx;
+    textState.y=p.y-activePointer.dy;
+    renderTextOverlay();
+    e.preventDefault();
+  } else if(currentTool==='crop' && cropState.drag){
+    const d=cropState.drag;
+    if(d.type==='move'){
+      cropState.x = d.ox + (p.x-d.sx);
+      cropState.y = d.oy + (p.y-d.sy);
+      cropState.x=Math.max(0,Math.min(main.width-cropState.w, cropState.x));
+      cropState.y=Math.max(0,Math.min(main.height-cropState.h, cropState.y));
+      updateCropBox();
+    }
+  }
+}
+function onPointerUp(e){
+  if(brush.drawing){
+    brush.drawing=false;
+    // push new state
+    history[histIdx]=main.toDataURL('image/png'); // actually we pushed before drawing, need to save new
+    // we pushed before, so now replace top with prior? Let's just push new snapshot correctly
+    // Our pushHistory before drawing saved prior; now save current as new entry
+    history.push(main.toDataURL('image/png')); histIdx=history.length-1; updateUndo();
+    enableOverlayEvents(false);
+  }
+  if(mosaic.drawing){
+    mosaic.drawing=false;
+    history.push(main.toDataURL('image/png')); histIdx=history.length-1; updateUndo();
+    enableOverlayEvents(false);
+  }
+  if(textState.dragging){ textState.dragging=false; enableOverlayEvents(false); }
+  if(cropState.drag){ cropState.drag=null; enableOverlayEvents(false); }
+}
+
+// Crop
+function initCrop(){
+  if(!hasImage) return;
+  const w=main.width, h=main.height;
+  cropState.active=true;
+  cropState.x=w*0.08; cropState.y=h*0.08; cropState.w=w*0.84; cropState.h=h*0.84;
+  $('#cropBox').style.display='block';
+  updateCropBox();
+  enableOverlayEvents(false);
+}
+function hideCrop(){ $('#cropBox').style.display='none'; cropState.active=false; }
+function updateCropBox(){
+  const box=$('#cropBox');
+  const rect=main.getBoundingClientRect();
+  const sx=rect.width/main.width, sy=rect.height/main.height;
+  box.style.left=(cropState.x*sx)+'px';
+  box.style.top=(cropState.y*sy)+'px';
+  box.style.width=(cropState.w*sx)+'px';
+  box.style.height=(cropState.h*sy)+'px';
+}
+function doCrop(){
+  const r=cropState;
+  if(r.w<10||r.h<10){ toast('選取範圍太小'); return; }
+  pushHistory();
+  const tmp=document.createElement('canvas');
+  tmp.width=Math.round(r.w); tmp.height=Math.round(r.h);
+  tmp.getContext('2d').drawImage(main, r.x, r.y, r.w, r.h, 0,0, tmp.width, tmp.height);
+  main.width=tmp.width; main.height=tmp.height;
+  ocan.width=tmp.width; ocan.height=tmp.height;
+  ctx.clearRect(0,0,main.width,main.height);
+  ctx.drawImage(tmp,0,0);
+  fitCanvas(); updateSizeLabel();
+  hideCrop(); currentTool=null; renderSubBar(); updateToolActive();
+  history.push(main.toDataURL('image/png')); histIdx=history.length-1; updateUndo();
+  toast('已裁切');
+}
+// handle resize observer for crop box
+new ResizeObserver(()=>{ if(cropState.active) updateCropBox(); }).observe(wrap);
+
+// Rotate / Flip
+function rotate(deg){
+  pushHistory();
+  const tmp=document.createElement('canvas');
+  const w=main.width, h=main.height;
+  if(Math.abs(deg)===90){ tmp.width=h; tmp.height=w; } else { tmp.width=w; tmp.height=h; }
+  const tctx=tmp.getContext('2d');
+  tctx.translate(tmp.width/2, tmp.height/2);
+  tctx.rotate(deg*Math.PI/180);
+  tctx.drawImage(main, -w/2, -h/2);
+  main.width=tmp.width; main.height=tmp.height;
+  ocan.width=tmp.width; ocan.height=tmp.height;
+  ctx.clearRect(0,0,main.width,main.height);
+  ctx.drawImage(tmp,0,0);
+  fitCanvas(); updateSizeLabel();
+  history.push(main.toDataURL('image/png')); histIdx=history.length-1; updateUndo();
+}
+function flip(dir){
+  pushHistory();
+  const tmp=document.createElement('canvas');
+  tmp.width=main.width; tmp.height=main.height;
+  const tctx=tmp.getContext('2d');
+  tctx.translate(dir==='h'?tmp.width:0, dir==='v'?tmp.height:0);
+  tctx.scale(dir==='h'?-1:1, dir==='v'?-1:1);
+  tctx.drawImage(main,0,0);
+  ctx.clearRect(0,0,main.width,main.height);
+  ctx.drawImage(tmp,0,0);
+  // canvas size unchanged
+  history.push(main.toDataURL('image/png')); histIdx=history.length-1; updateUndo();
+}
+
+// Mosaic pixelate
+function applyMosaicAt(cx,cy, size){
+  const s=size*2; // block size
+  const x=Math.max(0, Math.round(cx - s*1.2)), y=Math.max(0, Math.round(cy - s*1.2));
+  const w=Math.min(main.width - x, s*2.4), h=Math.min(main.height - y, s*2.4);
+  if(w<=0||h<=0) return;
+  // downscale then upscale
+  const block = Math.max(6, Math.round(size*0.9));
+  const smallW = Math.max(1, Math.round(w / block));
+  const smallH = Math.max(1, Math.round(h / block));
+  const tmp=document.createElement('canvas');
+  tmp.width=smallW; tmp.height=smallH;
+  const tctx=tmp.getContext('2d');
+  // disable smoothing for pixel effect? actually want smoothing off for blocks
+  tctx.imageSmoothingEnabled=false;
+  tctx.drawImage(main, x,y,w,h, 0,0, smallW, smallH);
+  ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(tmp, 0,0, smallW, smallH, x,y,w,h);
+  ctx.imageSmoothingEnabled=true;
+}
+
+// Layout modal
+const layoutModal=$('#layoutModal');
+function openLayoutModal(){
+  $('#layoutCount').textContent=pendingImages.length;
+  selectedLayout='grid';
+  selectedTemplate = pendingImages.length===2 ? '1x2' : pendingImages.length===3 ? '1x3' : '2x2';
+  buildGridPick();
+  layoutModal.classList.add('show');
+}
+$('#btnLayoutCancel').onclick=()=> layoutModal.classList.remove('show');
+$('#btnFreeMode').onclick=()=>{
+  selectedLayout='free';
+  $('#gridTemplates').style.display='none';
+  $('#btnFreeMode').style.background='#0ea5e9';
+  $('#btnGridMode').style.background='#334155';
+};
+$('#btnGridMode').onclick=()=>{
+  selectedLayout='grid';
+  $('#gridTemplates').style.display='block';
+  $('#btnGridMode').style.background='#0ea5e9';
+  $('#btnFreeMode').style.background='#334155';
+};
+function buildGridPick(){
+  const n=pendingImages.length;
+  const templates=[
+    {id:'1x2', label:'左右 2格', cols:2, rows:1},
+    {id:'2x1', label:'上下 2格', cols:1, rows:2},
+    {id:'2x2', label:'田字 4格', cols:2, rows:2},
+    {id:'1x3', label:'橫向 3格', cols:3, rows:1},
+    {id:'3x1', label:'直向 3格', cols:1, rows:3},
+    {id:'1x4', label:'橫向 4格', cols:4, rows:1},
+  ];
+  const pick=$('#gridPick'); pick.innerHTML='';
+  templates.forEach(t=>{
+    // hide unsuitable for count? show all but suggest
+    const card=document.createElement('div');
+    card.className='pick-card'+(t.id===selectedTemplate?' selected':'');
+    const total=t.cols*t.rows;
+    let cells='';
+    for(let i=0;i<total;i++) cells+=`<div>${i < n ? '圖'+(i+1) : ''}</div>`;
+    card.innerHTML=`<div class="prev" style="grid-template-columns:repeat(${t.cols},1fr);grid-template-rows:repeat(${t.rows},1fr);display:grid">${cells}</div><h4>${t.label}</h4><div style="font-size:11px;color:#777">${t.cols} × ${t.rows}</div>`;
+    card.onclick=()=>{ selectedTemplate=t.id; [...pick.children].forEach(c=>c.classList.remove('selected')); card.classList.add('selected'); };
+    pick.appendChild(card);
+  });
+  $('#gridTemplates').style.display='block';
+  $('#btnGridMode').style.background='#0ea5e9';
+  $('#btnFreeMode').style.background='#334155';
+}
+$('#btnLayoutConfirm').onclick=()=>{
+  layoutModal.classList.remove('show');
+  if(selectedLayout==='free') buildFreeLayout();
+  else buildGridLayout(selectedTemplate);
+};
+function buildGridLayout(tplId){
+  const map={ '1x2':[2,1], '2x1':[1,2], '2x2':[2,2], '1x3':[3,1], '3x1':[1,3], '1x4':[4,1]};
+  const [cols,rows]=map[tplId]||[2,1];
+  const outW=1200, outH= Math.round(1200 * rows/cols * 0.85);
+  main.width=outW; main.height=outH; ocan.width=outW; ocan.height=outH;
+  ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,outW,outH);
+  const gap=4;
+  const cellW=(outW - gap*(cols+1))/cols;
+  const cellH=(outH - gap*(rows+1))/rows;
+  let idx=0;
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const img=pendingImages[idx % pendingImages.length];
+      const x=gap + c*(cellW+gap), y=gap + r*(cellH+gap);
+      // cover
+      const ir=img.width/img.height, cr=cellW/cellH;
+      let dw, dh, dx, dy;
+      if(ir > cr){ dh=cellH; dw=dh*ir; dx=x - (dw-cellW)/2; dy=y; } else { dw=cellW; dh=dw/ir; dx=x; dy=y - (dh-cellH)/2; }
+      ctx.save(); ctx.beginPath(); ctx.rect(x,y,cellW,cellH); ctx.clip();
+      ctx.drawImage(img, dx, dy, dw, dh);
+      ctx.restore();
+      idx++;
+      if(idx>=pendingImages.length && pendingImages.length < cols*rows) break;
+    }
+  }
+  hasImage=true; emptyHint.style.display='none';
+  fitCanvas(); updateSizeLabel(); pushHistory();
+  toast('拼貼完成');
+}
+function buildFreeLayout(){
+  const outW=1200, outH=1200;
+  main.width=outW; main.height=outH; ocan.width=outW; ocan.height=outH;
+  ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,outW,outH);
+  // place images with offsets
+  const n=pendingImages.length;
+  pendingImages.forEach((img,i)=>{
+    const scale=Math.min(520/img.width, 520/img.height, 0.9);
+    const w=img.width*scale, h=img.height*scale;
+    const cols=Math.ceil(Math.sqrt(n));
+    const col=i%cols, row=Math.floor(i/cols);
+    const x= 40 + col*(520+40) + (520-w)/2;
+    const y= 40 + row*(520+40) + (520-h)/2;
+    // shadow
+    ctx.save(); ctx.shadowColor='rgba(0,0,0,.18)'; ctx.shadowBlur=16; ctx.shadowOffsetY=8;
+    ctx.fillStyle='#fff'; ctx.fillRect(x-4,y-4,w+8,h+8);
+    ctx.restore();
+    ctx.drawImage(img, x,y,w,h);
+    // border
+    ctx.strokeStyle='#e5e7eb'; ctx.lineWidth=1; ctx.strokeRect(x-4,y-4,w+8,h+8);
+  });
+  hasImage=true; emptyHint.style.display='none';
+  fitCanvas(); updateSizeLabel(); pushHistory();
+  toast('自由排列完成');
+}
+
+// Export
+const exportModal=$('#exportModal');
+function openExport(){
+  if(!hasImage){ toast('請先載入照片'); return; }
+  exportModal.classList.add('show');
+  updateExpInfo();
+  // share availability
+  if(navigator.canShare && navigator.canShare({files:[new File([new Blob()], 'test.png', {type:'image/png'})]})){
+    $('#btnDoShare').style.display='inline-block';
+  } else if(navigator.share){
+    $('#btnDoShare').style.display='inline-block';
+  } else {
+    $('#btnDoShare').style.display='none';
+  }
+}
+$('#btnExportTop').onclick=openExport;
+$('#btnExpCancel').onclick=()=> exportModal.classList.remove('show');
+$('#expFormat').onchange=updateExpInfo;
+$('#expQuality').oninput=()=>{ $('#qVal').textContent=$('#expQuality').value+'%'; updateExpInfo(); };
+$('#expScale').oninput=()=>{ $('#sVal').textContent=$('#expScale').value+'%'; updateExpInfo(); };
+function updateExpInfo(){
+  const fmt=$('#expFormat').value, q=$('#expQuality').value, sc=$('#expScale').value;
+  const w=Math.round(main.width*sc/100), h=Math.round(main.height*sc/100);
+  $('#qVal').textContent=q+'%'; $('#sVal').textContent=sc+'%';
+  $('#expInfo').textContent=`輸出尺寸：${w} × ${h} ｜ 格式：${fmt.split('/')[1].toUpperCase()} ｜ 品質：${q}%`;
+}
+$('#btnDoDownload').onclick=async()=>{
+  const fmt=$('#expFormat').value, q=parseInt($('#expQuality').value)/100, sc=parseInt($('#expScale').value)/100;
+  let c=main;
+  if(sc!==1){
+    const tmp=document.createElement('canvas');
+    tmp.width=Math.round(main.width*sc); tmp.height=Math.round(main.height*sc);
+    tmp.getContext('2d').drawImage(main,0,0,tmp.width, tmp.height);
+    c=tmp;
+  }
+  const ext = fmt==='image/png' ? 'png' : fmt==='image/webp' ? 'webp' : 'jpg';
+  c.toBlob(blob=>{
+    if(!blob){ toast('輸出失敗'); return; }
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download=`photo-edit-${Date.now()}.${ext}`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 2000);
+    toast('已下載');
+    exportModal.classList.remove('show');
+  }, fmt, fmt==='image/png'?undefined:q);
+};
+$('#btnDoShare').onclick=async()=>{
+  const fmt=$('#expFormat').value, q=parseInt($('#expQuality').value)/100, sc=parseInt($('#expScale').value)/100;
+  let c=main;
+  if(sc!==1){
+    const tmp=document.createElement('canvas');
+    tmp.width=Math.round(main.width*sc); tmp.height=Math.round(main.height*sc);
+    tmp.getContext('2d').drawImage(main,0,0,tmp.width, tmp.height);
+    c=tmp;
+  }
+  const ext = fmt==='image/png' ? 'png' : fmt==='image/webp' ? 'webp' : 'jpg';
+  c.toBlob(async blob=>{
+    const file=new File([blob], `photo.${ext}`, {type:fmt});
+    try{
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({files:[file], title:'照片編輯輸出'});
+      } else if(navigator.share){
+        // fallback share url
+        const url=URL.createObjectURL(blob);
+        await navigator.share({title:'照片編輯', url});
+        URL.revokeObjectURL(url);
+      }
+      toast('已分享');
+    }catch(e){ if(e.name!=='AbortError') toast('分享取消或不支援'); }
+  }, fmt, fmt==='image/png'?undefined:q);
+};
+
+// Init blank canvas placeholder
+(function init(){
+  ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,main.width,main.height);
+  ctx.fillStyle='#e5e7eb'; ctx.font='14px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('請載入照片', main.width/2, main.height/2);
+  // clear to white for export correctness, but keep hint overlay
+  ctx.clearRect(0,0,main.width,main.height);
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,main.width,main.height);
+  fitCanvas();
+})();
+
+// Fullscreen hint for PWA
+if(window.matchMedia('(display-mode: standalone)').matches){
+  document.body.style.paddingTop='env(safe-area-inset-top)';
+}
+})();
+</script>
+</body>
+</html>
