@@ -31,7 +31,10 @@ canvas{touch-action:none}
 #mainCanvas{display:block;max-width:100%;max-height:100%;background:#fff}
 #overlayCanvas{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
 #cropBox{position:absolute;border:2px dashed #0ea5e9;background:rgba(14,165,233,.12);display:none;pointer-events:none}
-.handle{position:absolute;width:16px;height:16px;background:#0ea5e9;border:2px solid #fff;border-radius:50%;pointer-events:auto}
+.handle{position:absolute;width:18px;height:18px;background:#0ea5e9;border:2px solid #fff;border-radius:50%;pointer-events:auto;touch-action:none}
+#layerBox{position:absolute;border:2px solid #0ea5e9;display:none;pointer-events:none}
+#layerBox .handle{pointer-events:auto}
+.lh{position:absolute;width:14px;height:14px;background:#fff;border:2px solid #0ea5e9;border-radius:3px;pointer-events:auto}
 .empty-hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#888;text-align:center;padding:20px}
 .empty-hint .big{font-size:44px}
 .empty-hint p{margin:0;font-size:14px;line-height:1.5}
@@ -86,7 +89,7 @@ canvas{touch-action:none}
 <body>
 <div class="topbar">
   <div class="topbar-left">
-    <div style="width:28px;height:28px;border-radius:7px;background:#0ea5e9;display:flex;align-items:center;justify-content:center;font-size:16px">✦</div>
+    <div style="width:28px;height:28px;border-radius:7px;background:#0ea5e9;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg></div>
     <h1>照片編輯</h1>
     <span id="sizeLabel" style="font-size:11px;color:#777;margin-left:4px"></span>
   </div>
@@ -102,10 +105,11 @@ canvas{touch-action:none}
   <div id="canvasWrap">
     <canvas id="mainCanvas" width="800" height="600"></canvas>
     <canvas id="overlayCanvas"></canvas>
-    <div id="cropBox"><div class="handle" data-dir="nw" style="left:-8px;top:-8px"></div><div class="handle" data-dir="ne" style="right:-8px;top:-8px"></div><div class="handle" data-dir="sw" style="left:-8px;bottom:-8px"></div><div class="handle" data-dir="se" style="right:-8px;bottom:-8px"></div></div>
+    <div id="cropBox"><div class="handle" data-dir="nw" style="left:-9px;top:-9px"></div><div class="handle" data-dir="ne" style="right:-9px;top:-9px"></div><div class="handle" data-dir="sw" style="left:-9px;bottom:-9px"></div><div class="handle" data-dir="se" style="right:-9px;bottom:-9px"></div></div>
+    <div id="layerBox"><div class="handle" data-lh="nw" style="left:-9px;top:-9px"></div><div class="handle" data-lh="ne" style="right:-9px;top:-9px"></div><div class="handle" data-lh="sw" style="left:-9px;bottom:-9px"></div><div class="handle" data-lh="se" style="right:-9px;bottom:-9px"></div></div>
     <div class="empty-hint" id="emptyHint">
-      <div class="big">🖼️</div>
-      <p>點下方「載入照片」開始<br><span style="color:#666;font-size:12px">支援多張一次選取，可做拼貼／自由排列</span></p>
+      <div class="big"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg></div>
+      <p>點下方「載入照片」開始<br><span style="color:#666;font-size:12px">支援多張一次選取，個別拖曳／縮放</span></p>
       <button id="btnPickEmpty">載入照片</button>
     </div>
   </div>
@@ -114,14 +118,14 @@ canvas{touch-action:none}
 <div id="subBar"></div>
 
 <div id="toolBar">
-  <button class="tool-btn" data-tool="load"><span class="tool-icon">📁</span><span class="tool-label">載入照片</span></button>
-  <button class="tool-btn" data-tool="crop"><span class="tool-icon">✂️</span><span class="tool-label">裁切</span></button>
-  <button class="tool-btn" data-tool="rotate"><span class="tool-icon">↻</span><span class="tool-label">旋轉翻轉</span></button>
-  <button class="tool-btn" data-tool="text"><span class="tool-icon">🔤</span><span class="tool-label">文字</span></button>
-  <button class="tool-btn" data-tool="brush"><span class="tool-icon">✏️</span><span class="tool-label">塗鴉</span></button>
-  <button class="tool-btn" data-tool="mosaic"><span class="tool-icon">▦</span><span class="tool-label">馬賽克</span></button>
-  <button class="tool-btn" data-tool="layout"><span class="tool-icon">⊞</span><span class="tool-label">多圖排列</span></button>
-  <button class="tool-btn" data-tool="export"><span class="tool-icon">💾</span><span class="tool-label">輸出</span><span class="tool-dot"></span></button>
+  <button class="tool-btn" data-tool="load"><span class="tool-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></span><span class="tool-label">載入照片</span></button>
+  <button class="tool-btn" data-tool="crop"><span class="tool-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 3v6H3"/><path d="M18 3v6h3"/><path d="M6 21v-6H3"/><path d="M18 21v-6h3"/><rect x="8" y="8" width="8" height="8"/></svg></span><span class="tool-label">裁切</span></button>
+  <button class="tool-btn" data-tool="rotate"><span class="tool-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v7h-7"/></svg></span><span class="tool-label">旋轉翻轉</span></button>
+  <button class="tool-btn" data-tool="text"><span class="tool-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16"/><path d="M12 7v10"/><path d="M8 17h8"/></svg></span><span class="tool-label">文字</span></button>
+  <button class="tool-btn" data-tool="brush"><span class="tool-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7a2.5 2.5 0 0 0-3.5-3.5L9 15l-4 1 1-4z"/><path d="M13.5 6.5l3 3"/></svg></span><span class="tool-label">塗鴉</span></button>
+  <button class="tool-btn" data-tool="mosaic"><span class="tool-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span><span class="tool-label">馬賽克</span></button>
+  <button class="tool-btn" data-tool="layout"><span class="tool-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></span><span class="tool-label">多圖排列</span></button>
+  <button class="tool-btn" data-tool="export"><span class="tool-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M12 3v13"/><path d="M7 11l5 5 5-5"/><path d="M3 17v3a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1v-3"/></svg></span><span class="tool-label">輸出</span><span class="tool-dot"></span></button>
 </div>
 
 <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
@@ -192,7 +196,8 @@ let selectedLayout='grid', selectedTemplate=null;
 let brush = {color:'#ff3b30', size:8, drawing:false, pts:[]};
 let mosaic = {size:16, drawing:false, pts:[]};
 let textState = {text:'HELLO', font:'Noto Sans TC', size:48, color:'#ffffff', stroke:'#000000', strokeW:4, x:0, y:0, dragging:false, placed:false};
-let cropState = {active:false, x:40,y:40,w:0,h:0, drag:null};
+let cropState = {active:false, x:40,y:40,w:0,h:0, drag:null, ratio:0};
+let layers=[], selectedLayer=-1, layerDrag=null, lastPinchDist=0;
 let scaleToFit = 1;
 
 // Toast
@@ -208,12 +213,15 @@ document.addEventListener('touchend',e=>{
 document.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('gesturestart',e=>e.preventDefault());
 
-// History
+// History（含圖層快照）
 function pushHistory(){
   try{
+    // 若有圖層，先合成當前視圖
+    if(layers.length) renderLayers();
     const url = main.toDataURL('image/png');
+    const snap = layers.length ? JSON.stringify(layers.map(l=>({x:l.x,y:l.y,w:l.w,h:l.h,rot:l.rot,src:l.img.src}))) : null;
     history = history.slice(0, histIdx+1);
-    history.push(url);
+    history.push({url, snap, w:main.width, h:main.height});
     histIdx = history.length-1;
     if(history.length>30){history.shift();histIdx--;}
     updateUndo();
@@ -226,18 +234,27 @@ function updateUndo(){
 function restoreHistory(idx){
   if(idx<0||idx>=history.length) return;
   histIdx=idx;
+  const entry = history[idx];
+  const url = typeof entry==='string'? entry : entry.url;
+  const snap = typeof entry==='object'? entry.snap : null;
   const img=new Image();
   img.onload=()=>{
-    const dpr = Math.min(2, window.devicePixelRatio||1);
-    // keep canvas size as image size, but wrap scales via CSS
     main.width=img.width; main.height=img.height;
     ocan.width=img.width; ocan.height=img.height;
     fitCanvas();
     ctx.clearRect(0,0,main.width,main.height);
     ctx.drawImage(img,0,0);
-    updateUndo(); updateSizeLabel(); renderTextOverlay();
+    // 嘗試還原圖層位置
+    if(snap && layers.length){
+      try{
+        const arr=JSON.parse(snap);
+        arr.forEach((s,i)=>{ if(layers[i]){ layers[i].x=s.x; layers[i].y=s.y; layers[i].w=s.w; layers[i].h=s.h; layers[i].rot=s.rot; }});
+        renderLayers(); updateLayerBox();
+      }catch{}
+    }
+    updateUndo(); updateSizeLabel(); renderTextOverlay(); if(layers.length) updateLayerBox();
   };
-  img.src=history[idx];
+  img.src=url;
 }
 $('#btnUndo').onclick=()=>{ if(histIdx>0) restoreHistory(histIdx-1)};
 $('#btnRedo').onclick=()=>{ if(histIdx<history.length-1) restoreHistory(histIdx+1)};
@@ -292,13 +309,14 @@ async function handleFiles(files){
     pendingImages=imgs;
     openLayoutModal();
   } else {
+    layers=[]; selectedLayer=-1;
     loadSingleImage(imgs[0]);
   }
 }
 function loadSingleImage(img){
   hasImage=true;
   emptyHint.style.display='none';
-  // limit max dimension to 2400 for performance but keep aspect
+  layers=[]; selectedLayer=-1; hideLayerBox();
   let w=img.width, h=img.height;
   const max=2600;
   if(w>max||h>max){
@@ -312,6 +330,99 @@ function loadSingleImage(img){
   fitCanvas(); updateSizeLabel(); pushHistory();
   toast('已載入');
 }
+// ===== 多圖獨立圖層系統 =====
+function initLayersFromImages(imgs, mode, tplId){
+  hasImage=true; emptyHint.style.display='none';
+  layers=[]; selectedLayer=-1;
+  if(mode==='free'){
+    const outW=1200, outH=1200;
+    main.width=outW; main.height=outH; ocan.width=outW; ocan.height=outH;
+    const n=imgs.length;
+    imgs.forEach((img,i)=>{
+      const scale=Math.min(520/img.width, 520/img.height, 0.9);
+      const w=img.width*scale, h=img.height*scale;
+      const cols=Math.ceil(Math.sqrt(n));
+      const col=i%cols, row=Math.floor(i/cols);
+      const x= 40 + col*(560) + (520-w)/2;
+      const y= 40 + row*(560) + (520-h)/2;
+      layers.push({img, x, y, w, h, rot:0});
+    });
+  } else {
+    const map={ '1x2':[2,1], '2x1':[1,2], '2x2':[2,2], '1x3':[3,1], '3x1':[1,3], '1x4':[4,1]};
+    const [cols,rows]=map[tplId]||[2,1];
+    const outW=1200, outH= Math.round(1200 * rows/cols * 0.85);
+    main.width=outW; main.height=outH; ocan.width=outW; ocan.height=outH;
+    const gap=4;
+    const cellW=(outW - gap*(cols+1))/cols;
+    const cellH=(outH - gap*(rows+1))/rows;
+    let idx=0;
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        if(idx>=imgs.length) break;
+        const img=imgs[idx];
+        const x=gap + c*(cellW+gap), y=gap + r*(cellH+gap);
+        const ir=img.width/img.height, cr=cellW/cellH;
+        let dw,dh,dx,dy;
+        if(ir > cr){ dh=cellH; dw=dh*ir; dx=x - (dw-cellW)/2; dy=y; } else { dw=cellW; dh=dw/ir; dx=x; dy=y - (dh-cellH)/2; }
+        // 裁切來源以符合格子 cover：把圖片等比縮放後，記錄顯示區域（用 x,y,w,h + 來源裁切透過離屏 canvas）
+        // 簡化：直接建立一個符合格子大小的裁切後圖片
+        const tmp=document.createElement('canvas'); tmp.width=cellW; tmp.height=cellH;
+        const tctx=tmp.getContext('2d');
+        tctx.save(); tctx.beginPath(); tctx.rect(0,0,cellW,cellH); tctx.clip();
+        tctx.drawImage(img, dx-x, dy-y, dw, dh);
+        tctx.restore();
+        const cimg=new Image(); cimg.src=tmp.toDataURL();
+        layers.push({img:cimg, x, y, w:cellW, h:cellH, rot:0, _src:img});
+        idx++;
+      }
+    }
+  }
+  selectedLayer = layers.length?0:-1;
+  renderLayers(); fitCanvas(); updateSizeLabel(); pushHistory();
+  updateLayerBox(); toast('已建立獨立圖層，點選照片可個別拖曳/縮放');
+}
+function renderLayers(){
+  if(!layers.length) return;
+  ctx.clearRect(0,0,main.width,main.height);
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,main.width,main.height);
+  layers.forEach(l=>{
+    ctx.save();
+    ctx.translate(l.x + l.w/2, l.y + l.h/2);
+    ctx.rotate(l.rot*Math.PI/180);
+    ctx.drawImage(l.img, -l.w/2, -l.h/2, l.w, l.h);
+    // 邊框
+    ctx.strokeStyle='rgba(0,0,0,.06)'; ctx.lineWidth=1; ctx.strokeRect(-l.w/2,-l.h/2,l.w,l.h);
+    ctx.restore();
+  });
+}
+function hitLayer(px,py){
+  for(let i=layers.length-1;i>=0;i--){
+    const l=layers[i];
+    // 考慮旋轉的碰撞檢測（簡化為軸對齊，若有旋轉則用反旋轉點）
+    if(l.rot!==0){
+      const cx=l.x+l.w/2, cy=l.y+l.h/2;
+      const dx=px-cx, dy=py-cy;
+      const rad=-l.rot*Math.PI/180;
+      const rx=dx*Math.cos(rad)-dy*Math.sin(rad)+cx;
+      const ry=dx*Math.sin(rad)+dy*Math.cos(rad)+cy;
+      px=rx; py=ry;
+    }
+    if(px>=l.x && px<=l.x+l.w && py>=l.y && py<=l.y+l.h) return i;
+  }
+  return -1;
+}
+function updateLayerBox(){
+  const box=$('#layerBox');
+  if(selectedLayer<0 || !layers.length || currentTool==='crop'){ box.style.display='none'; return; }
+  const l=layers[selectedLayer];
+  const rect=main.getBoundingClientRect();
+  const sx=rect.width/main.width, sy=rect.height/main.height;
+  box.style.display='block';
+  box.style.left=(l.x*sx)+'px'; box.style.top=(l.y*sy)+'px';
+  box.style.width=(l.w*sx)+'px'; box.style.height=(l.h*sy)+'px';
+  box.style.transform=`rotate(${l.rot}deg)`; box.style.transformOrigin='center center';
+}
+function hideLayerBox(){ $('#layerBox').style.display='none'; }
 $('#btnPickEmpty').onclick=()=> fileInput.click();
 fileInput.onchange = e=> handleFiles(e.target.files);
 stage.addEventListener('dragover',e=>{e.preventDefault()});
@@ -353,8 +464,12 @@ function renderSubBar(){
     subBar.querySelector('#cropCancel').onclick=()=>{hideCrop(); currentTool=null; renderSubBar(); updateToolActive();};
     subBar.querySelectorAll('[data-ratio]').forEach(b=> b.onclick=()=>{
       const r=b.dataset.ratio;
-      if(r==='free') return;
+      // 視覺回饋
+      subBar.querySelectorAll('[data-ratio]').forEach(x=>{x.style.background=''; x.style.color='';});
+      b.style.background='#0ea5e9'; b.style.color='#fff';
+      if(r==='free'){ cropState.ratio=0; return; }
       const ratio=parseFloat(r);
+      cropState.ratio=ratio;
       const cw=main.width, ch=main.height;
       let w,h;
       if(cw/ch > ratio){ h=ch*0.72; w=h*ratio; } else { w=cw*0.72; h=w/ratio; }
@@ -404,8 +519,24 @@ function renderSubBar(){
     $('#moSize').oninput=e=>{ mosaic.size=parseInt(e.target.value); $('#moVal').textContent=mosaic.size+'px'};
     $('#moUndo').onclick=()=>{ if(histIdx>0) restoreHistory(histIdx-1); };
   } else if(currentTool==='layout'){
-    subBar.innerHTML = `<span style="font-size:12px;color:#aaa">需重新載入多張照片才會出現拼貼選項</span><button class="btn-sm" id="btnRepick">重新選擇照片</button>`;
-    $('#btnRepick').onclick=()=> fileInput.click();
+    if(layers.length>1){
+      subBar.innerHTML = `<span style="font-size:12px;color:#aaa">已選第 ${selectedLayer+1}/${layers.length} 張</span>
+        <button class="btn-sm" id="btnLayerPrev">◀ 上一張</button>
+        <button class="btn-sm" id="btnLayerNext">下一張 ▶</button>
+        <button class="btn-sm" id="btnLayerFront">置頂</button>
+        <button class="btn-sm" id="btnLayerBack">置底</button>
+        <button class="btn-sm" id="btnLayerDel" style="color:#f87171;border-color:#7f1d1d">刪除此張</button>
+        <button class="btn-sm" id="btnRepick">重新選照片</button>`;
+      $('#btnLayerPrev').onclick=()=>{ if(layers.length){ selectedLayer=(selectedLayer-1+layers.length)%layers.length; updateLayerBox(); renderSubBar(); }};
+      $('#btnLayerNext').onclick=()=>{ if(layers.length){ selectedLayer=(selectedLayer+1)%layers.length; updateLayerBox(); renderSubBar(); }};
+      $('#btnLayerFront').onclick=()=>{ if(selectedLayer<0) return; const a=layers.splice(selectedLayer,1)[0]; layers.push(a); selectedLayer=layers.length-1; renderLayers(); updateLayerBox(); pushHistory(); };
+      $('#btnLayerBack').onclick=()=>{ if(selectedLayer<0) return; const a=layers.splice(selectedLayer,1)[0]; layers.unshift(a); selectedLayer=0; renderLayers(); updateLayerBox(); pushHistory(); };
+      $('#btnLayerDel').onclick=()=>{ if(selectedLayer<0) return; if(!confirm('刪除選中的這張照片？')) return; layers.splice(selectedLayer,1); selectedLayer=Math.min(selectedLayer, layers.length-1); if(layers.length===0){ hasImage=false; emptyHint.style.display='flex'; hideLayerBox(); ctx.clearRect(0,0,main.width,main.height); } else { renderLayers(); updateLayerBox(); } pushHistory(); renderSubBar(); };
+      $('#btnRepick').onclick=()=> fileInput.click();
+    } else {
+      subBar.innerHTML = `<span style="font-size:12px;color:#aaa">需重新載入多張照片才會出現拼貼選項</span><button class="btn-sm" id="btnRepick">重新選擇照片</button>`;
+      $('#btnRepick').onclick=()=> fileInput.click();
+    }
   }
 }
 
@@ -452,7 +583,7 @@ function commitText(){
   toast('文字已合併');
 }
 
-// Pointer handling for brush/mosaic/text drag/crop
+// Pointer handling for brush/mosaic/text drag/crop/layers
 let activePointer=null;
 function canvasPoint(e){
   const rect = main.getBoundingClientRect();
@@ -468,26 +599,78 @@ function enableOverlayEvents(on){ ocan.style.pointerEvents = on ? 'auto' : 'none
 main.addEventListener('pointerdown', onPointerDown);
 main.addEventListener('pointermove', onPointerMove);
 window.addEventListener('pointerup', onPointerUp);
+window.addEventListener('pointercancel', onPointerUp);
 ocan.addEventListener('pointerdown', onPointerDown);
 ocan.addEventListener('pointermove', onPointerMove);
+// crop handles direct drag
+wrap.querySelectorAll('#cropBox .handle').forEach(h=>{
+  h.addEventListener('pointerdown', e=>{
+    if(!cropState.active) return;
+    e.stopPropagation(); e.preventDefault();
+    const dir=h.dataset.dir;
+    const p=canvasPoint(e);
+    cropState.drag={type:dir, sx:p.x, sy:p.y, ox:cropState.x, oy:cropState.y, ow:cropState.w, oh:cropState.h};
+    enableOverlayEvents(true);
+    try{ h.setPointerCapture(e.pointerId);}catch{}
+  });
+});
+wrap.querySelectorAll('#layerBox .handle').forEach(h=>{
+  h.addEventListener('pointerdown', e=>{
+    if(selectedLayer<0) return;
+    e.stopPropagation(); e.preventDefault();
+    const dir=h.dataset.lh;
+    const p=canvasPoint(e);
+    const l=layers[selectedLayer];
+    layerDrag={type:dir, sx:p.x, sy:p.y, ox:l.x, oy:l.y, ow:l.w, oh:l.h};
+    try{ h.setPointerCapture(e.pointerId);}catch{}
+  });
+});
 
 function onPointerDown(e){
   if(!hasImage) return;
+  // 多圖層拖曳（無工具或 layout/text 下皆可選取移動）
+  if(layers.length>0 && currentTool!=='brush' && currentTool!=='mosaic' && currentTool!=='crop'){
+    const p=canvasPoint(e);
+    // 若正在文字拖曳，優先文字
+    if(currentTool==='text'){
+      octx.font=`700 ${textState.size}px "${textState.font}", sans-serif`;
+      const m=octx.measureText(textState.text);
+      const tw=m.width, th=textState.size*1.1;
+      const bx=textState.x-tw/2-10, by=textState.y-th/2-8, bw=tw+20, bh=th+16;
+      if(p.x>=bx && p.x<=bx+bw && p.y>=by && p.y<=by+bh){
+        textState.dragging=true;
+        activePointer={dx:p.x-textState.x, dy:p.y-textState.y};
+        enableOverlayEvents(true); return;
+      }
+    }
+    const hit=hitLayer(p.x,p.y);
+    if(hit!==-1){
+      selectedLayer=hit; updateLayerBox(); if(currentTool==='layout') renderSubBar();
+      const l=layers[hit];
+      layerDrag={type:'move', sx:p.x, sy:p.y, ox:l.x, oy:l.y};
+      e.preventDefault(); return;
+    } else {
+      // 點空白處不取消選取，保持
+    }
+  }
   if(currentTool==='brush'){
     enableOverlayEvents(true);
     const p=canvasPoint(e);
+    // 若有圖層，先將圖層合成到主畫布（扁平化）再塗鴉
+    if(layers.length>0){ renderLayers(); layers=[]; selectedLayer=-1; hideLayerBox(); }
     brush.drawing=true; brush.pts=[p];
     pushHistory();
     e.preventDefault(); main.setPointerCapture?.(e.pointerId);
   } else if(currentTool==='mosaic'){
     enableOverlayEvents(true);
     const p=canvasPoint(e);
+    if(layers.length>0){ renderLayers(); layers=[]; selectedLayer=-1; hideLayerBox(); }
     mosaic.drawing=true; mosaic.pts=[p];
     pushHistory();
     e.preventDefault();
   } else if(currentTool==='text'){
     const p=canvasPoint(e);
-    // hit test text
+    if(layers.length>0){ /* 文字可直接在圖層上，暫不扁平 */ }
     octx.font=`700 ${textState.size}px "${textState.font}", sans-serif`;
     const m=octx.measureText(textState.text);
     const tw=m.width, th=textState.size*1.1;
@@ -499,11 +682,19 @@ function onPointerDown(e){
     }
   } else if(currentTool==='crop'){
     const p=canvasPoint(e);
-    // check handle
-    const handles=[$('#cropBox').querySelectorAll('.handle')];
-    // simple: if near crop edge, drag rect
     const r=cropState;
-    if(p.x>=r.x && p.x<=r.x+r.w && p.y>=r.y && p.y<=r.y+r.h){
+    const thr = 28; // 容錯
+    // 檢查是否點到手把附近（自由模式）
+    const pts={nw:[r.x,r.y], ne:[r.x+r.w,r.y], sw:[r.x,r.y+r.h], se:[r.x+r.w,r.y+r.h]};
+    let handled=false;
+    for(let k in pts){
+      const [hx,hy]=pts[k];
+      if(Math.abs(p.x-hx)<thr && Math.abs(p.y-hy)<thr){
+        r.drag={type:k, sx:p.x, sy:p.y, ox:r.x, oy:r.y, ow:r.w, oh:r.h, ratio:cropState.ratio};
+        enableOverlayEvents(true); handled=true; break;
+      }
+    }
+    if(!handled && p.x>=r.x && p.x<=r.x+r.w && p.y>=r.y && p.y<=r.y+r.h){
       r.drag={type:'move', sx:p.x, sy:p.y, ox:r.x, oy:r.y};
       enableOverlayEvents(true);
     }
@@ -512,9 +703,32 @@ function onPointerDown(e){
 function onPointerMove(e){
   if(!hasImage) return;
   const p=canvasPoint(e);
+  if(layerDrag){
+    const l=layers[selectedLayer];
+    if(!l) return;
+    if(layerDrag.type==='move'){
+      l.x = layerDrag.ox + (p.x-layerDrag.sx);
+      l.y = layerDrag.oy + (p.y-layerDrag.sy);
+      // 限制在畫布內
+      l.x = Math.max(-l.w*0.6, Math.min(main.width-l.w*0.4, l.x));
+      l.y = Math.max(-l.h*0.6, Math.min(main.height-l.h*0.4, l.y));
+    } else {
+      // 縮放
+      let dx=p.x-layerDrag.sx, dy=p.y-layerDrag.sy;
+      let nx=layerDrag.ox, ny=layerDrag.oy, nw=layerDrag.ow, nh=layerDrag.oh;
+      if(layerDrag.type==='se'){ nw=layerDrag.ow+dx; nh=layerDrag.oh+dy; }
+      else if(layerDrag.type==='nw'){ nx=layerDrag.ox+dx; ny=layerDrag.oy+dy; nw=layerDrag.ow-dx; nh=layerDrag.oh-dy; }
+      else if(layerDrag.type==='ne'){ ny=layerDrag.oy+dy; nw=layerDrag.ow+dx; nh=layerDrag.oh-dy; nx=layerDrag.ox; }
+      else if(layerDrag.type==='sw'){ nx=layerDrag.ox+dx; nw=layerDrag.ow-dx; nh=layerDrag.oh+dy; ny=layerDrag.oy; }
+      const min=30;
+      if(nw<min){ nw=min; if(layerDrag.type==='nw'||layerDrag.type==='sw') nx=layerDrag.ox+layerDrag.ow-min; }
+      if(nh<min){ nh=min; if(layerDrag.type==='nw'||layerDrag.type==='ne') ny=layerDrag.oy+layerDrag.oh-min; }
+      l.x=nx; l.y=ny; l.w=nw; l.h=nh;
+    }
+    renderLayers(); updateLayerBox(); e.preventDefault(); return;
+  }
   if(currentTool==='brush' && brush.drawing){
     brush.pts.push(p);
-    // draw segment on main directly for live feedback
     ctx.strokeStyle=brush.color; ctx.lineWidth=brush.size; ctx.lineCap='round'; ctx.lineJoin='round';
     if(brush.pts.length>=2){
       const a=brush.pts[brush.pts.length-2], b=brush.pts[brush.pts.length-1];
@@ -531,6 +745,7 @@ function onPointerMove(e){
     textState.x=p.x-activePointer.dx;
     textState.y=p.y-activePointer.dy;
     renderTextOverlay();
+    if(layers.length) updateLayerBox();
     e.preventDefault();
   } else if(currentTool==='crop' && cropState.drag){
     const d=cropState.drag;
@@ -540,16 +755,46 @@ function onPointerMove(e){
       cropState.x=Math.max(0,Math.min(main.width-cropState.w, cropState.x));
       cropState.y=Math.max(0,Math.min(main.height-cropState.h, cropState.y));
       updateCropBox();
+    } else {
+      let nx=d.ox, ny=d.oy, nw=d.ow, nh=d.oh;
+      const dx=p.x-d.sx, dy=p.y-d.sy;
+      if(d.type==='se'){ nw=d.ow+dx; nh=d.oh+dy; }
+      else if(d.type==='nw'){ nx=d.ox+dx; ny=d.oy+dy; nw=d.ow-dx; nh=d.oh-dy; }
+      else if(d.type==='ne'){ ny=d.oy+dy; nw=d.ow+dx; nh=d.oh-dy; }
+      else if(d.type==='sw'){ nx=d.ox+dx; nw=d.ow-dx; nh=d.oh+dy; }
+      // 比例鎖定
+      if(d.ratio){
+        const ratio=d.ratio;
+        if(d.type==='se'||d.type==='nw'){
+          if(Math.abs(dx)>Math.abs(dy)) nh=nw/ratio; else nw=nh*ratio;
+          if(d.type==='nw'){ nx=d.ox+d.ow-nw; ny=d.oy+d.oh-nh; }
+        } else {
+          if(Math.abs(dx)>Math.abs(dy)) nh=nw/ratio; else nw=nh*ratio;
+          if(d.type==='ne') ny=d.oy+d.oh-nh;
+          if(d.type==='sw') nx=d.ox+d.ow-nw;
+        }
+      }
+      // 最小尺寸與邊界
+      const min=20;
+      if(nw<min){ nw=min; if(d.type==='nw'||d.type==='sw') nx=d.ox+d.ow-min; if(d.ratio) { nh=nw/d.ratio; if(d.type==='nw'||d.type==='ne') ny=d.oy+d.oh-nh; } }
+      if(nh<min){ nh=min; if(d.type==='nw'||d.type==='ne') ny=d.oy+d.oh-min; if(d.ratio) { nw=nh*d.ratio; if(d.type==='nw'||d.type==='sw') nx=d.ox+d.ow-nw; } }
+      nx=Math.max(0, Math.min(nx, main.width-nw)); ny=Math.max(0, Math.min(ny, main.height-nh));
+      if(nx+nw>main.width) nw=main.width-nx;
+      if(ny+nh>main.height) nh=main.height-ny;
+      cropState.x=nx; cropState.y=ny; cropState.w=nw; cropState.h=nh;
+      updateCropBox();
     }
   }
 }
 function onPointerUp(e){
+  if(layerDrag){
+    layerDrag=null;
+    pushHistory();
+    e.preventDefault();
+  }
   if(brush.drawing){
     brush.drawing=false;
-    // push new state
-    history[histIdx]=main.toDataURL('image/png'); // actually we pushed before drawing, need to save new
-    // we pushed before, so now replace top with prior? Let's just push new snapshot correctly
-    // Our pushHistory before drawing saved prior; now save current as new entry
+    history[histIdx]=main.toDataURL('image/png');
     history.push(main.toDataURL('image/png')); histIdx=history.length-1; updateUndo();
     enableOverlayEvents(false);
   }
@@ -565,12 +810,19 @@ function onPointerUp(e){
 // Crop
 function initCrop(){
   if(!hasImage) return;
+  // 若有多圖層，先提示需先合併或選單張
+  if(layers.length>1){ toast('多圖模式請先完成排列，裁切將針對整張合成圖'); }
   const w=main.width, h=main.height;
   cropState.active=true;
+  cropState.ratio=0;
   cropState.x=w*0.08; cropState.y=h*0.08; cropState.w=w*0.84; cropState.h=h*0.84;
   $('#cropBox').style.display='block';
   updateCropBox();
   enableOverlayEvents(false);
+  requestAnimationFrame(()=>{
+    const freeBtn=subBar.querySelector('[data-ratio="free"]');
+    if(freeBtn){ subBar.querySelectorAll('[data-ratio]').forEach(x=>{x.style.background='';x.style.color='';}); freeBtn.style.background='#0ea5e9'; freeBtn.style.color='#fff'; }
+  });
 }
 function hideCrop(){ $('#cropBox').style.display='none'; cropState.active=false; }
 function updateCropBox(){
@@ -585,6 +837,8 @@ function updateCropBox(){
 function doCrop(){
   const r=cropState;
   if(r.w<10||r.h<10){ toast('選取範圍太小'); return; }
+  // 若有圖層，先合成
+  if(layers.length){ renderLayers(); layers=[]; selectedLayer=-1; hideLayerBox(); }
   pushHistory();
   const tmp=document.createElement('canvas');
   tmp.width=Math.round(r.w); tmp.height=Math.round(r.h);
@@ -595,14 +849,21 @@ function doCrop(){
   ctx.drawImage(tmp,0,0);
   fitCanvas(); updateSizeLabel();
   hideCrop(); currentTool=null; renderSubBar(); updateToolActive();
-  history.push(main.toDataURL('image/png')); histIdx=history.length-1; updateUndo();
+  // 儲存新狀態
+  const url=main.toDataURL('image/png');
+  history.push({url, snap:null, w:main.width, h:main.height}); histIdx=history.length-1; updateUndo();
   toast('已裁切');
 }
-// handle resize observer for crop box
-new ResizeObserver(()=>{ if(cropState.active) updateCropBox(); }).observe(wrap);
+// handle resize observer for crop box + layer box
+new ResizeObserver(()=>{ if(cropState.active) updateCropBox(); if(selectedLayer>=0) updateLayerBox(); }).observe(wrap);
 
-// Rotate / Flip
+// Rotate / Flip（若有選中圖層則針對單張）
 function rotate(deg){
+  if(layers.length && selectedLayer>=0){
+    layers[selectedLayer].rot = (layers[selectedLayer].rot + deg) % 360;
+    renderLayers(); updateLayerBox(); pushHistory(); toast('已旋轉選中照片'); return;
+  }
+  if(layers.length){ renderLayers(); layers=[]; selectedLayer=-1; hideLayerBox(); }
   pushHistory();
   const tmp=document.createElement('canvas');
   const w=main.width, h=main.height;
@@ -616,9 +877,23 @@ function rotate(deg){
   ctx.clearRect(0,0,main.width,main.height);
   ctx.drawImage(tmp,0,0);
   fitCanvas(); updateSizeLabel();
-  history.push(main.toDataURL('image/png')); histIdx=history.length-1; updateUndo();
+  const url=main.toDataURL('image/png');
+  history.push({url, snap:null, w:main.width, h:main.height}); histIdx=history.length-1; updateUndo();
 }
 function flip(dir){
+  if(layers.length && selectedLayer>=0){
+    // 針對單張做鏡像：用離屏 canvas 翻轉該圖
+    const l=layers[selectedLayer];
+    const tmp=document.createElement('canvas'); tmp.width=l.img.width; tmp.height=l.img.height;
+    const tctx=tmp.getContext('2d');
+    tctx.translate(dir==='h'?tmp.width:0, dir==='v'?tmp.height:0);
+    tctx.scale(dir==='h'?-1:1, dir==='v'?-1:1);
+    tctx.drawImage(l.img,0,0);
+    const nimg=new Image(); nimg.src=tmp.toDataURL();
+    l.img=nimg;
+    renderLayers(); updateLayerBox(); pushHistory(); toast('已翻轉選中照片'); return;
+  }
+  if(layers.length){ renderLayers(); layers=[]; selectedLayer=-1; hideLayerBox(); }
   pushHistory();
   const tmp=document.createElement('canvas');
   tmp.width=main.width; tmp.height=main.height;
@@ -628,8 +903,8 @@ function flip(dir){
   tctx.drawImage(main,0,0);
   ctx.clearRect(0,0,main.width,main.height);
   ctx.drawImage(tmp,0,0);
-  // canvas size unchanged
-  history.push(main.toDataURL('image/png')); histIdx=history.length-1; updateUndo();
+  const url=main.toDataURL('image/png');
+  history.push({url, snap:null, w:main.width, h:main.height}); histIdx=history.length-1; updateUndo();
 }
 
 // Mosaic pixelate
@@ -703,8 +978,7 @@ function buildGridPick(){
 }
 $('#btnLayoutConfirm').onclick=()=>{
   layoutModal.classList.remove('show');
-  if(selectedLayout==='free') buildFreeLayout();
-  else buildGridLayout(selectedTemplate);
+  initLayersFromImages(pendingImages, selectedLayout, selectedTemplate);
 };
 function buildGridLayout(tplId){
   const map={ '1x2':[2,1], '2x1':[1,2], '2x2':[2,2], '1x3':[3,1], '3x1':[1,3], '1x4':[4,1]};
