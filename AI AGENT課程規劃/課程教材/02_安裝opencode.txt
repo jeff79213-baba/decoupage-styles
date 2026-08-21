@@ -61,20 +61,46 @@
 第四步：給員工發薪帳戶（設定 API 金鑰）
 ─────────────────────────────
 opencode 的「大腦」在雲端，它需要一張「識別證」才能跟大腦通話。
-這張識別證叫「API 金鑰」，是你向 AI 服務提供者（例如 OpenRouter、
-NVIDIA 等）申請來的，證明你是付費用戶。
+這張識別證叫「API 金鑰」，是你向 AI 服務提供者申請來的，
+證明你是付費用戶。
 
 ⏸ 授權點（請停下來，這一步要你親自動手）：
 API 金鑰是你的私密資料，AI 不能幫你申請、也不可以亂猜。
 必須由你本人到提供者網站申請一組金鑰，再貼給 opencode。
 
-做法是：在終端機輸入下面這一行，然後按 Enter：
+下面以最常用的提供者 OpenRouter 為例，帶你一步步完成：
+
+── 4-1：到 OpenRouter 網站註冊帳號 ──
+
+1. 打開瀏覽器，網址列輸入：https://openrouter.ai
+2. 點右上角「Sign In」或「Get Started」
+3. 用 Google 帳號或 email 註冊（跟註冊一樣簡單）
+4. 註冊完成後，你會進入後台畫面
+
+── 4-2：產生 API 金鑰 ──
+
+1. 在後台畫面左側選單，找到「Keys」（或網址列直接輸入
+   https://openrouter.ai/keys）
+2. 點「Create Key」或「+ Create Key」
+3. 給它一個名字（例如「opencode」），然後點「Create」
+4. 畫面會顯示一組以「sk-or-」開頭的字串，例如：
+   sk-or-v1-abc123def456ghi789...
+5. ⚠️ 這組金鑰只會顯示一次！立刻複製並存好。
+   建議貼到手機備忘錄或記事本，等一下要貼給 opencode。
+
+── 4-3：把金鑰貼給 opencode ──
+
+回到終端機，輸入下面這一行，然後按 Enter：
 
   opencode auth login
 
-它會引導你選擇提供者（例如 openrouter / nvidia），
-接著請你把申請到的 API 金鑰貼上去。設定完成後，
-opencode 就能連上雲端大腦，開始工作。
+它會問你要用哪一個提供者——選「openrouter」。
+然後它會要你貼上 API 金鑰——把剛才複製的那組貼上去，按 Enter。
+
+看到類似「Login successful」或「設定完成」的訊息，就成功了！
+
+（如果你用的是其他提供者，例如 NVIDIA，流程類似：
+到 build.nvidia.com 註冊 → 產生 API Key → opencode auth login 選 nvidia → 貼上金鑰。）
 
 （進階：你也可以在 opencode 的設定檔 opencode.json 裡指定要用
 哪一個模型，例如 {"model": "你選擇的提供者/模型名稱"}。

@@ -704,7 +704,7 @@ body[data-theme="dark"] {
         <div class="bento-card">
           <h3><span class="icon icon-green">🏢</span> 僱用員工的第一天</h3>
           <div class="concept"><h4>安裝 = 把員工帶進公司</h4><p>輸入 <code>npm install -g opencode-ai</code>，把 opencode 裝進電腦，就像跟員工喊一聲「今天開始你來上班」，員工就正式入職了。</p></div>
-          <div class="concept"><h4>設定 = 給員工發薪帳戶</h4><p>執行 <code>opencode auth login</code>，貼上你的 API 金鑰。opencode 的「大腦」在雲端，沒有這張識別證，AI 助理只會發呆。</p></div>
+          <div class="concept"><h4>設定 = 給員工發薪帳戶</h4><p>執行 <code>opencode auth login</code>，貼上你的 API 金鑰。金鑰要去 <strong>openrouter.ai</strong> 註冊帳號後產生（左選單 Keys → Create Key）。opencode 的「大腦」在雲端，沒有這張識別證，AI 助理只會發呆。</p></div>
           <div class="concept"><h4>⏸ 授權點</h4><p>API 金鑰必須由你<strong>親手</strong>提供——AI 不能幫你申請、也不可以亂猜。</p></div>
         </div>
         <div class="bento-card">
@@ -713,8 +713,9 @@ body[data-theme="dark"] {
           <div class="sim-btn-row">
             <button class="sim-btn" id="sim2b1" onclick="sim2Step(1)">① 安裝 opencode</button>
             <button class="sim-btn" id="sim2b2" onclick="sim2Step(2)" disabled>② 驗證版本</button>
-            <button class="sim-btn" id="sim2b3" onclick="sim2Step(3)" disabled>③ 設定 API 金鑰</button>
-            <button class="sim-btn" id="sim2b4" onclick="sim2Step(4)" disabled>④ 第一次對話</button>
+            <button class="sim-btn" id="sim2b3" onclick="sim2Step(3)" disabled>③ 到 OpenRouter 申請金鑰</button>
+            <button class="sim-btn" id="sim2b4" onclick="sim2Step(4)" disabled>④ 設定 API 金鑰</button>
+            <button class="sim-btn" id="sim2b5" onclick="sim2Step(5)" disabled>⑤ 第一次對話</button>
           </div>
         </div>
         <div class="bento-card">
@@ -1402,9 +1403,14 @@ var sim2Lines = [
   ['✔ added 1 package，員工正式入職！', 'success'],
   ['$ opencode --version', 'cmd'],
   ['1.16.2', 'file'],
+  ['── 請先到 OpenRouter 網站申請 API 金鑰 ──', 'comment'],
+  ['1. 瀏覽器開啟 https://openrouter.ai', 'comment'],
+  ['2. 點 Sign In → 用 Google 或 email 註冊', 'comment'],
+  ['3. 左側選單點 Keys → Create Key → 複製金鑰', 'comment'],
+  ['4. ⚠️ 金鑰只顯示一次，先複製存好！', 'comment'],
   ['$ opencode auth login', 'cmd'],
-  ['? 選擇提供者（openrouter / nvidia）', 'comment'],
-  ['⏸ 授權點：請停下來，貼上你自己申請的 API 金鑰', 'comment'],
+  ['? 選擇提供者：openrouter', 'comment'],
+  ['? 貼上你的 API 金鑰：sk-or-v1-xxxx...（你貼的）', 'comment'],
   ['✔ API 金鑰設定完成，連上雲端大腦！', 'success'],
   ['$ opencode', 'cmd'],
   ['你：你好，請幫我介紹一下你自己，我是完全沒寫過程式的新手。', 'file'],
@@ -1414,8 +1420,9 @@ function sim2Step(n) {
   var box = document.getElementById('sim2');
   if (n === 1) box.innerHTML = '';
   if (n >= 1 && n <= 2) showSim(box, sim2Lines.slice(0, 4));
-  if (n === 3) showSim(box, sim2Lines.slice(0, 8));
-  if (n === 4) showSim(box, sim2Lines.slice(0, 11));
+  if (n === 3) showSim(box, sim2Lines.slice(0, 9));
+  if (n === 4) showSim(box, sim2Lines.slice(0, 13));
+  if (n === 5) showSim(box, sim2Lines.slice(0, 17));
   var nb = document.getElementById('sim2b' + (n + 1));
   if (nb) nb.disabled = false;
 }
