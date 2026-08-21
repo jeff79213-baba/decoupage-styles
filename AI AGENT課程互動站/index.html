@@ -1297,12 +1297,12 @@ opencode-sk-*.json</code>
 
 <!-- ══════ SLIDE NAV (BOTTOM) ══════ -->
 <footer class="slide-nav">
-  <button class="slide-nav-btn" id="prevBtn" title="上一章" disabled>◀ 上一章</button>
+  <button class="slide-nav-btn" id="prevBtn" title="上一章" disabled onclick="goPrev()">◀ 上一章</button>
   <span class="slide-indicator" id="slideIndicator">第 0/0 章</span>
-  <select class="chapter-select" id="chapterSelect" title="跳轉章節" disabled>
+  <select class="chapter-select" id="chapterSelect" title="跳轉章節" disabled onchange="onChapterSelect()">
     <option>未選擇章節</option>
   </select>
-  <button class="slide-nav-btn" id="nextBtn" title="下一章" disabled>下一章 ▶</button>
+  <button class="slide-nav-btn" id="nextBtn" title="下一章" disabled onclick="goNext()">下一章 ▶</button>
 </footer>
 
 <script src="app-logic.js"></script>
