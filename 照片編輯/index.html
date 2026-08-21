@@ -26,15 +26,22 @@ canvas{touch-action:none}
 .btn-primary{border:none;background:#0ea5e9;color:#fff;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer}
 .btn-primary:active{background:#0284c7}
 /* Stage */
-#stage{flex:1;position:relative;overflow:hidden;background:#111;display:flex;align-items:center;justify-content:center;padding:8px}
+#stage{flex:1;position:relative;overflow:auto;background:#111;display:flex;align-items:center;justify-content:center;padding:8px;touch-action:none}
+#stage.zoomed{justify-content:flex-start;align-items:flex-start}
 #canvasWrap{position:relative;max-width:100%;max-height:100%;box-shadow:0 8px 32px rgba(0,0,0,.6);background:#222;border-radius:4px;overflow:hidden}
 #mainCanvas{display:block;max-width:100%;max-height:100%;background:#fff}
 #overlayCanvas{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
 #cropBox{position:absolute;border:2px dashed #0ea5e9;background:rgba(14,165,233,.12);display:none;pointer-events:none}
 .handle{position:absolute;width:18px;height:18px;background:#0ea5e9;border:2px solid #fff;border-radius:50%;pointer-events:auto;touch-action:none}
+.handle.edge{background:#fff;border-color:#0ea5e9;width:22px;height:14px;border-radius:7px}
+.handle.edge.v{width:14px;height:22px}
 #layerBox{position:absolute;border:2px solid #0ea5e9;display:none;pointer-events:none}
 #layerBox .handle{pointer-events:auto}
 .lh{position:absolute;width:14px;height:14px;background:#fff;border:2px solid #0ea5e9;border-radius:3px;pointer-events:auto}
+#zoomBar{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px;z-index:5}
+#zoomBar button{width:36px;height:36px;border-radius:10px;border:1px solid #333;background:rgba(30,30,30,.92);color:#e8e8e8;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+#zoomBar button:active{background:#222}
+#zoomLabel{font-size:11px;color:#aaa;text-align:center;background:rgba(0,0,0,.45);border-radius:6px;padding:2px 4px}
 .empty-hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#888;text-align:center;padding:20px}
 .empty-hint .big{font-size:44px}
 .empty-hint p{margin:0;font-size:14px;line-height:1.5}
@@ -105,8 +112,9 @@ canvas{touch-action:none}
   <div id="canvasWrap">
     <canvas id="mainCanvas" width="800" height="600"></canvas>
     <canvas id="overlayCanvas"></canvas>
-    <div id="cropBox"><div class="handle" data-dir="nw" style="left:-9px;top:-9px"></div><div class="handle" data-dir="ne" style="right:-9px;top:-9px"></div><div class="handle" data-dir="sw" style="left:-9px;bottom:-9px"></div><div class="handle" data-dir="se" style="right:-9px;bottom:-9px"></div></div>
-    <div id="layerBox"><div class="handle" data-lh="nw" style="left:-9px;top:-9px"></div><div class="handle" data-lh="ne" style="right:-9px;top:-9px"></div><div class="handle" data-lh="sw" style="left:-9px;bottom:-9px"></div><div class="handle" data-lh="se" style="right:-9px;bottom:-9px"></div></div>
+    <div id="cropBox"><div class="handle" data-dir="nw" style="left:-9px;top:-9px"></div><div class="handle" data-dir="ne" style="right:-9px;top:-9px"></div><div class="handle" data-dir="sw" style="left:-9px;bottom:-9px"></div><div class="handle" data-dir="se" style="right:-9px;bottom:-9px"></div><div class="handle edge" data-dir="n" style="left:50%;top:-7px;transform:translateX(-50%)"></div><div class="handle edge" data-dir="s" style="left:50%;bottom:-7px;transform:translateX(-50%)"></div><div class="handle edge v" data-dir="w" style="left:-7px;top:50%;transform:translateY(-50%)"></div><div class="handle edge v" data-dir="e" style="right:-7px;top:50%;transform:translateY(-50%)"></div></div>
+    <div id="layerBox"><div class="handle" data-lh="nw" style="left:-9px;top:-9px"></div><div class="handle" data-lh="ne" style="right:-9px;top:-9px"></div><div class="handle" data-lh="sw" style="left:-9px;bottom:-9px"></div><div class="handle" data-lh="se" style="right:-9px;bottom:-9px"></div><div class="handle edge" data-lh="n" style="left:50%;top:-7px;transform:translateX(-50%)"></div><div class="handle edge" data-lh="s" style="left:50%;bottom:-7px;transform:translateX(-50%)"></div><div class="handle edge v" data-lh="w" style="left:-7px;top:50%;transform:translateY(-50%)"></div><div class="handle edge v" data-lh="e" style="right:-7px;top:50%;transform:translateY(-50%)"></div></div>
+    <div id="zoomBar"><button id="btnZoomIn" aria-label="放大">＋</button><div id="zoomLabel">100%</div><button id="btnZoomOut" aria-label="縮小">－</button><button id="btnZoomFit" aria-label="適中" style="font-size:11px">適合</button></div>
     <div class="empty-hint" id="emptyHint">
       <div class="big"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg></div>
       <p>點下方「載入照片」開始<br><span style="color:#666;font-size:12px">支援多張一次選取，個別拖曳／縮放</span></p>
@@ -266,22 +274,62 @@ $('#btnReset').onclick=()=>{
 function updateSizeLabel(){
   $('#sizeLabel').textContent = hasImage? `${main.width} × ${main.height}` : '';
 }
+let zoom=1, baseFit=1;
 function fitCanvas(){
   if(!hasImage) return;
-  // wrap CSS sizing: JS sets canvas CSS max
   requestAnimationFrame(()=>{
-    const availW = stage.clientWidth - 16;
+    const availW = stage.clientWidth - 16 - 46; // 預留縮放鈕
     const availH = stage.clientHeight - 16;
-    const r = Math.min(availW / main.width, availH / main.height, 1);
+    const r0 = Math.min(availW / main.width, availH / main.height, 1);
+    baseFit=r0;
+    const r = Math.max(0.08, r0 * zoom);
     const w = Math.round(main.width * r);
     const h = Math.round(main.height * r);
     wrap.style.width = w+'px';
     wrap.style.height = h+'px';
-    // overlay size already in px via width/height attrs; CSS via absolute
     ocan.style.width = '100%'; ocan.style.height='100%';
+    const pct=Math.round(zoom*100);
+    const zl=$('#zoomLabel'); if(zl) zl.textContent=pct+'%';
+    if(cropState.active) updateCropBox();
+    if(selectedLayer>=0) updateLayerBox();
   });
 }
+function setZoom(v){
+  zoom=Math.max(0.15, Math.min(4, v));
+  if(zoom>1.02) stage.classList.add('zoomed'); else stage.classList.remove('zoomed');
+  fitCanvas();
+}
 window.addEventListener('resize', fitCanvas);
+// 縮放按鈕
+requestAnimationFrame(()=>{
+  const zi=$('#btnZoomIn'), zo=$('#btnZoomOut'), zf=$('#btnZoomFit');
+  if(zi) zi.onclick=()=> setZoom(zoom*1.28);
+  if(zo) zo.onclick=()=> setZoom(zoom/1.28);
+  if(zf) zf.onclick=()=> setZoom(1);
+});
+// 雙指縮放
+let lastDist=0;
+stage.addEventListener('touchstart', e=>{
+  if(e.touches.length===2){
+    const dx=e.touches[0].clientX-e.touches[1].clientX;
+    const dy=e.touches[0].clientY-e.touches[1].clientY;
+    lastDist=Math.hypot(dx,dy);
+  }
+},{passive:false});
+stage.addEventListener('touchmove', e=>{
+  if(e.touches.length===2){
+    e.preventDefault();
+    const dx=e.touches[0].clientX-e.touches[1].clientX;
+    const dy=e.touches[0].clientY-e.touches[1].clientY;
+    const d=Math.hypot(dx,dy);
+    if(lastDist>0){ const s=d/lastDist; setZoom(zoom*s); }
+    lastDist=d;
+  }
+},{passive:false});
+stage.addEventListener('touchend', e=>{ if(e.touches.length<2) lastDist=0; });
+stage.addEventListener('wheel', e=>{
+  if(e.ctrlKey || e.metaKey){ e.preventDefault(); const s=e.deltaY<0?1.08:0.92; setZoom(zoom*s); }
+},{passive:false});
 
 // Helpers
 function fileToImage(file){
@@ -713,16 +761,20 @@ function onPointerMove(e){
       l.x = Math.max(-l.w*0.6, Math.min(main.width-l.w*0.4, l.x));
       l.y = Math.max(-l.h*0.6, Math.min(main.height-l.h*0.4, l.y));
     } else {
-      // 縮放
+      // 縮放（含邊框拉伸）
       let dx=p.x-layerDrag.sx, dy=p.y-layerDrag.sy;
       let nx=layerDrag.ox, ny=layerDrag.oy, nw=layerDrag.ow, nh=layerDrag.oh;
       if(layerDrag.type==='se'){ nw=layerDrag.ow+dx; nh=layerDrag.oh+dy; }
       else if(layerDrag.type==='nw'){ nx=layerDrag.ox+dx; ny=layerDrag.oy+dy; nw=layerDrag.ow-dx; nh=layerDrag.oh-dy; }
       else if(layerDrag.type==='ne'){ ny=layerDrag.oy+dy; nw=layerDrag.ow+dx; nh=layerDrag.oh-dy; nx=layerDrag.ox; }
       else if(layerDrag.type==='sw'){ nx=layerDrag.ox+dx; nw=layerDrag.ow-dx; nh=layerDrag.oh+dy; ny=layerDrag.oy; }
+      else if(layerDrag.type==='e'){ nw=layerDrag.ow+dx; }
+      else if(layerDrag.type==='w'){ nx=layerDrag.ox+dx; nw=layerDrag.ow-dx; }
+      else if(layerDrag.type==='s'){ nh=layerDrag.oh+dy; }
+      else if(layerDrag.type==='n'){ ny=layerDrag.oy+dy; nh=layerDrag.oh-dy; }
       const min=30;
-      if(nw<min){ nw=min; if(layerDrag.type==='nw'||layerDrag.type==='sw') nx=layerDrag.ox+layerDrag.ow-min; }
-      if(nh<min){ nh=min; if(layerDrag.type==='nw'||layerDrag.type==='ne') ny=layerDrag.oy+layerDrag.oh-min; }
+      if(nw<min){ nw=min; if(layerDrag.type==='nw'||layerDrag.type==='sw'||layerDrag.type==='w') nx=layerDrag.ox+layerDrag.ow-min; }
+      if(nh<min){ nh=min; if(layerDrag.type==='nw'||layerDrag.type==='ne'||layerDrag.type==='n') ny=layerDrag.oy+layerDrag.oh-min; }
       l.x=nx; l.y=ny; l.w=nw; l.h=nh;
     }
     renderLayers(); updateLayerBox(); e.preventDefault(); return;
@@ -762,16 +814,26 @@ function onPointerMove(e){
       else if(d.type==='nw'){ nx=d.ox+dx; ny=d.oy+dy; nw=d.ow-dx; nh=d.oh-dy; }
       else if(d.type==='ne'){ ny=d.oy+dy; nw=d.ow+dx; nh=d.oh-dy; }
       else if(d.type==='sw'){ nx=d.ox+dx; nw=d.ow-dx; nh=d.oh+dy; }
+      else if(d.type==='e'){ nw=d.ow+dx; }
+      else if(d.type==='w'){ nx=d.ox+dx; nw=d.ow-dx; }
+      else if(d.type==='s'){ nh=d.oh+dy; }
+      else if(d.type==='n'){ ny=d.oy+dy; nh=d.oh-dy; }
       // 比例鎖定
       if(d.ratio){
         const ratio=d.ratio;
         if(d.type==='se'||d.type==='nw'){
           if(Math.abs(dx)>Math.abs(dy)) nh=nw/ratio; else nw=nh*ratio;
           if(d.type==='nw'){ nx=d.ox+d.ow-nw; ny=d.oy+d.oh-nh; }
-        } else {
+        } else if(d.type==='ne'||d.type==='sw'){
           if(Math.abs(dx)>Math.abs(dy)) nh=nw/ratio; else nw=nh*ratio;
           if(d.type==='ne') ny=d.oy+d.oh-nh;
           if(d.type==='sw') nx=d.ox+d.ow-nw;
+        } else if(d.type==='n'||d.type==='s'){
+          nw=nh*ratio; nx=d.ox+(d.ow-nw)/2;
+          if(d.type==='n') ny=d.oy+d.oh-nh;
+        } else if(d.type==='e'||d.type==='w'){
+          nh=nw/ratio; ny=d.oy+(d.oh-nh)/2;
+          if(d.type==='w') nx=d.ox+d.ow-nw;
         }
       }
       // 最小尺寸與邊界
