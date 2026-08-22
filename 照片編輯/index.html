@@ -197,6 +197,7 @@ const wrap = $('#canvasWrap'), stage = $('#stage'), subBar = $('#subBar'), empty
 const fileInput = $('#fileInput');
 let hasImage=false, history=[], histIdx=-1, currentTool=null;
 let pendingImages=[]; // Image elements for multi
+let originalImgs=[], originalMode=null, originalTpl=null; // 最初載入狀態（重置用）
 let selectedLayout='grid', selectedTemplate=null;
 let brush = {color:'#ff3b30', size:8, drawing:false, pts:[]};
 let mosaic = {size:16, drawing:false, pts:[]};
@@ -265,41 +266,19 @@ function restoreHistory(idx){
 $('#btnUndo').onclick=()=>{ if(histIdx>0) restoreHistory(histIdx-1)};
 $('#btnRedo').onclick=()=>{ if(histIdx<history.length-1) restoreHistory(histIdx+1)};
 $('#btnReset').onclick=()=>{
-  if(!hasImage) return;
+  if(!hasImage || !originalImgs.length) return;
   if(confirm('確定重置回最初載入的狀態？')){
+    // 用最初載入的原始照片完整重建，確保多圖仍為獨立圖層
     textLayers=[]; octx.clearRect(0,0,ocan.width,ocan.height);
-    if(history.length>0){
-      // 回到最初載入時的快照（包含圖層位置與文字清空）
-      histIdx=0;
-      const entry=history[0];
-      const url=typeof entry==='string'? entry : entry.url;
-      const snap=typeof entry==='object'? entry.snap : null;
-      const img=new Image();
-      img.onload=()=>{
-        main.width=img.width; main.height=img.height;
-        ocan.width=img.width; ocan.height=img.height;
-        fitCanvas();
-        ctx.clearRect(0,0,main.width,main.height);
-        ctx.drawImage(img,0,0);
-        if(snap && layers.length){
-          try{
-            const arr=JSON.parse(snap);
-            arr.forEach((s,i)=>{ if(layers[i]){ layers[i].x=s.x; layers[i].y=s.y; layers[i].w=s.w; layers[i].h=s.h; layers[i].rot=s.rot; if(s.baseW) layers[i].baseW=s.baseW; if(s.baseH) layers[i].baseH=s.baseH; }});
-            renderLayers();
-          }catch{}
-        }
-        // 重置後清空文字並重建歷史
-        textLayers=[];
-        history=[{url:main.toDataURL('image/png'), snap: snap, w:main.width, h:main.height}];
-        histIdx=0;
-        updateUndo(); updateSizeLabel(); updateLayerBox(); updatePersistScale();
-        toast('已重置回最初狀態');
-      };
-      img.src=url;
+    currentTool=null; renderSubBar(); updateToolActive(); hideCrop();
+    selectedLayer=-1; hideLayerBox();
+    history=[]; histIdx=-1; updateUndo();
+    if(originalImgs.length>1){
+      initLayersFromImages(originalImgs, originalMode||'free', originalTpl);
     } else {
-      textLayers=[]; renderLayers();
-      toast('已重置');
+      loadSingleImage(originalImgs[0]);
     }
+    toast('已重置回最初狀態');
   }
 };
 
@@ -439,6 +418,7 @@ async function handleFiles(files){
     pendingImages=imgs;
     openLayoutModal();
   } else {
+    originalImgs=[imgs[0]]; originalMode=null; originalTpl=null;
     layers=[]; selectedLayer=-1;
     loadSingleImage(imgs[0]);
   }
@@ -1292,6 +1272,7 @@ function buildGridPick(){
 }
 $('#btnLayoutConfirm').onclick=()=>{
   layoutModal.classList.remove('show');
+  originalImgs=pendingImages.slice(); originalMode=selectedLayout; originalTpl=selectedTemplate;
   initLayersFromImages(pendingImages, selectedLayout, selectedTemplate);
 };
 function buildGridLayout(tplId){
