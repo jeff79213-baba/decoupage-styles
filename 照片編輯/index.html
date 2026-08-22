@@ -424,6 +424,7 @@ function loadSingleImage(img){
   ctx.clearRect(0,0,w,h);
   ctx.drawImage(img,0,0,w,h);
   fitCanvas(); updateSizeLabel(); pushHistory();
+  updatePersistScale();
   toast('已載入');
 }
 // ===== 多圖獨立圖層系統 =====
@@ -1051,7 +1052,8 @@ function doCrop(){
     nimg.onload=()=>{
       l.img=nimg;
       l.x=ix; l.y=iy; l.w=cw; l.h=ch;
-      renderLayers(); updateLayerBox(); fitCanvas(); updateSizeLabel();
+      l.baseW=cw; l.baseH=ch;
+      renderLayers(); updateLayerBox(); updatePersistScale(); fitCanvas(); updateSizeLabel();
       hideCrop(); currentTool=null; renderSubBar(); updateToolActive();
       pushHistory(); toast('已裁切單張，格位保留');
     };
