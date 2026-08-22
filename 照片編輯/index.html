@@ -1444,7 +1444,7 @@ $('#btnDoShare').onclick=async()=>{
 // 阻止頁面滑動/下拉刷新（彈窗與工具列保留捲動）
 document.addEventListener('touchmove', e=>{
   const t=e.target;
-  if(t && t.closest && (t.closest('.modal')||t.closest('#toolBar'))) return;
+  if(t && t.closest && (t.closest('.modal')||t.closest('#toolBar')||t.closest('#subBar')||t.closest('#persistScale'))) return;
   e.preventDefault();
 },{passive:false});
 
