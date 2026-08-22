@@ -317,7 +317,26 @@ function scaleSelected(factor, cx, cy){
     l.x = l.x + (oldW - nw)/2;
     l.y = l.y + (oldH - nh)/2;
   }
-  l.w=nw; l.h=nh;
+  // 拼貼格內限制：不可超出各自的格
+  if(l.cell){
+    const c=l.cell;
+    // 尺寸不可超過格子
+    if(nw > c.w-4) { nw=c.w-4; nh=nw/ratio; }
+    if(nh > c.h-4) { nh=c.h-4; nw=nh*ratio; }
+    // 位置限制在格內
+    if(cx!==undefined && cy!==undefined){
+      // 已計算 x,y，夾緊
+    }
+    l.w=nw; l.h=nh;
+    // 夾緊位置
+  } else {
+    l.w=nw; l.h=nh;
+  }
+  if(l.cell){
+    const c=l.cell;
+    l.x = Math.max(c.x+1, Math.min(c.x+c.w- l.w -1, l.x));
+    l.y = Math.max(c.y+1, Math.min(c.y+c.h- l.h -1, l.y));
+  }
   renderLayers(); updateLayerBox();
 }
 let lastDist=0, lastMid=null;
@@ -450,7 +469,7 @@ function initLayersFromImages(imgs, mode, tplId){
         else { h=cellH; w=h*ir; x=cellX+(cellW-w)/2; y=cellY; }
         // 稍微內縮留邊，避免貼框
         const pad=2; x+=pad; y+=pad; w-=pad*2; h-=pad*2;
-        layers.push({img, x, y, w, h, rot:0});
+        layers.push({img, x, y, w, h, rot:0, cell:{x:cellX, y:cellY, w:cellW, h:cellH}});
         idx++;
       }
     }
@@ -463,8 +482,22 @@ function renderLayers(){
   if(!layers.length) return;
   ctx.clearRect(0,0,main.width,main.height);
   ctx.fillStyle='#fff'; ctx.fillRect(0,0,main.width,main.height);
+  // 若為拼貼格，繪製格線
+  if(layers[0] && layers[0].cell){
+    ctx.save();
+    ctx.strokeStyle='#ddd'; ctx.lineWidth=1;
+    const seen=new Set();
+    layers.forEach(l=>{ const k=l.cell.x+','+l.cell.y; if(!seen.has(k)){ seen.add(k); ctx.strokeRect(l.cell.x+0.5,l.cell.y+0.5,l.cell.w-1,l.cell.h-1); }});
+    // 外框
+    ctx.strokeRect(0.5,0.5,main.width-1,main.height-1);
+    ctx.restore();
+  }
   layers.forEach(l=>{
     ctx.save();
+    // 若有格子，裁切至格內（確保不超出）
+    if(l.cell){
+      ctx.beginPath(); ctx.rect(l.cell.x+1,l.cell.y+1,l.cell.w-2,l.cell.h-2); ctx.clip();
+    }
     ctx.translate(l.x + l.w/2, l.y + l.h/2);
     ctx.rotate(l.rot*Math.PI/180);
     ctx.drawImage(l.img, -l.w/2, -l.h/2, l.w, l.h);
@@ -761,9 +794,14 @@ function onPointerMove(e){
     if(layerDrag.type==='move'){
       l.x = layerDrag.ox + (p.x-layerDrag.sx);
       l.y = layerDrag.oy + (p.y-layerDrag.sy);
-      // 限制在畫布內
-      l.x = Math.max(-l.w*0.6, Math.min(main.width-l.w*0.4, l.x));
-      l.y = Math.max(-l.h*0.6, Math.min(main.height-l.h*0.4, l.y));
+      if(l.cell){
+        const c=l.cell;
+        l.x = Math.max(c.x+1, Math.min(c.x+c.w - l.w -1, l.x));
+        l.y = Math.max(c.y+1, Math.min(c.y+c.h - l.h -1, l.y));
+      } else {
+        l.x = Math.max(-l.w*0.6, Math.min(main.width-l.w*0.4, l.x));
+        l.y = Math.max(-l.h*0.6, Math.min(main.height-l.h*0.4, l.y));
+      }
     } else {
       // 縮放（含邊框拉伸）
       let dx=p.x-layerDrag.sx, dy=p.y-layerDrag.sy;
@@ -779,6 +817,15 @@ function onPointerMove(e){
       const min=30;
       if(nw<min){ nw=min; if(layerDrag.type==='nw'||layerDrag.type==='sw'||layerDrag.type==='w') nx=layerDrag.ox+layerDrag.ow-min; }
       if(nh<min){ nh=min; if(layerDrag.type==='nw'||layerDrag.type==='ne'||layerDrag.type==='n') ny=layerDrag.oy+layerDrag.oh-min; }
+      if(l.cell){
+        const c=l.cell;
+        // 尺寸不可超過格子
+        if(nw > c.w-2) { nw=c.w-2; if(layerDrag.type==='nw'||layerDrag.type==='sw'||layerDrag.type==='w') nx=c.x+1; }
+        if(nh > c.h-2) { nh=c.h-2; if(layerDrag.type==='nw'||layerDrag.type==='ne'||layerDrag.type==='n') ny=c.y+1; }
+        // 位置夾緊在格內
+        nx = Math.max(c.x+1, Math.min(c.x+c.w - nw -1, nx));
+        ny = Math.max(c.y+1, Math.min(c.y+c.h - nh -1, ny));
+      }
       l.x=nx; l.y=ny; l.w=nw; l.h=nh;
     }
     renderLayers(); updateLayerBox(); e.preventDefault(); return;
