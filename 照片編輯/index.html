@@ -121,7 +121,7 @@ canvas{touch-action:none}
 </div>
 
 <div id="subBar"></div>
-<div id="persistScale" style="display:none;background:#1e1e1e;border-top:1px solid #2a2a2a;padding:8px 10px;align-items:center;gap:8px"><span style="font-size:12px;color:#aaa;white-space:nowrap">縮放</span><input type="range" id="persistScaleSlider" min="30" max="300" value="100" style="flex:1"><span id="persistScaleVal" style="font-size:12px;color:#0ea5e9;min-width:38px">100%</span><span style="font-size:11px;color:#666">點選照片後拖動</span></div>
+<div id="persistScale" style="display:none;background:#1e1e1e;border-top:1px solid #2a2a2a;padding:8px 10px;align-items:center;gap:8px"><button id="psZoomOut" class="btn-sm" aria-label="縮小" style="padding:4px 14px;font-size:17px;line-height:1">－</button><span style="font-size:12px;color:#aaa;white-space:nowrap">縮放</span><input type="range" id="persistScaleSlider" min="30" max="300" value="100" style="flex:1"><span id="persistScaleVal" style="font-size:12px;color:#0ea5e9;min-width:38px">100%</span><button id="psZoomIn" class="btn-sm" aria-label="放大" style="padding:4px 12px;font-size:17px;line-height:1">＋</button><button id="psZoomFit" class="btn-sm" style="font-size:11px;padding:4px 9px">適合</button></div>
 
 <div id="toolBar">
   <button class="tool-btn" data-tool="load"><span class="tool-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></span><span class="tool-label">載入照片</span></button>
@@ -612,6 +612,30 @@ function updatePersistScale(){
     slider.onchange=()=> pushHistory();
   }
 }
+// 底部縮放列：＋／－／適合
+$('#psZoomIn').onclick=()=>{
+  if(!hasImage){ toast('請先載入照片'); return; }
+  scaleSelected(1.15); pushHistory();
+};
+$('#psZoomOut').onclick=()=>{
+  if(!hasImage){ toast('請先載入照片'); return; }
+  scaleSelected(1/1.15); pushHistory();
+};
+$('#psZoomFit').onclick=()=>{
+  if(!hasImage){ toast('請先載入照片'); return; }
+  if(layers.length===0) ensureSingleLayer();
+  const l=layers[selectedLayer>=0?selectedLayer:0]; if(!l) return;
+  const cx=l.x+l.w/2, cy=l.y+l.h/2;
+  if(l.cell){
+    const c=l.cell, r=l.baseW/l.baseH, cr2=c.w/c.h;
+    let w,h;
+    if(r>cr2){ w=c.w-4; h=w/r; } else { h=c.h-4; w=h*r; }
+    l.w=w; l.h=h; l.x=c.x+(c.w-w)/2; l.y=c.y+(c.h-h)/2;
+  } else {
+    l.w=l.baseW; l.h=l.baseH; l.x=cx-l.w/2; l.y=cy-l.h/2;
+  }
+  renderLayers(); updateLayerBox(); updatePersistScale(); pushHistory();
+};
 $('#btnPickEmpty').onclick=()=> fileInput.click();
 fileInput.onchange = e=> handleFiles(e.target.files);
 stage.addEventListener('dragover',e=>{e.preventDefault()});
