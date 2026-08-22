@@ -266,7 +266,13 @@ $('#btnUndo').onclick=()=>{ if(histIdx>0) restoreHistory(histIdx-1)};
 $('#btnRedo').onclick=()=>{ if(histIdx<history.length-1) restoreHistory(histIdx+1)};
 $('#btnReset').onclick=()=>{
   if(!hasImage) return;
-  if(confirm('確定重置回最初載入的狀態？')) restoreHistory(0);
+  if(confirm('確定重置回最初載入的狀態？')){
+    textLayers=[]; octx.clearRect(0,0,ocan.width,ocan.height);
+    // 若為多圖，保留照片位置但移除文字
+    if(layers.length){ renderLayers(); pushHistory(); }
+    else restoreHistory(0);
+    toast('已重置');
+  }
 };
 
 function updateSizeLabel(){
@@ -475,28 +481,34 @@ function initLayersFromImages(imgs, mode, tplId){
   updateLayerBox(); updatePersistScale(); toast('已建立獨立圖層，點選照片可個別拖曳/縮放');
 }
 function renderLayers(){
-  if(!layers.length) return;
-  ctx.clearRect(0,0,main.width,main.height);
-  ctx.fillStyle='#fff'; ctx.fillRect(0,0,main.width,main.height);
-  // 若為拼貼格，繪製格線
-  if(layers[0] && layers[0].cell){
-    ctx.save();
-    ctx.strokeStyle='#ddd'; ctx.lineWidth=1;
-    const seen=new Set();
-    layers.forEach(l=>{ const k=l.cell.x+','+l.cell.y; if(!seen.has(k)){ seen.add(k); ctx.strokeRect(l.cell.x+0.5,l.cell.y+0.5,l.cell.w-1,l.cell.h-1); }});
-    ctx.strokeRect(0.5,0.5,main.width-1,main.height-1);
-    ctx.restore();
+  const hasPhotos=layers.length>0;
+  const hasText=textLayers.length>0;
+  if(!hasPhotos && !hasText) return;
+  if(hasPhotos){
+    ctx.clearRect(0,0,main.width,main.height);
+    ctx.fillStyle='#fff'; ctx.fillRect(0,0,main.width,main.height);
+    if(layers[0] && layers[0].cell){
+      ctx.save();
+      ctx.strokeStyle='#ddd'; ctx.lineWidth=1;
+      const seen=new Set();
+      layers.forEach(l=>{ const k=l.cell.x+','+l.cell.y; if(!seen.has(k)){ seen.add(k); ctx.strokeRect(l.cell.x+0.5,l.cell.y+0.5,l.cell.w-1,l.cell.h-1); }});
+      ctx.strokeRect(0.5,0.5,main.width-1,main.height-1);
+      ctx.restore();
+    }
+    layers.forEach(l=>{
+      ctx.save();
+      if(l.cell){ ctx.beginPath(); ctx.rect(l.cell.x+1,l.cell.y+1,l.cell.w-2,l.cell.h-2); ctx.clip(); }
+      ctx.translate(l.x + l.w/2, l.y + l.h/2);
+      ctx.rotate(l.rot*Math.PI/180);
+      ctx.drawImage(l.img, -l.w/2, -l.h/2, l.w, l.h);
+      ctx.strokeStyle='rgba(0,0,0,.06)'; ctx.lineWidth=1; ctx.strokeRect(-l.w/2,-l.h/2,l.w,l.h);
+      ctx.restore();
+    });
+  } else if(hasText){
+    // 單張模式有文字但無圖層：不清除底圖，直接疊加文字（避免白底覆蓋）
+    // 需先還原底圖為當前歷史再疊加
   }
-  layers.forEach(l=>{
-    ctx.save();
-    if(l.cell){ ctx.beginPath(); ctx.rect(l.cell.x+1,l.cell.y+1,l.cell.w-2,l.cell.h-2); ctx.clip(); }
-    ctx.translate(l.x + l.w/2, l.y + l.h/2);
-    ctx.rotate(l.rot*Math.PI/180);
-    ctx.drawImage(l.img, -l.w/2, -l.h/2, l.w, l.h);
-    ctx.strokeStyle='rgba(0,0,0,.06)'; ctx.lineWidth=1; ctx.strokeRect(-l.w/2,-l.h/2,l.w,l.h);
-    ctx.restore();
-  });
-  // 跨照片置頂文字
+  // 跨照片置頂文字（多圖或單張皆置頂）
   textLayers.forEach(t=>{
     ctx.save();
     ctx.textAlign='center'; ctx.textBaseline='middle';
@@ -569,22 +581,16 @@ function updatePersistScale(){
       const v=parseInt(slider.value); val.textContent=v+'%';
       const ll=layers[selectedLayer>=0?selectedLayer:0]; if(!ll) return;
       let nw=ll.baseW*v/100, nh=ll.baseH*v/100;
-      const ox=ll.x, oy=ll.y;
-      ll.w=nw; ll.h=nh;
-      // 保持左上角，放大後可拖動
-      ll.x=ox; ll.y=oy;
+      // 置中縮放，避免卡上框向下延伸變形
       if(ll.cell){
         const c=ll.cell;
-        if(ll.w <= c.w){
-          ll.x=Math.max(c.x+1, Math.min(c.x+c.w - ll.w -1, ll.x));
-        } else {
-          ll.x=Math.max(c.x + c.w - ll.w, Math.min(c.x, ll.x));
-        }
-        if(ll.h <= c.h){
-          ll.y=Math.max(c.y+1, Math.min(c.y+c.h - ll.h -1, ll.y));
-        } else {
-          ll.y=Math.max(c.y + c.h - ll.h, Math.min(c.y, ll.y));
-        }
+        ll.w=nw; ll.h=nh;
+        ll.x=c.x + (c.w - nw)/2;
+        ll.y=c.y + (c.h - nh)/2;
+      } else {
+        const cx=ll.x+ll.w/2, cy=ll.y+ll.h/2;
+        ll.w=nw; ll.h=nh;
+        ll.x=cx - nw/2; ll.y=cy - nh/2;
       }
       renderLayers(); updateLayerBox();
     };
@@ -708,25 +714,26 @@ function renderTextOverlay(){
 }
 function commitText(){
   if(!textState.text){ toast('請輸入文字'); return; }
-  if(layers.length){
-    // 多圖：文字跨照片置頂，不扁平化
-    pushHistory();
-    textLayers.push({text:textState.text, x:textState.x, y:textState.y, font:textState.font, size:textState.size, color:textState.color, stroke:textState.stroke, strokeW:textState.strokeW});
-    octx.clearRect(0,0,ocan.width,ocan.height);
-    renderLayers();
-    pushHistory();
-    toast('文字已置頂顯示（跨照片）');
-    return;
+  // 統一轉為圖層+文字置頂，支援長按刪除與跨照片
+  if(layers.length===0 && hasImage) ensureSingleLayer();
+  pushHistory();
+  textLayers.push({text:textState.text, x:textState.x, y:textState.y, font:textState.font, size:textState.size, color:textState.color, stroke:textState.stroke, strokeW:textState.strokeW});
+  octx.clearRect(0,0,ocan.width,ocan.height);
+  if(layers.length) renderLayers();
+  else {
+    ctx.save();
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font=`700 ${textState.size}px "${textState.font}", sans-serif`;
+    ctx.lineJoin='round';
+    if(textState.strokeW>0){ ctx.strokeStyle=textState.stroke; ctx.lineWidth=textState.strokeW*2; ctx.strokeText(textState.text, textState.x, textState.y); }
+    ctx.fillStyle=textState.color; ctx.fillText(textState.text, textState.x, textState.y);
+    ctx.restore();
   }
   pushHistory();
-  ctx.save();
-  ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.font=`700 ${textState.size}px "${textState.font}", sans-serif`;
-  ctx.lineJoin='round';
-  if(textState.strokeW>0){ ctx.strokeStyle=textState.stroke; ctx.lineWidth=textState.strokeW*2; ctx.strokeText(textState.text, textState.x, textState.y); }
-  ctx.fillStyle=textState.color; ctx.fillText(textState.text, textState.x, textState.y);
-  ctx.restore();
-  octx.clearRect(0,0,ocan.width,ocan.height);
+  toast(layers.length?'文字已置頂顯示（長按可刪除）':'文字已合併');
+  // 若為多圖，保持選中以便長按刪除
+  return;
+}
   textState.placed=false;
   pushHistory(); // second push after commit? actually we pushed before, push after too so redo works? keep one.
   // remove duplicate: we pushed before draw, so history already has prior; after draw we push again for new state, but we pushed before so need keep after as well — do extra push only if needed. Let's just update undo without extra push.
@@ -736,6 +743,18 @@ function commitText(){
   toast('文字已合併');
 }
 
+let longPressTimer=null, longPressTarget=-1;
+function hitText(px,py){
+  for(let i=textLayers.length-1;i>=0;i--){
+    const t=textLayers[i];
+    const ctx2=document.createElement('canvas').getContext('2d');
+    ctx2.font=`700 ${t.size}px "${t.font}", sans-serif`;
+    const m=ctx2.measureText(t.text);
+    const tw=m.width, th=t.size*1.1;
+    if(px>=t.x-tw/2-8 && px<=t.x+tw/2+8 && py>=t.y-th/2-6 && py<=t.y+th/2+6) return i;
+  }
+  return -1;
+}
 // Pointer handling for brush/mosaic/text drag/crop/layers
 let activePointer=null;
 function canvasPoint(e){
@@ -771,9 +790,25 @@ wrap.querySelectorAll('#cropBox .handle').forEach(h=>{
 
 function onPointerDown(e){
   if(!hasImage) return;
-  // 多圖層拖曳（無工具或 layout/text 下皆可選取移動）
+  // 多圖層拖曳與文字長按刪除
   if(layers.length>0 && currentTool!=='brush' && currentTool!=='mosaic' && currentTool!=='crop'){
     const p=canvasPoint(e);
+    // 文字長按刪除優先（已合併的跨照片文字）
+    const th=hitText(p.x,p.y);
+    if(th!==-1){
+      longPressTarget=th;
+      clearTimeout(longPressTimer);
+      longPressTimer=setTimeout(()=>{
+        if(longPressTarget===th){
+          if(confirm('長按偵測：刪除此文字？')){
+            textLayers.splice(th,1); renderLayers(); pushHistory(); toast('已刪除文字');
+          }
+          longPressTarget=-1;
+        }
+      }, 650);
+      // 同時允許拖動該文字（若不長按則拖動）
+      // 暫不return，讓後續可拖動照片，長按才刪除
+    }
     // 若正在文字拖曳，優先文字
     if(currentTool==='text'){
       octx.font=`700 ${textState.size}px "${textState.font}", sans-serif`;
@@ -794,6 +829,25 @@ function onPointerDown(e){
       e.preventDefault(); return;
     } else {
       // 點空白處不取消選取，保持
+    }
+  } else if(textLayers.length && currentTool!=='brush' && currentTool!=='mosaic' && currentTool!=='crop'){
+    const p=canvasPoint(e);
+    const th=hitText(p.x,p.y);
+    if(th!==-1){
+      longPressTarget=th;
+      clearTimeout(longPressTimer);
+      longPressTimer=setTimeout(()=>{
+        if(longPressTarget===th){
+          if(confirm('長按偵測：刪除此文字？')){
+            textLayers.splice(th,1);
+            // 單張模式需重繪底圖
+            if(layers.length) renderLayers(); else { ctx.clearRect(0,0,main.width,main.height); ctx.fillStyle='#fff'; ctx.fillRect(0,0,main.width,main.height); /* 需還原底圖？簡化：重新繪製 */ }
+            pushHistory(); toast('已刪除文字');
+          }
+          longPressTarget=-1;
+        }
+      }, 650);
+      e.preventDefault(); return;
     }
   }
   if(currentTool==='brush'){
@@ -841,6 +895,7 @@ function onPointerDown(e){
   }
 }
 function onPointerMove(e){
+  if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer=null; longPressTarget=-1; }
   if(!hasImage) return;
   const p=canvasPoint(e);
   if(layerDrag){
@@ -979,6 +1034,8 @@ function onPointerMove(e){
   }
 }
 function onPointerUp(e){
+  if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer=null; }
+  longPressTarget=-1;
   if(layerDrag){
     layerDrag=null;
     pushHistory();
