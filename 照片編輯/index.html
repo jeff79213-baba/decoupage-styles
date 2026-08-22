@@ -933,8 +933,17 @@ function onPointerMove(e){
       l.y = layerDrag.oy + (p.y-layerDrag.sy);
       if(l.cell){
         const c=l.cell;
-        l.x = Math.max(c.x+1, Math.min(c.x+c.w - l.w -1, l.x));
-        l.y = Math.max(c.y+1, Math.min(c.y+c.h - l.h -1, l.y));
+        // 小於格子→完全在格內；大於格子→允許超出，只要蓋住格子即可
+        if(l.w <= c.w){
+          l.x = Math.max(c.x+1, Math.min(c.x+c.w - l.w -1, l.x));
+        } else {
+          l.x = Math.max(c.x + c.w - l.w, Math.min(c.x, l.x));
+        }
+        if(l.h <= c.h){
+          l.y = Math.max(c.y+1, Math.min(c.y+c.h - l.h -1, l.y));
+        } else {
+          l.y = Math.max(c.y + c.h - l.h, Math.min(c.y, l.y));
+        }
       } else {
         l.x = Math.max(-l.w*0.6, Math.min(main.width-l.w*0.4, l.x));
         l.y = Math.max(-l.h*0.6, Math.min(main.height-l.h*0.4, l.y));
