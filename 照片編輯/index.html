@@ -509,16 +509,15 @@ function renderLayers(){
 function hitLayer(px,py){
   for(let i=layers.length-1;i>=0;i--){
     const l=layers[i];
-    // 考慮旋轉的碰撞檢測（簡化為軸對齊，若有旋轉則用反旋轉點）
+    let tx=px, ty=py;
     if(l.rot!==0){
       const cx=l.x+l.w/2, cy=l.y+l.h/2;
       const dx=px-cx, dy=py-cy;
       const rad=-l.rot*Math.PI/180;
-      const rx=dx*Math.cos(rad)-dy*Math.sin(rad)+cx;
-      const ry=dx*Math.sin(rad)+dy*Math.cos(rad)+cy;
-      px=rx; py=ry;
+      tx=dx*Math.cos(rad)-dy*Math.sin(rad)+cx;
+      ty=dx*Math.sin(rad)+dy*Math.cos(rad)+cy;
     }
-    if(px>=l.x && px<=l.x+l.w && py>=l.y && py<=l.y+l.h) return i;
+    if(tx>=l.x && tx<=l.x+l.w && ty>=l.y && ty<=l.y+l.h) return i;
   }
   return -1;
 }
@@ -1010,24 +1009,17 @@ function onPointerUp(e){
 function initCrop(){
   if(!hasImage) return;
   cropState.active=true; cropState.ratio=0;
+  // 框選模式：進入時不顯示框，點擊拖曳後才出現
+  cropState.w=0; cropState.h=0;
+  $('#cropBox').style.display='none';
   if(layers.length && selectedLayer>=0){
-    const l=layers[selectedLayer];
-    // 框選只針對選中單張
-    cropState.x=l.x + l.w*0.15; cropState.y=l.y + l.h*0.15;
-    cropState.w=l.w*0.7; cropState.h=l.h*0.7;
-    toast('框選後裁切此張，其餘格位保留');
+    toast('在選中照片上拖曳框選，放開即裁切');
   } else if(layers.length){
-    selectedLayer=0; updateLayerBox();
-    const l=layers[0];
-    cropState.x=l.x + l.w*0.15; cropState.y=l.y + l.h*0.15;
-    cropState.w=l.w*0.7; cropState.h=l.h*0.7;
-    toast('已選第一張進行裁切');
+    selectedLayer=0; updateLayerBox(); updatePersistScale();
+    toast('已選第一張，請拖曳框選');
   } else {
-    const w=main.width, h=main.height;
-    cropState.x=w*0.2; cropState.y=h*0.2; cropState.w=w*0.6; cropState.h=h*0.6;
+    toast('拖曳框選裁切範圍');
   }
-  $('#cropBox').style.display='block';
-  updateCropBox();
   enableOverlayEvents(false);
 }
 function hideCrop(){ $('#cropBox').style.display='none'; cropState.active=false; }
