@@ -35,9 +35,8 @@ canvas{touch-action:none}
 .handle{position:absolute;width:18px;height:18px;background:#0ea5e9;border:2px solid #fff;border-radius:50%;pointer-events:auto;touch-action:none}
 .handle.edge{background:#fff;border-color:#0ea5e9;width:22px;height:14px;border-radius:7px}
 .handle.edge.v{width:14px;height:22px}
-#layerBox{position:absolute;border:2px solid #0ea5e9;display:none;pointer-events:none}
-#layerBox .handle{pointer-events:auto}
-.lh{position:absolute;width:14px;height:14px;background:#fff;border:2px solid #0ea5e9;border-radius:3px;pointer-events:auto}
+#layerBox{position:absolute;border:2px solid #fff;display:none;pointer-events:none;box-shadow:0 0 0 1px #0ea5e9, 0 0 18px rgba(14,165,233,.85), inset 0 0 0 1px rgba(255,255,255,.9);background:rgba(255,255,255,.10);mix-blend-mode:normal}
+#layerBox::after{content:"";position:absolute;inset:-2px;border:1px dashed rgba(255,255,255,.9);pointer-events:none}
 #zoomBar{display:none}
 .empty-hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#888;text-align:center;padding:20px}
 .empty-hint .big{font-size:44px}
@@ -110,7 +109,7 @@ canvas{touch-action:none}
     <canvas id="mainCanvas" width="800" height="600"></canvas>
     <canvas id="overlayCanvas"></canvas>
     <div id="cropBox"><div class="handle" data-dir="nw" style="left:-9px;top:-9px"></div><div class="handle" data-dir="ne" style="right:-9px;top:-9px"></div><div class="handle" data-dir="sw" style="left:-9px;bottom:-9px"></div><div class="handle" data-dir="se" style="right:-9px;bottom:-9px"></div><div class="handle edge" data-dir="n" style="left:50%;top:-7px;transform:translateX(-50%)"></div><div class="handle edge" data-dir="s" style="left:50%;bottom:-7px;transform:translateX(-50%)"></div><div class="handle edge v" data-dir="w" style="left:-7px;top:50%;transform:translateY(-50%)"></div><div class="handle edge v" data-dir="e" style="right:-7px;top:50%;transform:translateY(-50%)"></div></div>
-    <div id="layerBox"><div class="handle" data-lh="nw" style="left:-9px;top:-9px"></div><div class="handle" data-lh="ne" style="right:-9px;top:-9px"></div><div class="handle" data-lh="sw" style="left:-9px;bottom:-9px"></div><div class="handle" data-lh="se" style="right:-9px;bottom:-9px"></div><div class="handle edge" data-lh="n" style="left:50%;top:-7px;transform:translateX(-50%)"></div><div class="handle edge" data-lh="s" style="left:50%;bottom:-7px;transform:translateX(-50%)"></div><div class="handle edge v" data-lh="w" style="left:-7px;top:50%;transform:translateY(-50%)"></div><div class="handle edge v" data-lh="e" style="right:-7px;top:50%;transform:translateY(-50%)"></div></div>
+    <div id="layerBox"></div>
     <div id="zoomBar"><button id="btnZoomIn" aria-label="放大">＋</button><div id="zoomLabel">100%</div><button id="btnZoomOut" aria-label="縮小">－</button><button id="btnZoomFit" aria-label="適中" style="font-size:11px">適合</button></div>
     <div class="empty-hint" id="emptyHint">
       <div class="big"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg></div>
@@ -702,17 +701,7 @@ wrap.querySelectorAll('#cropBox .handle').forEach(h=>{
     try{ h.setPointerCapture(e.pointerId);}catch{}
   });
 });
-wrap.querySelectorAll('#layerBox .handle').forEach(h=>{
-  h.addEventListener('pointerdown', e=>{
-    if(selectedLayer<0) return;
-    e.stopPropagation(); e.preventDefault();
-    const dir=h.dataset.lh;
-    const p=canvasPoint(e);
-    const l=layers[selectedLayer];
-    layerDrag={type:dir, sx:p.x, sy:p.y, ox:l.x, oy:l.y, ow:l.w, oh:l.h};
-    try{ h.setPointerCapture(e.pointerId);}catch{}
-  });
-});
+// layerBox 已改為純反白燈光，無手把，縮放改用滾輪/雙指
 
 function onPointerDown(e){
   if(!hasImage) return;
@@ -855,16 +844,27 @@ function onPointerMove(e){
     if(d.type==='create'){
       const x1=d.sx, y1=d.sy, x2=p.x, y2=p.y;
       let nx=Math.min(x1,x2), ny=Math.min(y1,y2), nw=Math.abs(x2-x1), nh=Math.abs(y2-y1);
-      nx=Math.max(0, Math.min(nx, main.width-1)); ny=Math.max(0, Math.min(ny, main.height-1));
-      if(nx+nw>main.width) nw=main.width-nx;
-      if(ny+nh>main.height) nh=main.height-ny;
+      if(layers.length && selectedLayer>=0){
+        const l=layers[selectedLayer];
+        nx=Math.max(l.x, Math.min(nx, l.x+l.w-1)); ny=Math.max(l.y, Math.min(ny, l.y+l.h-1));
+        if(nx+nw>l.x+l.w) nw=l.x+l.w-nx; if(ny+nh>l.y+l.h) nh=l.y+l.h-ny;
+      } else {
+        nx=Math.max(0, Math.min(nx, main.width-1)); ny=Math.max(0, Math.min(ny, main.height-1));
+        if(nx+nw>main.width) nw=main.width-nx; if(ny+nh>main.height) nh=main.height-ny;
+      }
       cropState.x=nx; cropState.y=ny; cropState.w=nw; cropState.h=nh;
       updateCropBox();
     } else if(d.type==='move'){
       cropState.x = d.ox + (p.x-d.sx);
       cropState.y = d.oy + (p.y-d.sy);
-      cropState.x=Math.max(0,Math.min(main.width-cropState.w, cropState.x));
-      cropState.y=Math.max(0,Math.min(main.height-cropState.h, cropState.y));
+      if(layers.length && selectedLayer>=0){
+        const l=layers[selectedLayer];
+        cropState.x=Math.max(l.x, Math.min(cropState.x, l.x+l.w - cropState.w));
+        cropState.y=Math.max(l.y, Math.min(cropState.y, l.y+l.h - cropState.h));
+      } else {
+        cropState.x=Math.max(0,Math.min(main.width-cropState.w, cropState.x));
+        cropState.y=Math.max(0,Math.min(main.height-cropState.h, cropState.y));
+      }
       updateCropBox();
     } else {
       let nx=d.ox, ny=d.oy, nw=d.ow, nh=d.oh;
@@ -899,9 +899,14 @@ function onPointerMove(e){
       const min=20;
       if(nw<min){ nw=min; if(d.type==='nw'||d.type==='sw') nx=d.ox+d.ow-min; if(d.ratio) { nh=nw/d.ratio; if(d.type==='nw'||d.type==='ne') ny=d.oy+d.oh-nh; } }
       if(nh<min){ nh=min; if(d.type==='nw'||d.type==='ne') ny=d.oy+d.oh-min; if(d.ratio) { nw=nh*d.ratio; if(d.type==='nw'||d.type==='sw') nx=d.ox+d.ow-nw; } }
-      nx=Math.max(0, Math.min(nx, main.width-nw)); ny=Math.max(0, Math.min(ny, main.height-nh));
-      if(nx+nw>main.width) nw=main.width-nx;
-      if(ny+nh>main.height) nh=main.height-ny;
+      if(layers.length && selectedLayer>=0){
+        const l=layers[selectedLayer];
+        nx=Math.max(l.x, Math.min(nx, l.x+l.w - nw)); ny=Math.max(l.y, Math.min(ny, l.y+l.h - nh));
+        if(nx+nw>l.x+l.w) nw=l.x+l.w-nx; if(ny+nh>l.y+l.h) nh=l.y+l.h-ny;
+      } else {
+        nx=Math.max(0, Math.min(nx, main.width-nw)); ny=Math.max(0, Math.min(ny, main.height-nh));
+        if(nx+nw>main.width) nw=main.width-nx; if(ny+nh>main.height) nh=main.height-ny;
+      }
       cropState.x=nx; cropState.y=ny; cropState.w=nw; cropState.h=nh;
       updateCropBox();
     }
@@ -931,12 +936,23 @@ function onPointerUp(e){
 // Crop
 function initCrop(){
   if(!hasImage) return;
-  if(layers.length>1){ toast('多圖模式裁切將合成整張圖'); }
-  const w=main.width, h=main.height;
-  cropState.active=true;
-  cropState.ratio=0;
-  // 框選模式：預設不顯示框，等待拖曳產生
-  cropState.x=w*0.2; cropState.y=h*0.2; cropState.w=w*0.6; cropState.h=h*0.6;
+  cropState.active=true; cropState.ratio=0;
+  if(layers.length && selectedLayer>=0){
+    const l=layers[selectedLayer];
+    // 框選只針對選中單張
+    cropState.x=l.x + l.w*0.15; cropState.y=l.y + l.h*0.15;
+    cropState.w=l.w*0.7; cropState.h=l.h*0.7;
+    toast('框選後裁切此張，其餘格位保留');
+  } else if(layers.length){
+    selectedLayer=0; updateLayerBox();
+    const l=layers[0];
+    cropState.x=l.x + l.w*0.15; cropState.y=l.y + l.h*0.15;
+    cropState.w=l.w*0.7; cropState.h=l.h*0.7;
+    toast('已選第一張進行裁切');
+  } else {
+    const w=main.width, h=main.height;
+    cropState.x=w*0.2; cropState.y=h*0.2; cropState.w=w*0.6; cropState.h=h*0.6;
+  }
   $('#cropBox').style.display='block';
   updateCropBox();
   enableOverlayEvents(false);
@@ -954,8 +970,29 @@ function updateCropBox(){
 function doCrop(){
   const r=cropState;
   if(r.w<10||r.h<10){ toast('選取範圍太小'); return; }
-  // 若有圖層，先合成
-  if(layers.length){ renderLayers(); layers=[]; selectedLayer=-1; hideLayerBox(); }
+  // 多圖：只裁切選中單張，保留格位
+  if(layers.length && selectedLayer>=0){
+    const l=layers[selectedLayer];
+    const ix = Math.max(r.x, l.x), iy = Math.max(r.y, l.y);
+    const ix2 = Math.min(r.x+r.w, l.x+l.w), iy2 = Math.min(r.y+r.h, l.y+l.h);
+    const cw = ix2-ix, ch = iy2-iy;
+    if(cw<10||ch<10){ toast('裁切範圍需在選中照片內'); return; }
+    pushHistory();
+    const sx=(ix - l.x)/l.w * l.img.width, sy=(iy - l.y)/l.h * l.img.height;
+    const sw=cw/l.w * l.img.width, sh=ch/l.h * l.img.height;
+    const tmp=document.createElement('canvas'); tmp.width=Math.round(sw); tmp.height=Math.round(sh);
+    tmp.getContext('2d').drawImage(l.img, sx,sy,sw,sh, 0,0, tmp.width, tmp.height);
+    const nimg=new Image();
+    nimg.onload=()=>{
+      l.img=nimg;
+      l.x=ix; l.y=iy; l.w=cw; l.h=ch;
+      renderLayers(); updateLayerBox(); fitCanvas(); updateSizeLabel();
+      hideCrop(); currentTool=null; renderSubBar(); updateToolActive();
+      pushHistory(); toast('已裁切單張，格位保留');
+    };
+    nimg.src=tmp.toDataURL();
+    return;
+  }
   pushHistory();
   const tmp=document.createElement('canvas');
   tmp.width=Math.round(r.w); tmp.height=Math.round(r.h);
@@ -966,7 +1003,6 @@ function doCrop(){
   ctx.drawImage(tmp,0,0);
   fitCanvas(); updateSizeLabel();
   hideCrop(); currentTool=null; renderSubBar(); updateToolActive();
-  // 儲存新狀態
   const url=main.toDataURL('image/png');
   history.push({url, snap:null, w:main.width, h:main.height}); histIdx=history.length-1; updateUndo();
   toast('已裁切');
@@ -999,16 +1035,17 @@ function rotate(deg){
 }
 function flip(dir){
   if(layers.length && selectedLayer>=0){
-    // 針對單張做鏡像：用離屏 canvas 翻轉該圖
     const l=layers[selectedLayer];
     const tmp=document.createElement('canvas'); tmp.width=l.img.width; tmp.height=l.img.height;
     const tctx=tmp.getContext('2d');
     tctx.translate(dir==='h'?tmp.width:0, dir==='v'?tmp.height:0);
     tctx.scale(dir==='h'?-1:1, dir==='v'?-1:1);
     tctx.drawImage(l.img,0,0);
-    const nimg=new Image(); nimg.src=tmp.toDataURL();
-    l.img=nimg;
-    renderLayers(); updateLayerBox(); pushHistory(); toast('已翻轉選中照片'); return;
+    const nimg=new Image();
+    nimg.onload=()=>{ l.img=nimg; renderLayers(); updateLayerBox(); pushHistory(); toast('已翻轉選中照片'); };
+    nimg.src=tmp.toDataURL();
+    // 先顯示等待，避免白畫面
+    return;
   }
   if(layers.length){ renderLayers(); layers=[]; selectedLayer=-1; hideLayerBox(); }
   pushHistory();
