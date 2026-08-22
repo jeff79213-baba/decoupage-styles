@@ -558,6 +558,10 @@ function hitLayer(px,py){
       tx=dx*Math.cos(rad)-dy*Math.sin(rad)+cx;
       ty=dx*Math.sin(rad)+dy*Math.cos(rad)+cy;
     }
+    // 若有格子，點擊格內即選中該張（方便拖動留白區域）
+    if(l.cell){
+      if(tx>=l.cell.x && tx<=l.cell.x+l.cell.w && ty>=l.cell.y && ty<=l.cell.y+l.cell.h) return i;
+    }
     if(tx>=l.x && tx<=l.x+l.w && ty>=l.y && ty<=l.y+l.h) return i;
   }
   return -1;
