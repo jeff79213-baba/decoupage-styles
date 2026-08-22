@@ -442,19 +442,15 @@ function initLayersFromImages(imgs, mode, tplId){
       for(let c=0;c<cols;c++){
         if(idx>=imgs.length) break;
         const img=imgs[idx];
-        const x=gap + c*(cellW+gap), y=gap + r*(cellH+gap);
+        const cellX=gap + c*(cellW+gap), cellY=gap + r*(cellH+gap);
+        // 不預先裁切：等比置中留白（contain），讓操作者自行拖曳/縮放
         const ir=img.width/img.height, cr=cellW/cellH;
-        let dw,dh,dx,dy;
-        if(ir > cr){ dh=cellH; dw=dh*ir; dx=x - (dw-cellW)/2; dy=y; } else { dw=cellW; dh=dw/ir; dx=x; dy=y - (dh-cellH)/2; }
-        // 裁切來源以符合格子 cover：把圖片等比縮放後，記錄顯示區域（用 x,y,w,h + 來源裁切透過離屏 canvas）
-        // 簡化：直接建立一個符合格子大小的裁切後圖片
-        const tmp=document.createElement('canvas'); tmp.width=cellW; tmp.height=cellH;
-        const tctx=tmp.getContext('2d');
-        tctx.save(); tctx.beginPath(); tctx.rect(0,0,cellW,cellH); tctx.clip();
-        tctx.drawImage(img, dx-x, dy-y, dw, dh);
-        tctx.restore();
-        const cimg=new Image(); cimg.src=tmp.toDataURL();
-        layers.push({img:cimg, x, y, w:cellW, h:cellH, rot:0, _src:img});
+        let w,h,x,y;
+        if(ir > cr){ w=cellW; h=w/ir; x=cellX; y=cellY+(cellH-h)/2; }
+        else { h=cellH; w=h*ir; x=cellX+(cellW-w)/2; y=cellY; }
+        // 稍微內縮留邊，避免貼框
+        const pad=2; x+=pad; y+=pad; w-=pad*2; h-=pad*2;
+        layers.push({img, x, y, w, h, rot:0});
         idx++;
       }
     }
