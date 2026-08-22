@@ -200,6 +200,7 @@ let selectedLayout='grid', selectedTemplate=null;
 let brush = {color:'#ff3b30', size:8, drawing:false, pts:[]};
 let mosaic = {size:16, drawing:false, pts:[]};
 let textState = {text:'HELLO', font:'Noto Sans TC', size:48, color:'#ffffff', stroke:'#000000', strokeW:4, x:0, y:0, dragging:false, placed:false};
+let textLayers=[]; // 已合併的文字，跨照片置頂
 let cropState = {active:false, x:40,y:40,w:0,h:0, drag:null, ratio:0};
 let layers=[], selectedLayer=-1, layerDrag=null, lastPinchDist=0;
 let scaleToFit = 1;
@@ -289,9 +290,8 @@ window.addEventListener('resize', fitCanvas);
 // 滾輪/雙指縮放：調整單張照片（選中圖層）
 function ensureSingleLayer(){
   if(layers.length===0 && hasImage){
-    // 將當前畫布轉為單一圖層
     const img=new Image(); img.src=main.toDataURL();
-    layers=[{img, x:0, y:0, w:main.width, h:main.height, rot:0}];
+    layers=[{img, x:0, y:0, w:main.width, h:main.height, rot:0, baseW:main.width, baseH:main.height}];
     selectedLayer=0;
   }
 }
@@ -445,7 +445,7 @@ function initLayersFromImages(imgs, mode, tplId){
       const col=i%cols, row=Math.floor(i/cols);
       const x= 40 + col*(560) + (520-w)/2;
       const y= 40 + row*(560) + (520-h)/2;
-      layers.push({img, x, y, w, h, rot:0});
+      layers.push({img, x, y, w, h, rot:0, baseW:w, baseH:h});
     });
   } else {
     const map={ '1x2':[2,1], '2x1':[1,2], '2x2':[2,2], '1x3':[3,1], '3x1':[1,3], '1x4':[4,1]};
@@ -468,7 +468,7 @@ function initLayersFromImages(imgs, mode, tplId){
         else { h=cellH; w=h*ir; x=cellX+(cellW-w)/2; y=cellY; }
         // 稍微內縮留邊，避免貼框
         const pad=2; x+=pad; y+=pad; w-=pad*2; h-=pad*2;
-        layers.push({img, x, y, w, h, rot:0, cell:{x:cellX, y:cellY, w:cellW, h:cellH}});
+        layers.push({img, x, y, w, h, rot:0, baseW:w, baseH:h, cell:{x:cellX, y:cellY, w:cellW, h:cellH}});
         idx++;
       }
     }
@@ -487,21 +487,26 @@ function renderLayers(){
     ctx.strokeStyle='#ddd'; ctx.lineWidth=1;
     const seen=new Set();
     layers.forEach(l=>{ const k=l.cell.x+','+l.cell.y; if(!seen.has(k)){ seen.add(k); ctx.strokeRect(l.cell.x+0.5,l.cell.y+0.5,l.cell.w-1,l.cell.h-1); }});
-    // 外框
     ctx.strokeRect(0.5,0.5,main.width-1,main.height-1);
     ctx.restore();
   }
   layers.forEach(l=>{
     ctx.save();
-    // 若有格子，裁切至格內（確保不超出）
-    if(l.cell){
-      ctx.beginPath(); ctx.rect(l.cell.x+1,l.cell.y+1,l.cell.w-2,l.cell.h-2); ctx.clip();
-    }
+    if(l.cell){ ctx.beginPath(); ctx.rect(l.cell.x+1,l.cell.y+1,l.cell.w-2,l.cell.h-2); ctx.clip(); }
     ctx.translate(l.x + l.w/2, l.y + l.h/2);
     ctx.rotate(l.rot*Math.PI/180);
     ctx.drawImage(l.img, -l.w/2, -l.h/2, l.w, l.h);
-    // 邊框
     ctx.strokeStyle='rgba(0,0,0,.06)'; ctx.lineWidth=1; ctx.strokeRect(-l.w/2,-l.h/2,l.w,l.h);
+    ctx.restore();
+  });
+  // 跨照片置頂文字
+  textLayers.forEach(t=>{
+    ctx.save();
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font=`700 ${t.size}px "${t.font}", sans-serif`;
+    ctx.lineJoin='round';
+    if(t.strokeW>0){ ctx.strokeStyle=t.stroke; ctx.lineWidth=t.strokeW*2; ctx.strokeText(t.text, t.x, t.y); }
+    ctx.fillStyle=t.color; ctx.fillText(t.text, t.x, t.y);
     ctx.restore();
   });
 }
@@ -606,22 +611,76 @@ function renderSubBar(){
     $('#moSize').oninput=e=>{ mosaic.size=parseInt(e.target.value); $('#moVal').textContent=mosaic.size+'px'};
     $('#moUndo').onclick=()=>{ if(histIdx>0) restoreHistory(histIdx-1); };
   } else if(currentTool==='layout'){
-    if(layers.length>1){
+    if(layers.length>0){
+      const cur=layers[selectedLayer]||layers[0];
+      const curScale=cur && cur.baseW ? Math.round(cur.w/cur.baseW*100) : 100;
       subBar.innerHTML = `<span style="font-size:12px;color:#aaa">已選第 ${selectedLayer+1}/${layers.length} 張</span>
         <button class="btn-sm" id="btnLayerPrev">◀ 上一張</button>
         <button class="btn-sm" id="btnLayerNext">下一張 ▶</button>
         <button class="btn-sm" id="btnLayerFront">置頂</button>
         <button class="btn-sm" id="btnLayerBack">置底</button>
-        <button class="btn-sm" id="btnLayerDel" style="color:#f87171;border-color:#7f1d1d">刪除此張</button>
-        <button class="btn-sm" id="btnRepick">重新選照片</button>`;
+        <button class="btn-sm" id="btnLayerDel" style="color:#f87171;border-color:#7f1d1d">刪除</button>
+        <button class="btn-sm" id="btnRepick">重選</button>
+        <div style="width:100%;display:flex;align-items:center;gap:8px;margin-top:4px">
+          <span style="font-size:12px;color:#aaa;white-space:nowrap">縮放</span>
+          <input type="range" id="scaleSlider" min="30" max="250" value="${curScale}" style="flex:1">
+          <span id="scaleVal" style="font-size:12px;color:#0ea5e9;min-width:38px">${curScale}%</span>
+        </div>`;
       $('#btnLayerPrev').onclick=()=>{ if(layers.length){ selectedLayer=(selectedLayer-1+layers.length)%layers.length; updateLayerBox(); renderSubBar(); }};
       $('#btnLayerNext').onclick=()=>{ if(layers.length){ selectedLayer=(selectedLayer+1)%layers.length; updateLayerBox(); renderSubBar(); }};
       $('#btnLayerFront').onclick=()=>{ if(selectedLayer<0) return; const a=layers.splice(selectedLayer,1)[0]; layers.push(a); selectedLayer=layers.length-1; renderLayers(); updateLayerBox(); pushHistory(); };
       $('#btnLayerBack').onclick=()=>{ if(selectedLayer<0) return; const a=layers.splice(selectedLayer,1)[0]; layers.unshift(a); selectedLayer=0; renderLayers(); updateLayerBox(); pushHistory(); };
       $('#btnLayerDel').onclick=()=>{ if(selectedLayer<0) return; if(!confirm('刪除選中的這張照片？')) return; layers.splice(selectedLayer,1); selectedLayer=Math.min(selectedLayer, layers.length-1); if(layers.length===0){ hasImage=false; emptyHint.style.display='flex'; hideLayerBox(); ctx.clearRect(0,0,main.width,main.height); } else { renderLayers(); updateLayerBox(); } pushHistory(); renderSubBar(); };
       $('#btnRepick').onclick=()=> fileInput.click();
+      const slider=$('#scaleSlider'), val=$('#scaleVal');
+      if(slider){
+        slider.oninput=()=>{
+          const v=parseInt(slider.value); val.textContent=v+'%';
+          const l=layers[selectedLayer]; if(!l) return;
+          const ratio=l.baseW/l.baseH;
+          let nw=l.baseW*v/100, nh=l.baseH*v/100;
+          if(l.cell){
+            const c=l.cell;
+            if(nw>c.w-4){ nw=c.w-4; nh=nw/ratio; }
+            if(nh>c.h-4){ nh=c.h-4; nw=nh*ratio; }
+          }
+          const cx=l.x+l.w/2, cy=l.y+l.h/2;
+          l.w=nw; l.h=nh;
+          l.x=cx-nw/2; l.y=cy-nh/2;
+          if(l.cell){
+            const c=l.cell;
+            l.x=Math.max(c.x+1, Math.min(c.x+c.w-nw-1, l.x));
+            l.y=Math.max(c.y+1, Math.min(c.y+c.h-nh-1, l.y));
+          }
+          renderLayers(); updateLayerBox();
+        };
+        slider.onchange=()=> pushHistory();
+      }
+    } else if(hasImage){
+      // 單張：轉為可縮放圖層
+      subBar.innerHTML = `<span style="font-size:12px;color:#aaa">單張照片可用滑桿縮放</span>
+        <div style="width:100%;display:flex;align-items:center;gap:8px;margin-top:4px">
+          <span style="font-size:12px;color:#aaa">縮放</span>
+          <input type="range" id="scaleSliderSingle" min="30" max="250" value="100" style="flex:1">
+          <span id="scaleValSingle" style="font-size:12px;color:#0ea5e9;min-width:38px">100%</span>
+          <button class="btn-sm" id="btnRepick">重選照片</button>
+        </div>`;
+      $('#btnRepick').onclick=()=> fileInput.click();
+      const slider=$('#scaleSliderSingle'), val=$('#scaleValSingle');
+      if(slider){
+        slider.oninput=()=>{
+          const v=parseInt(slider.value); val.textContent=v+'%';
+          ensureSingleLayer();
+          const l=layers[selectedLayer];
+          let nw=l.baseW*v/100, nh=l.baseH*v/100;
+          const cx=main.width/2, cy=main.height/2;
+          l.w=nw; l.h=nh; l.x=cx-nw/2; l.y=cy-nh/2;
+          renderLayers();
+        };
+        slider.onchange=()=> pushHistory();
+      }
     } else {
-      subBar.innerHTML = `<span style="font-size:12px;color:#aaa">需重新載入多張照片才會出現拼貼選項</span><button class="btn-sm" id="btnRepick">重新選擇照片</button>`;
+      subBar.innerHTML = `<span style="font-size:12px;color:#aaa">需載入照片才可縮放</span><button class="btn-sm" id="btnRepick">選擇照片</button>`;
       $('#btnRepick').onclick=()=> fileInput.click();
     }
   }
@@ -652,6 +711,16 @@ function renderTextOverlay(){
 }
 function commitText(){
   if(!textState.text){ toast('請輸入文字'); return; }
+  if(layers.length){
+    // 多圖：文字跨照片置頂，不扁平化
+    pushHistory();
+    textLayers.push({text:textState.text, x:textState.x, y:textState.y, font:textState.font, size:textState.size, color:textState.color, stroke:textState.stroke, strokeW:textState.strokeW});
+    octx.clearRect(0,0,ocan.width,ocan.height);
+    renderLayers();
+    pushHistory();
+    toast('文字已置頂顯示（跨照片）');
+    return;
+  }
   pushHistory();
   ctx.save();
   ctx.textAlign='center'; ctx.textBaseline='middle';
