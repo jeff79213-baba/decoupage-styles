@@ -731,16 +731,7 @@ function commitText(){
   }
   pushHistory();
   toast(layers.length?'文字已置頂顯示（長按可刪除）':'文字已合併');
-  // 若為多圖，保持選中以便長按刪除
   return;
-}
-  textState.placed=false;
-  pushHistory(); // second push after commit? actually we pushed before, push after too so redo works? keep one.
-  // remove duplicate: we pushed before draw, so history already has prior; after draw we push again for new state, but we pushed before so need keep after as well — do extra push only if needed. Let's just update undo without extra push.
-  // Fix: we already pushed before; after draw we need to update history top
-  history[histIdx]=main.toDataURL('image/png'); // replace last pushed with prior state? Actually pushHistory added prior state, now overwrite last with new? Simplify: keep as new entry
-  history.push(main.toDataURL('image/png')); histIdx=history.length-1; updateUndo();
-  toast('文字已合併');
 }
 
 let longPressTimer=null, longPressTarget=-1;
