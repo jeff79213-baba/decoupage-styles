@@ -100,6 +100,7 @@ canvas{touch-action:none}
     <button class="btn-sm" id="btnUndo" disabled>↩ 上一步</button>
     <button class="btn-sm" id="btnRedo" disabled>↪ 重做</button>
     <button class="btn-sm" id="btnReset">重置</button>
+    <button class="btn-sm" id="btnFullscreen">⛶ 全螢幕</button>
     <button class="btn-primary" id="btnExportTop">輸出</button>
   </div>
 </div>
@@ -1413,6 +1414,36 @@ $('#btnDoShare').onclick=async()=>{
   ctx.fillStyle='#fff'; ctx.fillRect(0,0,main.width,main.height);
   fitCanvas();
 })();
+
+// 阻止頁面滑動/下拉刷新（彈窗與工具列保留捲動）
+document.addEventListener('touchmove', e=>{
+  const t=e.target;
+  if(t && t.closest && (t.closest('.modal')||t.closest('#toolBar'))) return;
+  e.preventDefault();
+},{passive:false});
+
+// 全螢幕切換
+$('#btnFullscreen').onclick=()=>{
+  const d=document, el=d.documentElement;
+  const active=d.fullscreenElement||d.webkitFullscreenElement;
+  if(!active){
+    const fn=el.requestFullscreen||el.webkitRequestFullscreen;
+    if(fn){
+      try{
+        const r=fn.call(el);
+        if(r && r.catch) r.catch(()=>toast('瀏覽器拒絕全螢幕'));
+        else toast('已進入全螢幕');
+      }catch{ toast('此瀏覽器不支援全螢幕'); }
+    } else {
+      toast('iOS 請用分享選單「加入主畫面」，開啟即為全螢幕');
+    }
+  } else {
+    (d.exitFullscreen||d.webkitExitFullscreen).call(d);
+  }
+};
+if(!(document.documentElement.requestFullscreen||document.documentElement.webkitRequestFullscreen)){
+  $('#btnFullscreen').textContent='⛶ 全螢幕說明';
+}
 
 // Fullscreen hint for PWA
 if(window.matchMedia('(display-mode: standalone)').matches){
