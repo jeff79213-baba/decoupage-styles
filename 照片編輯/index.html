@@ -200,7 +200,7 @@ let pendingImages=[]; // Image elements for multi
 let selectedLayout='grid', selectedTemplate=null;
 let brush = {color:'#ff3b30', size:8, drawing:false, pts:[]};
 let mosaic = {size:16, drawing:false, pts:[]};
-let textState = {text:'HELLO', font:'Noto Sans TC', size:48, color:'#ffffff', stroke:'#000000', strokeW:4, x:0, y:0, dragging:false, placed:false};
+let textState = {text:'', font:'Noto Sans TC', size:48, color:'#ffffff', stroke:'#000000', strokeW:4, x:0, y:0, dragging:false, placed:false};
 let textLayers=[]; // 已合併的文字，跨照片置頂
 let cropState = {active:false, x:40,y:40,w:0,h:0, drag:null, ratio:0};
 let layers=[], selectedLayer=-1, layerDrag=null, lastPinchDist=0;
@@ -722,20 +722,24 @@ function renderTextOverlay(){
   if(currentTool!=='text'){ octx.clearRect(0,0,ocan.width,ocan.height); return; }
   octx.clearRect(0,0,ocan.width,ocan.height);
   const s=textState;
-  if(!s.text) return;
+  const isPlaceholder=!s.text;
+  const displayText=isPlaceholder?'請輸入文字':s.text;
+  const displayColor=isPlaceholder?'rgba(180,180,180,0.9)':s.color;
+  const displayStroke=isPlaceholder?null:s.stroke;
+  // 若尚未放置，預設置中
+  if(!s.placed){ s.x=main.width/2; s.y=main.height/2; }
   octx.save();
   octx.textAlign='center'; octx.textBaseline='middle';
   octx.font=`700 ${s.size}px "${s.font}", sans-serif`;
   octx.lineJoin='round';
-  // shadow for visibility
-  octx.shadowColor='rgba(0,0,0,.4)'; octx.shadowBlur=6;
-  if(s.strokeW>0){ octx.strokeStyle=s.stroke; octx.lineWidth=s.strokeW*2; octx.strokeText(s.text, s.x, s.y); }
-  octx.fillStyle=s.color; octx.fillText(s.text, s.x, s.y);
+  if(!isPlaceholder) octx.shadowColor='rgba(0,0,0,.4)', octx.shadowBlur=6;
+  if(s.strokeW>0 && displayStroke){ octx.strokeStyle=displayStroke; octx.lineWidth=s.strokeW*2; octx.strokeText(displayText, s.x, s.y); }
+  octx.fillStyle=displayColor; octx.fillText(displayText, s.x, s.y);
   octx.restore();
-  // draw handle box
+  // 虛線框提示大小與位置
   octx.save();
-  octx.strokeStyle='#0ea5e9'; octx.setLineDash([6,4]); octx.lineWidth=2;
-  const m=octx.measureText(s.text);
+  octx.strokeStyle=isPlaceholder?'#aaa':'#0ea5e9'; octx.setLineDash(isPlaceholder?[4,6]:[6,4]); octx.lineWidth=1.5;
+  const m=octx.measureText(displayText);
   const tw=m.width, th=s.size*1.1;
   octx.strokeRect(s.x-tw/2-8, s.y-th/2-6, tw+16, th+12);
   octx.restore();
