@@ -568,22 +568,22 @@ function updatePersistScale(){
     slider.oninput=()=>{
       const v=parseInt(slider.value); val.textContent=v+'%';
       const ll=layers[selectedLayer>=0?selectedLayer:0]; if(!ll) return;
-      const ratio=ll.baseW/ll.baseH;
       let nw=ll.baseW*v/100, nh=ll.baseH*v/100;
-      // 允許超過格子（放大可超出，格內裁切顯示）
-      const cx=ll.x+ll.w/2, cy=ll.y+ll.h/2;
+      const ox=ll.x, oy=ll.y;
       ll.w=nw; ll.h=nh;
-      ll.x=cx-nw/2; ll.y=cy-nh/2;
+      // 保持左上角，放大後可拖動
+      ll.x=ox; ll.y=oy;
       if(ll.cell){
         const c=ll.cell;
-        // 位置夾緊：若超過格子，允許超出但保持至少部分可見
-        if(nw <= c.w && nh <= c.h){
-          ll.x=Math.max(c.x+1, Math.min(c.x+c.w-nw-1, ll.x));
-          ll.y=Math.max(c.y+1, Math.min(c.y+c.h-nh-1, ll.y));
+        if(ll.w <= c.w){
+          ll.x=Math.max(c.x+1, Math.min(c.x+c.w - ll.w -1, ll.x));
         } else {
-          // 放大超過格子時，允許中心在格內，邊緣可超出
-          ll.x=Math.max(c.x + c.w - nw, Math.min(c.x, ll.x));
-          ll.y=Math.max(c.y + c.h - nh, Math.min(c.y, ll.y));
+          ll.x=Math.max(c.x + c.w - ll.w, Math.min(c.x, ll.x));
+        }
+        if(ll.h <= c.h){
+          ll.y=Math.max(c.y+1, Math.min(c.y+c.h - ll.h -1, ll.y));
+        } else {
+          ll.y=Math.max(c.y + c.h - ll.h, Math.min(c.y, ll.y));
         }
       }
       renderLayers(); updateLayerBox();
