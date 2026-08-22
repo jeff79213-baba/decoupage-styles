@@ -38,10 +38,7 @@ canvas{touch-action:none}
 #layerBox{position:absolute;border:2px solid #0ea5e9;display:none;pointer-events:none}
 #layerBox .handle{pointer-events:auto}
 .lh{position:absolute;width:14px;height:14px;background:#fff;border:2px solid #0ea5e9;border-radius:3px;pointer-events:auto}
-#zoomBar{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px;z-index:5}
-#zoomBar button{width:36px;height:36px;border-radius:10px;border:1px solid #333;background:rgba(30,30,30,.92);color:#e8e8e8;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
-#zoomBar button:active{background:#222}
-#zoomLabel{font-size:11px;color:#aaa;text-align:center;background:rgba(0,0,0,.45);border-radius:6px;padding:2px 4px}
+#zoomBar{display:none}
 .empty-hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#888;text-align:center;padding:20px}
 .empty-hint .big{font-size:44px}
 .empty-hint p{margin:0;font-size:14px;line-height:1.5}
@@ -274,61 +271,98 @@ $('#btnReset').onclick=()=>{
 function updateSizeLabel(){
   $('#sizeLabel').textContent = hasImage? `${main.width} × ${main.height}` : '';
 }
-let zoom=1, baseFit=1;
 function fitCanvas(){
   if(!hasImage) return;
   requestAnimationFrame(()=>{
-    const availW = stage.clientWidth - 16 - 46; // 預留縮放鈕
+    const availW = stage.clientWidth - 16;
     const availH = stage.clientHeight - 16;
     const r0 = Math.min(availW / main.width, availH / main.height, 1);
-    baseFit=r0;
-    const r = Math.max(0.08, r0 * zoom);
-    const w = Math.round(main.width * r);
-    const h = Math.round(main.height * r);
+    const w = Math.round(main.width * r0);
+    const h = Math.round(main.height * r0);
     wrap.style.width = w+'px';
     wrap.style.height = h+'px';
     ocan.style.width = '100%'; ocan.style.height='100%';
-    const pct=Math.round(zoom*100);
-    const zl=$('#zoomLabel'); if(zl) zl.textContent=pct+'%';
     if(cropState.active) updateCropBox();
     if(selectedLayer>=0) updateLayerBox();
   });
 }
-function setZoom(v){
-  zoom=Math.max(0.15, Math.min(4, v));
-  if(zoom>1.02) stage.classList.add('zoomed'); else stage.classList.remove('zoomed');
-  fitCanvas();
-}
 window.addEventListener('resize', fitCanvas);
-// 縮放按鈕
-requestAnimationFrame(()=>{
-  const zi=$('#btnZoomIn'), zo=$('#btnZoomOut'), zf=$('#btnZoomFit');
-  if(zi) zi.onclick=()=> setZoom(zoom*1.28);
-  if(zo) zo.onclick=()=> setZoom(zoom/1.28);
-  if(zf) zf.onclick=()=> setZoom(1);
-});
-// 雙指縮放
-let lastDist=0;
+// 滾輪/雙指縮放：調整單張照片（選中圖層）
+function ensureSingleLayer(){
+  if(layers.length===0 && hasImage){
+    // 將當前畫布轉為單一圖層
+    const img=new Image(); img.src=main.toDataURL();
+    layers=[{img, x:0, y:0, w:main.width, h:main.height, rot:0}];
+    selectedLayer=0;
+  }
+}
+function scaleSelected(factor, cx, cy){
+  if(!hasImage) return;
+  if(layers.length===0) ensureSingleLayer();
+  if(selectedLayer<0) selectedLayer=0;
+  const l=layers[selectedLayer];
+  if(!l) return;
+  const oldW=l.w, oldH=l.h;
+  let nw=Math.max(30, Math.min(main.width*2.5, oldW*factor));
+  let nh=Math.max(30, Math.min(main.height*2.5, oldH*factor));
+  // 保持比例（以寬為基準）
+  const ratio=oldW/oldH;
+  if(Math.abs(nw/nh - ratio) > 0.01) nh=nw/ratio;
+  // 以中心或指定點為錨點縮放
+  if(cx!==undefined && cy!==undefined){
+    const px=(cx - l.x)/oldW, py=(cy - l.y)/oldH;
+    l.x = cx - px*nw;
+    l.y = cy - py*nh;
+  } else {
+    l.x = l.x + (oldW - nw)/2;
+    l.y = l.y + (oldH - nh)/2;
+  }
+  l.w=nw; l.h=nh;
+  renderLayers(); updateLayerBox();
+}
+let lastDist=0, lastMid=null;
 stage.addEventListener('touchstart', e=>{
-  if(e.touches.length===2){
+  if(e.touches.length===2 && layers.length>0){
     const dx=e.touches[0].clientX-e.touches[1].clientX;
     const dy=e.touches[0].clientY-e.touches[1].clientY;
     lastDist=Math.hypot(dx,dy);
+    lastMid={x:(e.touches[0].clientX+e.touches[1].clientX)/2, y:(e.touches[0].clientY+e.touches[1].clientY)/2};
   }
 },{passive:false});
 stage.addEventListener('touchmove', e=>{
-  if(e.touches.length===2){
+  if(e.touches.length===2 && layers.length>0){
     e.preventDefault();
     const dx=e.touches[0].clientX-e.touches[1].clientX;
     const dy=e.touches[0].clientY-e.touches[1].clientY;
     const d=Math.hypot(dx,dy);
-    if(lastDist>0){ const s=d/lastDist; setZoom(zoom*s); }
+    if(lastDist>0){
+      const s=d/lastDist;
+      const mid={x:(e.touches[0].clientX+e.touches[1].clientX)/2, y:(e.touches[0].clientY+e.touches[1].clientY)/2};
+      const p=canvasPoint({clientX:mid.x, clientY:mid.y});
+      scaleSelected(s, p.x, p.y);
+    }
     lastDist=d;
   }
 },{passive:false});
-stage.addEventListener('touchend', e=>{ if(e.touches.length<2) lastDist=0; });
+stage.addEventListener('touchend', e=>{ if(e.touches.length<2){ lastDist=0; if(layers.length) pushHistory(); }});
 stage.addEventListener('wheel', e=>{
-  if(e.ctrlKey || e.metaKey){ e.preventDefault(); const s=e.deltaY<0?1.08:0.92; setZoom(zoom*s); }
+  if(!hasImage) return;
+  // 滾輪直接縮放選中單張
+  e.preventDefault();
+  const rect=main.getBoundingClientRect();
+  const p=canvasPoint({clientX:e.clientX, clientY:e.clientY});
+  const inside = p.x>=0 && p.x<=main.width && p.y>=0 && p.y<=main.height;
+  const factor=e.deltaY<0?1.08:0.92;
+  if(layers.length>0 || inside){
+    const cx=inside? p.x : undefined;
+    const cy=inside? p.y : undefined;
+    scaleSelected(factor, cx, cy);
+  }
+},{passive:false});
+let wheelEndTimer=null;
+stage.addEventListener('wheel', e=>{
+  clearTimeout(wheelEndTimer);
+  wheelEndTimer=setTimeout(()=>{ if(layers.length) pushHistory(); }, 400);
 },{passive:false});
 
 // Helpers
@@ -499,32 +533,9 @@ function renderSubBar(){
   if(!currentTool){ subBar.classList.remove('show'); subBar.innerHTML=''; return; }
   subBar.classList.add('show');
   if(currentTool==='crop'){
-    subBar.innerHTML = `<span style="font-size:13px;color:#aaa">拖動選框或白點調整，選好後按確定</span><div style="margin-left:auto;display:flex;gap:6px"><button class="btn-sm" id="cropCancel">取消</button><button class="btn-primary" id="cropOk">確定裁切</button></div>
-    <div style="width:100%;display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
-      <button class="btn-sm" data-ratio="free">自由</button>
-      <button class="btn-sm" data-ratio="1">1:1</button>
-      <button class="btn-sm" data-ratio="1.333">4:3</button>
-      <button class="btn-sm" data-ratio="0.75">3:4</button>
-      <button class="btn-sm" data-ratio="1.777">16:9</button>
-      <button class="btn-sm" data-ratio="0.5625">9:16</button>
-    </div>`;
+    subBar.innerHTML = `<span style="font-size:13px;color:#aaa">在照片上拖曳框選裁切範圍，可拖動邊框調整</span><div style="margin-left:auto;display:flex;gap:6px"><button class="btn-sm" id="cropCancel">取消</button><button class="btn-primary" id="cropOk">確定裁切</button></div>`;
     subBar.querySelector('#cropOk').onclick=doCrop;
     subBar.querySelector('#cropCancel').onclick=()=>{hideCrop(); currentTool=null; renderSubBar(); updateToolActive();};
-    subBar.querySelectorAll('[data-ratio]').forEach(b=> b.onclick=()=>{
-      const r=b.dataset.ratio;
-      // 視覺回饋
-      subBar.querySelectorAll('[data-ratio]').forEach(x=>{x.style.background=''; x.style.color='';});
-      b.style.background='#0ea5e9'; b.style.color='#fff';
-      if(r==='free'){ cropState.ratio=0; return; }
-      const ratio=parseFloat(r);
-      cropState.ratio=ratio;
-      const cw=main.width, ch=main.height;
-      let w,h;
-      if(cw/ch > ratio){ h=ch*0.72; w=h*ratio; } else { w=cw*0.72; h=w/ratio; }
-      cropState.w=w; cropState.h=h;
-      cropState.x=(cw-w)/2; cropState.y=(ch-h)/2;
-      updateCropBox();
-    });
   } else if(currentTool==='rotate'){
     subBar.innerHTML = `<button class="btn-sm" id="rotL">↺ 90° 左轉</button><button class="btn-sm" id="rotR">↻ 90° 右轉</button><button class="btn-sm" id="flipH">⇔ 水平翻轉</button><button class="btn-sm" id="flipV">⇕ 垂直翻轉</button>`;
     $('#rotL').onclick=()=> rotate(-90);
@@ -731,20 +742,17 @@ function onPointerDown(e){
   } else if(currentTool==='crop'){
     const p=canvasPoint(e);
     const r=cropState;
-    const thr = 28; // 容錯
-    // 檢查是否點到手把附近（自由模式）
-    const pts={nw:[r.x,r.y], ne:[r.x+r.w,r.y], sw:[r.x,r.y+r.h], se:[r.x+r.w,r.y+r.h]};
-    let handled=false;
-    for(let k in pts){
-      const [hx,hy]=pts[k];
-      if(Math.abs(p.x-hx)<thr && Math.abs(p.y-hy)<thr){
-        r.drag={type:k, sx:p.x, sy:p.y, ox:r.x, oy:r.y, ow:r.w, oh:r.h, ratio:cropState.ratio};
-        enableOverlayEvents(true); handled=true; break;
-      }
-    }
-    if(!handled && p.x>=r.x && p.x<=r.x+r.w && p.y>=r.y && p.y<=r.y+r.h){
+    // 手把優先透過 DOM handle 處理（已在上方綁定），此處處理框內移動與框選新建
+    if(p.x>=r.x && p.x<=r.x+r.w && p.y>=r.y && p.y<=r.y+r.h){
       r.drag={type:'move', sx:p.x, sy:p.y, ox:r.x, oy:r.y};
       enableOverlayEvents(true);
+    } else {
+      // 框選：從點擊處拉出新框
+      r.drag={type:'create', sx:p.x, sy:p.y, ox:p.x, oy:p.y, ow:0, oh:0};
+      r.x=p.x; r.y=p.y; r.w=0; r.h=0;
+      updateCropBox();
+      enableOverlayEvents(true);
+      $('#cropBox').style.display='block';
     }
   }
 }
@@ -801,7 +809,15 @@ function onPointerMove(e){
     e.preventDefault();
   } else if(currentTool==='crop' && cropState.drag){
     const d=cropState.drag;
-    if(d.type==='move'){
+    if(d.type==='create'){
+      const x1=d.sx, y1=d.sy, x2=p.x, y2=p.y;
+      let nx=Math.min(x1,x2), ny=Math.min(y1,y2), nw=Math.abs(x2-x1), nh=Math.abs(y2-y1);
+      nx=Math.max(0, Math.min(nx, main.width-1)); ny=Math.max(0, Math.min(ny, main.height-1));
+      if(nx+nw>main.width) nw=main.width-nx;
+      if(ny+nh>main.height) nh=main.height-ny;
+      cropState.x=nx; cropState.y=ny; cropState.w=nw; cropState.h=nh;
+      updateCropBox();
+    } else if(d.type==='move'){
       cropState.x = d.ox + (p.x-d.sx);
       cropState.y = d.oy + (p.y-d.sy);
       cropState.x=Math.max(0,Math.min(main.width-cropState.w, cropState.x));
@@ -872,19 +888,15 @@ function onPointerUp(e){
 // Crop
 function initCrop(){
   if(!hasImage) return;
-  // 若有多圖層，先提示需先合併或選單張
-  if(layers.length>1){ toast('多圖模式請先完成排列，裁切將針對整張合成圖'); }
+  if(layers.length>1){ toast('多圖模式裁切將合成整張圖'); }
   const w=main.width, h=main.height;
   cropState.active=true;
   cropState.ratio=0;
-  cropState.x=w*0.08; cropState.y=h*0.08; cropState.w=w*0.84; cropState.h=h*0.84;
+  // 框選模式：預設不顯示框，等待拖曳產生
+  cropState.x=w*0.2; cropState.y=h*0.2; cropState.w=w*0.6; cropState.h=h*0.6;
   $('#cropBox').style.display='block';
   updateCropBox();
   enableOverlayEvents(false);
-  requestAnimationFrame(()=>{
-    const freeBtn=subBar.querySelector('[data-ratio="free"]');
-    if(freeBtn){ subBar.querySelectorAll('[data-ratio]').forEach(x=>{x.style.background='';x.style.color='';}); freeBtn.style.background='#0ea5e9'; freeBtn.style.color='#fff'; }
-  });
 }
 function hideCrop(){ $('#cropBox').style.display='none'; cropState.active=false; }
 function updateCropBox(){
