@@ -511,12 +511,12 @@ body[data-theme="dark"] {
         <label class="chapter-option">
           <input type="checkbox" value="1">
           <span class="ch-index">CH1</span>
-          <span class="ch-name">安裝 Node 與 Git</span>
+          <span class="ch-name">安裝 OpenCode</span>
         </label>
         <label class="chapter-option">
           <input type="checkbox" value="2">
           <span class="ch-index">CH2</span>
-          <span class="ch-name">安裝 opencode</span>
+          <span class="ch-name">接上大腦與環境建置</span>
         </label>
         <label class="chapter-option">
           <input type="checkbox" value="3">
@@ -647,86 +647,71 @@ body[data-theme="dark"] {
     <div class="module" id="mod1">
       <div class="module-header">
         <div class="module-badge">第 1 章</div>
-        <h1 class="module-title">安裝 Node 與 Git</h1>
-        <p class="module-desc">先打好地基，才能蓋 AI 大樓。裝好 Node.js、npm 與 Git，後面的 AI 課程才走得下去。</p>
+        <h1 class="module-title">安裝 OpenCode</h1>
+        <p class="module-desc">主角登場：把 AI 員工帶進公司。像裝 LINE 一樣簡單——下載、安裝、開啟，三步完工。</p>
       </div>
       <div class="bento">
         <div class="bento-card bento-full">
-          <h3><span class="icon icon-green">💻</span> 第一步：打開終端機（CLI 介面）</h3>
-          <div class="concept"><h4>什麼是終端機？</h4><p>終端機就是你「打指令」的地方，後面所有安裝步驟都要在這裡輸入指令。它長得像一個黑色（或藍色）的視窗，前面有一個游標在閃。</p></div>
-          <div class="concept"><h4>怎麼打開？</h4><p>在 Windows 左下角的<strong>開始功能表</strong>或<strong>搜尋列</strong>，輸入 <code>PowerShell</code>，看到「Windows PowerShell」後按 Enter 打開。打開後你會看到：</p>
-          <div style="background:#1E293B;color:#E2E8F0;padding:12px 16px;border-radius:8px;font-family:monospace;margin-top:8px;font-size:14px;">PS C:\Users\你的名字&gt; <span style="color:#76B947;">_</span></div>
-          <p style="margin-top:8px;font-size:13px;color:var(--text-secondary);">看到 <code>PS C:\Users\...</code> 開頭就對了！後面說「在終端機輸入 XXX」的意思，就是在這裡打字然後按 Enter。</p></div>
+          <h3><span class="icon icon-green">⬇️</span> 三步安裝法</h3>
+          <div class="concept"><h4>① 到官網下載 Desktop</h4><p>前往官方網站的下载頁 <code>opencode.ai/download</code>；找不到就用 Google 搜尋「OpenCode desktop」，<strong>認明官網（opencode.ai）再下載</strong>，不要抓來路不明的安裝檔。</p></div>
+          <div class="concept"><h4>② 選對你的作業系統版本</h4><p><strong>Windows</strong> 選 Windows 版；<strong>Mac M 系列晶片</strong>請選 Apple Silicon 版。Mac 分 Intel 和 M 系列兩種，裝錯可能跑不動。</p></div>
+          <div class="concept"><h4>③ 雙擊安裝並開啟</h4><p>下載完成後雙擊安裝檔，一路下一步，然後開啟。<strong>看到 OpenCode 視窗打開＝員工已經進公司了！</strong>（此時它還不會說話——還沒接上大腦，那是下一章的事。）</p></div>
         </div>
         <div class="bento-card">
-          <h3><span class="icon icon-green">🏭</span> 為什麼先裝 Node</h3>
-          <div class="concept"><h4>Node.js：電腦裡的小型工廠</h4><p>讓 AI 工具跑起來的底層引擎。就像一座<strong>小型工廠</strong>，所有 AI 程式都要站在它上面才開得了機。</p></div>
-          <div class="concept"><h4>npm：應用程式商店</h4><p>跟著 Node.js 一起裝好的「<strong>應用程式商店</strong>」，負責下載、安裝 AI 工具，跟手機裝 App 一樣。裝完 Node，商店也自動開張了。</p></div>
+          <h3><span class="icon icon-purple">💡</span> 不用再自己裝 Node 和 Git！</h3>
+          <div class="concept"><h4>以前的路線</h4><p>以前的電腦課會叫你先手動安裝 Node.js（地基）和 Git（時光機），裝完才能開始學 AI——光是打指令就勸退一半人。</p></div>
+          <div class="concept"><h4>AI Agent 時代</h4><p>OpenCode Desktop <strong>不需要它們就能直接安裝開啟</strong>；缺的工具，下一章直接叫 AI 自己裝給你看——你只要會「下載安裝」，其他交給它。</p></div>
         </div>
         <div class="bento-card">
-          <h3><span class="icon icon-blue">🖥️</span> 模擬：安裝 Node.js</h3>
+          <h3><span class="icon icon-blue">🖥️</span> 模擬：三步安裝</h3>
           <div class="sim-container" id="sim1"></div>
           <div class="sim-btn-row">
-            <button class="sim-btn" id="sim1b1" onclick="sim1Step(1)">① 安裝 Node.js</button>
-            <button class="sim-btn" id="sim1b2" onclick="sim1Step(2)" disabled>② 驗證 node --version</button>
-            <button class="sim-btn" id="sim1b3" onclick="sim1Step(3)" disabled>③ 驗證 npm --version</button>
-            <button class="sim-btn" id="sim1b4" onclick="sim1Step(4)" disabled>④ 安裝 Git</button>
-            <button class="sim-btn" id="sim1b5" onclick="sim1Step(5)" disabled>⑤ 驗證 git --version</button>
+            <button class="sim-btn" id="sim1b1" onclick="sim1Step(1)">① 官網下載</button>
+            <button class="sim-btn" id="sim1b2" onclick="sim1Step(2)" disabled>② 安裝</button>
+            <button class="sim-btn" id="sim1b3" onclick="sim1Step(3)" disabled>③ 開啟</button>
           </div>
-        </div>
-        <div class="bento-card bento-full">
-          <h3><span class="icon icon-purple">⏳</span> Git 的價值</h3>
-          <div class="concept"><h4>Git：時光機 + 檔案保險箱</h4><p>每次改動都存一個備份點（Commit），做壞了可以<strong>回到過去</strong>任何一次的狀態，改壞的檔案回不去？不存在的。</p></div>
-          <div class="concept"><p>用蓋房子來比喻：先打地基（Node.js），再架鋼骨（Git），後面才有能力裝上 AI Agent 跟各種輔助工具。</p></div>
         </div>
         <div class="bento-card bento-full">
           <h3><span class="icon icon-dark">⚠️</span> 常見陷阱</h3>
-          <div class="concept"><h4>⚠️ 輸入 node 顯示「找不到」或「不是內部或外部命令」</h4><p>通常是 PATH 沒設好，或<strong>裝完沒有重開終端機</strong>。解法：關掉終端機重新開一個再試；還是不行就重裝 Node，確認「Add to PATH」保持打勾。</p></div>
-          <div class="concept"><h4>⚠️ 裝到錯的版本</h4><p>Node 官網有兩個按鈕：<strong>LTS（穩定）</strong>和 Current（最新測試）。初學者選到 Current 容易遇到怪問題。解法：一律裝 LTS，最穩定。</p></div>
-          <div class="concept"><h4>⚠️ Git 安裝時亂改設定</h4><p>安裝過程很多設定畫面（選編輯器、預設分支名稱…），看不懂亂選會用得卡卡的。解法：全部保持預設，一路「Next」到底。</p></div>
-          <div class="concept"><h4>⚠️ git config 打完沒反應，以為失敗</h4><p>Git 設定成功本來就<strong>不會顯示任何東西</strong>，沒報錯就是成功。解法：輸入 <code>git config --global user.name</code> 確認，會印出你的名字。</p></div>
-        </div>
-        <div class="bento-card bento-full">
-          <h3><span class="icon icon-purple">✏️</span> 課堂練習：驗證三連招</h3>
-          <div class="concept"><p>打開終端機，把這三個指令依序打一遍（打完按 Enter）：</p>
-            <div style="background:#1E293B;color:#E2E8F0;padding:12px 16px;border-radius:8px;font-family:monospace;margin-top:8px;font-size:14px;line-height:1.8;">node --version<br>npm --version<br>git --version</div></div>
-          <div class="concept"><h4>過關標準</h4><p><code>node --version</code> 看到 v 開頭版本號（v20 以上）｜<code>npm --version</code> 看到一長串數字 ｜<code>git --version</code> 看到「git version」開頭。三個都看得到，地基就打好了！</p></div>
-          <div class="concept"><h4>加碼：告訴 Git 你是誰</h4><p><code>git config --global user.name "你的名字"</code><br><code>git config --global user.email "your@email.com"</code><br>打完沒反應＝成功（用第一個指令確認名字有印出來）。</p></div>
+          <div class="concept"><h4>⚠️ Mac 裝錯晶片版本</h4><p>Mac 分 Intel 和 M 系列（Apple Silicon）兩種，裝錯可能跑不動或打不開。解法：M 系列一律選 Apple Silicon 版。</p></div>
+          <div class="concept"><h4>⚠️ 搜尋到山寨網站</h4><p>廣告或仿冒網站可能排在搜尋前面，抓到非官方安裝檔有資安風險。解法：認明官網 opencode.ai，從站內 Download 頁下載。</p></div>
+          <div class="concept"><h4>⚠️ Windows 跳藍色警告「已保護你的電腦」</h4><p>這是 SmartScreen 對新軟體的正常把關，不是壞掉。解法：點「更多資訊」→「仍要執行」（前提是確實從官網下載）。</p></div>
+          <div class="concept"><h4>⚠️ 以為要打一堆指令才裝得起來</h4><p>那是 CLI 指令版的舊路線（先裝 Node 再 npm install）。初學者直接用桌面版，雙擊安裝就好，本課程不需要指令。</p></div>
         </div>
         <div class="bento-card bento-full">
           <h3><span class="icon icon-green">✏️</span> 小測驗</h3>
-          <div class="quiz-q" data-answer="1">
-            <p><span class="q-num">1</span>Node.js 在整個系統裡的角色？</p>
-            <div class="quiz-options">
-              <button class="quiz-opt" onclick="checkQuiz(this)">A. 只是一個文字編輯器</button>
-              <button class="quiz-opt" onclick="checkQuiz(this)">B. 像一座小型工廠，是 AI 工具運行的地基</button>
-              <button class="quiz-opt" onclick="checkQuiz(this)">C. 像一個瀏覽器，用來上網</button>
-            </div>
-            <div class="quiz-explain">Node.js 是「電腦裡的小型工廠」，所有 AI 工具都要站在它上面才跑得起來，沒有它任何 AI 程式都開不了機。</div>
-          </div>
           <div class="quiz-q" data-answer="0">
-            <p><span class="q-num">2</span>npm 像什麼？</p>
+            <p><span class="q-num">1</span>初學者要安裝 OpenCode，正確做法是？</p>
             <div class="quiz-options">
-              <button class="quiz-opt" onclick="checkQuiz(this)">A. 應用程式商店，下載安裝工具的地方</button>
-              <button class="quiz-opt" onclick="checkQuiz(this)">B. 一座發電廠，負責供應電力</button>
-              <button class="quiz-opt" onclick="checkQuiz(this)">C. 一個記事本，專門寫筆記</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 到官網下載 Desktop，Mac M 系列選 Apple Silicon 版</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 一定要先背一堆終端機指令才裝得起來</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 用手機下載 App 來裝</button>
             </div>
-            <div class="quiz-explain">npm 跟著 Node.js 一起裝好，負責下載、安裝 AI 工具，就像手機的應用程式商店。</div>
+            <div class="quiz-explain">桌面版就像裝 LINE：官網下載 → 選對作業系統版本 → 安裝開啟。看到 OpenCode 視窗打開，員工就進公司了。</div>
+          </div>
+          <div class="quiz-q" data-answer="1">
+            <p><span class="q-num">2</span>為什麼現在不用先手動安裝 Node.js 和 Git？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 它們已經被淘汰，沒有人用了</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 桌面版不需要它們就能安裝，缺的下一章叫 AI 自己裝</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. OpenCode 內建所有功能，永遠用不到</button>
+            </div>
+            <div class="quiz-explain">OpenCode Desktop 本身不需要 Node/Git 就能安裝開啟；之後缺什麼工具，直接叫 AI Agent 自己偵測、自己安裝——這就是 AI Agent 時代。</div>
           </div>
           <div class="quiz-q" data-answer="2">
-            <p><span class="q-num">3</span>Git 的「時光機」比喻是指？</p>
+            <p><span class="q-num">3</span>剛裝好的 OpenCode 視窗打開了，代表什麼？</p>
             <div class="quiz-options">
-              <button class="quiz-opt" onclick="checkQuiz(this)">A. Git 可以讓電腦跑得更快</button>
-              <button class="quiz-opt" onclick="checkQuiz(this)">B. Git 可以自動備份到雲端硬碟</button>
-              <button class="quiz-opt" onclick="checkQuiz(this)">C. 可以回到任何一次 Commit 的狀態</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. AI 已經會幫我做事了</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 整個課程結束了</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 員工進公司了，但還沒接上大腦、還不會說話</button>
             </div>
-            <div class="quiz-explain">Git 每次改動都存一個備份點（Commit），做壞了可以倒回任何一次的狀態，就像坐上時光機回到過去。</div>
+            <div class="quiz-explain">視窗打開＝員工進公司。但 OpenCode 只是「駕駛座」，要等下一章接上大腦（模型），它才會回話做事。</div>
           </div>
           <div class="quiz-score" id="score1"></div>
         </div>
         <div class="bento-card bento-full">
           <h3><span class="icon icon-orange">📌</span> 本節重點</h3>
-          <div class="concept"><p>Node 是 AI 的地基，裝完它「應用程式商店」npm 也跟著有了；Git 是保險箱 + 時光機，改壞了可以倒回。驗證三連招 <code>node --version</code>、<code>npm --version</code>、<code>git --version</code>，看到版本號就是成功。</p></div>
+          <div class="concept"><p>三步安裝法：<strong>① 官網下載</strong>（opencode.ai/download，認明官網）→ <strong>② 選對版本</strong>（Windows 版／Mac Apple Silicon）→ <strong>③ 雙擊安裝開啟</strong>，像裝 LINE 一樣簡單。💡 不用再手動裝 Node.js 和 Git——缺的工具下一章叫 AI 自己裝。⚠️ 裝好≠能用：接上大腦是下一章的事。</p></div>
         </div>
       </div>
     </div>
@@ -734,102 +719,138 @@ body[data-theme="dark"] {
     <div class="module" id="mod2">
       <div class="module-header">
         <div class="module-badge">第 2 章</div>
-        <h1 class="module-title">安裝 opencode</h1>
-        <p class="module-desc">主角登場：僱用你的第一個 AI 員工。安裝 = 把員工帶進公司，設定 API 金鑰 = 給員工發薪帳戶。</p>
+        <h1 class="module-title">接上大腦與環境建置</h1>
+        <p class="module-desc">讓 AI 活起來、長出手腳：接上免費大腦（OpenCode Zen），再貼懶人包叫它自己把環境建好。</p>
       </div>
       <div class="bento">
         <div class="bento-card">
-          <h3><span class="icon icon-green">⬇️</span> Step 1：下載並安裝 OpenCode Desktop</h3>
-          <div class="concept"><h4>到官網下載桌面版</h4><p>前往 OpenCode 官方網站下載桌面版；找不到就用 Google 搜尋「OpenCode desktop」，認明官網再下載。</p></div>
-          <div class="concept"><h4>選對你的作業系統版本</h4><p><strong>Windows</strong> 選 Windows 版；<strong>Mac M 系列晶片</strong>請選 Apple Silicon 版。下載後直接安裝、開啟，就像裝 LINE 一樣簡單。</p></div>
-          <div class="concept"><p style="color:var(--text-secondary);font-size:13px;">✅ 看到 opencode 視窗打開＝員工已經進公司了！</p></div>
+          <h3><span class="icon icon-orange">🔑</span> Step 1：申請 OpenCode Zen 免費金鑰</h3>
+          <div class="concept" style="background:#FFFBEB;border-left:4px solid #F59E0B;"><h4 style="color:#92400E;">⏸ 授權點：這一步 AI 不能代辦</h4><p>金鑰是你的<strong>私密資料</strong>，必須由你本人申請、親手貼給 OpenCode。</p></div>
+          <div class="concept"><h4>四個小動作拿到金鑰</h4><p>① 開 <code>opencode.ai/auth</code> 用 Email 註冊登入<br>② 進管理後台（Console）找 API Keys 區塊<br>③ 點建立新金鑰（Create API Key）<br>④ <strong>複製那串金鑰</strong>——只顯示一次，立刻貼到記事本存好！</p></div>
+          <div class="concept"><p style="color:var(--text-secondary);font-size:13px;">💡 若後台要求先填付款資料才讓建金鑰：公務機或不想綁卡的同學先停下來問承辦。</p></div>
         </div>
         <div class="bento-card">
-          <h3><span class="icon icon-orange">🔑</span> Step 2：申請 OpenRouter 免費 API Key</h3>
-          <div class="concept" style="background:#FFFBEB;border-left:4px solid #F59E0B;"><h4 style="color:#92400E;">⏸ 授權點：這一步 AI 不能代辦</h4><p>API 金鑰是你的<strong>私密資料</strong>，必須由你本人申請、親手貼給 opencode。</p></div>
-          <div class="concept"><h4>四個小動作拿到金鑰</h4><p>① Google 搜尋 <strong>OpenRouter</strong> 註冊帳號（完全免費）<br>② 點「Get API Key」→「New Key」<br>③ 命名（例如：<code>open code 0517</code>）→ 點「Create」生成<br>④ <strong>複製那組金鑰字串</strong>——只顯示一次，立刻存好！</p></div>
+          <h3><span class="icon icon-blue">🔌</span> Step 2：連接 OpenCode Zen（＋一定要重啟）</h3>
+          <div class="concept"><h4>把大腦接上</h4><p>Settings（設定）→ <strong>Providers（供應商）</strong> → 搜尋框打 <code>zen</code> 找到「<strong>OpenCode Zen</strong>」→ 點 <strong>Connect</strong> → 貼上金鑰 → 確認。</p></div>
+          <div class="concept"><h4 style="color:#92400E;">⚠️ 第 7 步不要跳過：完全關閉再重開！</h4><p>新加的供應商常常要<strong>重啟</strong>才會出現在模型清單。白話：發完識別證要讓員工重新進門一次，證才生效。</p></div>
+          <div class="concept"><p style="color:var(--text-secondary);font-size:13px;">⚠️ 清單裡長很像的「OpenCode Go」是<strong>付費訂閱制</strong>——本課程只走 OpenCode Zen。</p></div>
         </div>
         <div class="bento-card">
-          <h3><span class="icon icon-blue">🔌</span> Step 3：於 OpenCode 啟用免費 AI 連接</h3>
-          <div class="concept"><h4>把大腦接上</h4><p>回到 OpenCode：選擇「<strong>連接提供商</strong>」→ 點選「<strong>OpenRouter</strong>」→ 把剛剛複製的 API Key <strong>貼上</strong> → 按「提交」。</p></div>
-          <div class="concept"><p style="color:var(--text-secondary);font-size:13px;">✅ 提交成功＝大腦（CPU）接上了！AI 從「只會發呆」變成「會思考做事」。之後想換大腦，可選推薦的 <strong>DeepSeek V4 Flash (Free)</strong>（200K 上下文，免費）。</p></div>
+          <h3><span class="icon icon-purple">📁</span> Step 3：專案與語系初始設定</h3>
+          <div class="concept"><h4>新建專案，指定乾淨資料夾</h4><p>先在電腦新增一個全新的空資料夾（例如：<code>Open Code 0517</code>），再讓 OpenCode 打開它工作——給員工一間「乾淨的辦公室」，他才不會弄亂你的檔案。</p></div>
+          <div class="concept"><h4>語言改繁體中文 ＋ 建立 Git 資料庫</h4><p>進 Settings 把介面語言改成「<strong>繁體中文</strong>」，再點選「<strong>建立 Git 資料庫</strong>」（時光機）。若此時電腦還沒有 Git，等第五步 AI 裝完再補也來得及。</p></div>
         </div>
         <div class="bento-card">
-          <h3><span class="icon icon-purple">📁</span> Step 4：專案與語系初始設定</h3>
-          <div class="concept"><h4>新建專案，指定本地資料夾</h4><p>在電腦上新增一個全新的空資料夾（例如：<code>Open Code 0517</code>），在 OpenCode 中新建專案並指定它——給員工一間「乾淨的辦公室」，他才不會弄亂你的檔案。</p></div>
-          <div class="concept"><h4>語言改繁體中文 ＋ 建立 Git 資料庫</h4><p>進入設定（Settings）把介面語言改成「<strong>繁體中文</strong>」，再點選「<strong>建立 Git 資料庫</strong>」——把上一章裝好的時光機接上新辦公室，從第一天起每次改動都有備份點。</p></div>
+          <h3><span class="icon icon-blue">🧠</span> Step 4：選一顆免費的大腦</h3>
+          <div class="concept"><h4>挑名字有 Free 的模型</h4><p>打開模型清單（Models），挑<strong>名字有 Free 的</strong>，例如 DeepSeek V4 Flash Free（200K 上下文，講師實測好用）。換模型不用重做設定，隨時切換。</p></div>
+          <div class="concept"><h4>⚠️ 免費款會變動</h4><p>官方說免費是「<strong>限時提供</strong>」，最準的查法是官方 Pricing 表：<code>opencode.ai/docs/zen</code>。名字僅供參考，當下以官網標 Free 的為準。</p></div>
+          <div class="concept" style="background:#FEF2F2;border-left:4px solid #EF4444;"><h4 style="color:#991B1B;">🔒 隱私守則</h4><p>免費期間輸入的內容<strong>可能被拿來訓練模型</strong>。❌ 學生姓名、成績等個資絕不打進去；✅ 公開教材、自己寫的教案、假資料可以。真實學生資料先匿名化（學生A、學生B）。</p></div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-green">✅</span> Step 5：第一次動手測試（三關驗證，不要跳過）</h3>
+          <div class="concept"><h4>「會回話」不代表通了</h4><p>有些免費模型很會聊天但<strong>不會用工具做事</strong>。真正有用的驗證是叫它建一個檔案——把這段貼給 AI：</p>
+          <div style="background:#1E293B;color:#E2E8F0;padding:12px 16px;border-radius:8px;font-family:monospace;margin-top:8px;font-size:14px;">請在目前這個資料夾建立一個檔案叫 test.txt，<br>內容寫一行：OpenCode 連線成功。<br>建立完成後，把這個檔案的內容讀出來給我看。</div></div>
+          <div class="concept"><h4>三關都要過才算通過</h4><p>① <strong>會回話</strong>：正常中文回應，不是錯誤訊息｜② <strong>會動手</strong>：看得到它呼叫工具寫檔（跳出詢問按允許）｜③ <strong>檔案真的在</strong>：打開資料夾 test.txt 存在且內容正確。只有①沒有②③ → 換另一顆 Free 模型重測。測完刪掉 test.txt。</p></div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-purple">🧰</span> Step 6：貼懶人包，叫 AI 自己蓋地基（#00 必裝）</h3>
+          <div class="concept"><h4>先認識：終端機（PowerShell）</h4><p>終端機就是電腦裡「打指令」的地方。待會 AI 安裝環境時你會看到它在終端機跑指令——不用會打，看得懂它在做事就好。（Windows 開始功能表搜尋 PowerShell 可以打開來看看。）</p>
+          <div style="background:#1E293B;color:#E2E8F0;padding:12px 16px;border-radius:8px;font-family:monospace;margin-top:8px;font-size:14px;">PS C:\Users\你的名字&gt; <span style="color:#76B947;">_</span></div></div>
+          <div class="concept"><h4>把這段「魔法咒語」整段貼給 AI</h4>
+          <div style="background:#1E293B;color:#E2E8F0;padding:12px 16px;border-radius:8px;font-family:monospace;margin-top:8px;font-size:14px;">這是 OpenCode 懶人包全集<br>https://github.com/mathruffian-dot/opencode-lazy-packs<br>請讀取 repo 內容，列出所有可用的懶人包，問我要裝哪些。</div>
+          <p style="margin-top:8px;">AI 會自己讀清單、列出 11 包問你要裝哪些 → 回答：<strong>「裝 00 環境建置」</strong>。</p></div>
+          <div class="concept"><h4>接下來 AI 全自動：偵測 → 安裝 → 驗證 → 回報</h4><p>它會先偵測你電腦已裝什麼（缺的才裝），安裝 <strong>Git（時光機）、GitHub CLI（gh）、Node.js（地基）、uv（工具箱）</strong>，每項驗證版本，最後回報一張結果表。</p></div>
+          <div class="concept"><h4>🖐️ 過程中需要你做的兩件事</h4><p>① 跳出「要允許此應用程式變更你的裝置嗎？」（UAC 彈窗）→ 按「<strong>是</strong>」，AI 不能替你按，它會等你。<br>② AI 說「請重開終端機」→ 照做（剛裝好的工具舊視窗看不到）。<br>最後補一句：「幫我設定 Git 的使用者名字與 Email」——第 7 章上傳部署才不會卡住。</p></div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-orange">🎁</span> Step 7（選配）：#02 內部工具包——長出更厲害的手腳</h3>
+          <div class="concept"><h4>🅰 文件處理（今天就用得到）</h4><p>Word／Excel／PPT／PDF／圖片／QR Code 十件套。裝完直接說：「讀這份名單 Excel，套進獎狀模板每人產一份」「把這些 PDF 合併」「這 5 個連結各生一張 QR Code」。</p></div>
+          <div class="concept"><h4>🅱 影音工具（可跳過，剪影片課才用）</h4><p>yt-dlp 下載影片字幕當逐字稿、FFmpeg 轉檔。時間不夠回家補，不影響 A 和 C。</p></div>
+          <div class="concept"><h4>🅲 語音 Edge-TTS（30 秒聽到聲音的 Wow 時刻）</h4><p>讓 AI 用台灣中文開口唸結論給你聽，免金鑰免付費。裝完對它說：「把剛剛的結論用語音唸給我聽」。⏱ 三段互相獨立，課堂時間不夠先裝 A+C。</p></div>
         </div>
         <div class="bento-card">
-          <h3><span class="icon icon-blue">🖥️</span> 模擬：Desktop 版完整流程</h3>
+          <h3><span class="icon icon-blue">🖥️</span> 模擬：完整流程</h3>
           <div class="sim-container" id="sim2"></div>
           <div class="sim-btn-row">
-            <button class="sim-btn" id="sim2b1" onclick="sim2Step(1)">① 下載安裝 Desktop</button>
-            <button class="sim-btn" id="sim2b2" onclick="sim2Step(2)" disabled>② 申請 API Key</button>
-            <button class="sim-btn" id="sim2b3" onclick="sim2Step(3)" disabled>③ 連接提供商</button>
-            <button class="sim-btn" id="sim2b4" onclick="sim2Step(4)" disabled>④ 專案與語系設定</button>
-            <button class="sim-btn" id="sim2b5" onclick="sim2Step(5)" disabled>⑤ 第一次對話</button>
+            <button class="sim-btn" id="sim2b1" onclick="sim2Step(1)">① 申請金鑰</button>
+            <button class="sim-btn" id="sim2b2" onclick="sim2Step(2)" disabled>② 連接＋重啟</button>
+            <button class="sim-btn" id="sim2b3" onclick="sim2Step(3)" disabled>③ 專案設定</button>
+            <button class="sim-btn" id="sim2b4" onclick="sim2Step(4)" disabled>④ 選模型＋驗證</button>
+            <button class="sim-btn" id="sim2b5" onclick="sim2Step(5)" disabled>⑤ AI 自建環境</button>
+            <button class="sim-btn" id="sim2b6" onclick="sim2Step(6)" disabled>⑥ 工具包選配</button>
           </div>
         </div>
         <div class="bento-card bento-full">
           <h3><span class="icon icon-dark">⚠️</span> 常見陷阱</h3>
-          <div class="concept"><h4>⚠️ 忘了設定金鑰，AI 完全不回應</h4><p>opencode 裝好了但「發薪帳戶」沒設定——沒有識別證就連不上雲端大腦，訊息全部石沉大海。解法：回 Step 2 申請金鑰，到 Step 3「連接提供商」貼上提交。</p></div>
-          <div class="concept"><h4>⚠️ 金鑰貼錯或失效</h4><p>前後多貼了空白、複製到舊金鑰。解法：回 OpenRouter 重新產生一組新金鑰，重新複製貼上一次。</p></div>
-          <div class="concept"><h4>⚠️ Mac 裝錯版本</h4><p>Mac 分 Intel 和 M 系列（Apple Silicon）兩種晶片，裝錯可能跑不動。解法：M 系列一律選 Apple Silicon 版。</p></div>
-          <div class="concept"><h4>⚠️ 改了 MCP 沒生效</h4><p>調整 MCP 擴充元件後 OpenCode 不會自動重啟，新環境載入不了。解法：工作管理員找到 OpenCode 按「結束工作」，再重新開啟。（進階：把「懶人包」丟給它可自動部署 MCP，連接本地硬碟、Obsidian、NotebookLM。）</p></div>
-          <div class="concept"><h4>⚠️ 免費模型連線卡住</h4><p>部分免費模型（如通義千問免費版）某些時段較不穩。解法：切換成 DeepSeek V4 Flash (Free)，或等幾分鐘再試。</p></div>
+          <div class="concept"><h4>⚠️ 打字完全沒反應，或出現 No providers configured</h4><p>裝好了但還沒接上模型——不是裝壞了。解法：照 Step 1、2 申請金鑰並連接 OpenCode Zen，重啟後再試。</p></div>
+          <div class="concept"><h4>⚠️ 連接完清單還是沒東西（或改了 MCP 沒生效）</h4><p>沒有「完全關閉」就重開，新設定沒被載入。解法：工作管理員找到 OpenCode 按「結束工作」，再重新開啟。</p></div>
+          <div class="concept"><h4>⚠️ 選到 OpenCode Go 或付費模型，突然要收費</h4><p>Go 是付費訂閱制，跟 Zen 長很像；免費也是「限時提供」。解法：認明 OpenCode Zen、挑名字有 Free 的；突然要錢＝免費期到了，回官方 Pricing 表換一顆。</p></div>
+          <div class="concept"><h4>⚠️ 金鑰貼錯，出現 Unauthorized / invalid api key</h4><p>貼到一半、前後多空白、被自動換行切斷。解法：先貼到記事本確認整串在同一行，重新複製再連接。<strong>不小心外洩＝提款卡掉了</strong>：回 Console 立刻刪除重建。</p></div>
+          <div class="concept"><h4>⚠️ 學校網路連不上、一直轉圈</h4><p>校園網路可能擋掉 AI 服務。解法：用手機熱點測一次——能通就是校網問題，請資訊組放行 opencode.ai 與 auth.opencode.ai。</p></div>
+          <div class="concept"><h4>⚠️ AI 卡住不動，好像當機</h4><p>多半在等你：UAC 授權彈窗沒人按「是」，或它請你重開終端機你還沒做。解法：看螢幕有沒有彈窗；它說什麼就配合做什麼。</p></div>
+          <div class="concept"><h4>⚠️ AI 會聊天，但不會建檔案</h4><p>這顆模型的「工具呼叫」能力不足。解法：換另一顆 Free 模型，重跑步驟五的三關驗證。同一任務失敗兩次以上，先換模型再懷疑自己。</p></div>
         </div>
         <div class="bento-card bento-full">
           <h3><span class="icon icon-green">✏️</span> 小測驗</h3>
           <div class="quiz-q" data-answer="0">
-            <p><span class="q-num">1</span>初學者要安裝 opencode，正確做法是？</p>
+            <p><span class="q-num">1</span>OpenCode 裝好了，但打字進去完全沒反應，最可能是？</p>
             <div class="quiz-options">
-              <button class="quiz-opt" onclick="checkQuiz(this)">A. 到官網下載 OpenCode Desktop，Mac M 系列選 Apple Silicon 版</button>
-              <button class="quiz-opt" onclick="checkQuiz(this)">B. 一定要先背一堆指令才裝得起來</button>
-              <button class="quiz-opt" onclick="checkQuiz(this)">C. 用手機下載 App 來裝</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 還沒接上模型（沒做金鑰申請與連接）</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 電腦中毒了</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 螢幕壞掉了</button>
             </div>
-            <div class="quiz-explain">桌面版就像裝 LINE：官網下載 → 選對作業系統版本 → 安裝開啟。看到 opencode 視窗打開，員工就進公司了。</div>
-          </div>
-          <div class="quiz-q" data-answer="2">
-            <p><span class="q-num">2</span>API key 應該怎麼處理？</p>
-            <div class="quiz-options">
-              <button class="quiz-opt" onclick="checkQuiz(this)">A. 叫 AI 幫我申請</button>
-              <button class="quiz-opt" onclick="checkQuiz(this)">B. 貼在筆記本裡公開分享</button>
-              <button class="quiz-opt" onclick="checkQuiz(this)">C. 自己申請後貼上，它是私密資料</button>
-            </div>
-            <div class="quiz-explain">API 金鑰是你的私密資料，必須由你本人申請後親手貼給 opencode，AI 不能代辦。流程：OpenRouter 註冊 → Get API Key → New Key → 命名 → Create → 複製（只顯示一次！）。</div>
-          </div>
-          <div class="quiz-q" data-answer="0">
-            <p><span class="q-num">3</span>opencode 是整個系統的什麼角色？</p>
-            <div class="quiz-options">
-              <button class="quiz-opt" onclick="checkQuiz(this)">A. 主角 AI 助理本體</button>
-              <button class="quiz-opt" onclick="checkQuiz(this)">B. 一個備份工具</button>
-              <button class="quiz-opt" onclick="checkQuiz(this)">C. 一個算術計算機</button>
-            </div>
-            <div class="quiz-explain">opencode 就是「AI 助理本體」，你打字它做事，是整個課程的主角與靈魂。</div>
+            <div class="quiz-explain">OpenCode 只是「駕駛座」本身不會思考。裝好≠能用，必須先接上大腦：申請 Zen 金鑰 → Settings → Providers → 連接。</div>
           </div>
           <div class="quiz-q" data-answer="1">
-            <p><span class="q-num">4</span>「改繁體中文」和「建立 Git 資料庫」是在哪一步做？</p>
+            <p><span class="q-num">2</span>供應商清單同時看到 OpenCode Zen 和 OpenCode Go，要選哪個？</p>
             <div class="quiz-options">
-              <button class="quiz-opt" onclick="checkQuiz(this)">A. 下載安裝前就要先做好</button>
-              <button class="quiz-opt" onclick="checkQuiz(this)">B. 第四步：專案與語系初始設定</button>
-              <button class="quiz-opt" onclick="checkQuiz(this)">C. 不用設定，預設就是最好的</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 都一樣，隨便選</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. OpenCode Zen——Go 是付費訂閱制</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. OpenCode Go——聽起來比較快</button>
             </div>
-            <div class="quiz-explain">第四步新建專案並指定本地資料夾後，進 Settings 把語言改成繁體中文，並點選「建立 Git 資料庫」——讓第 1 章裝好的時光機從第一天就開始記錄備份點。</div>
+            <div class="quiz-explain">兩個名字很像但完全不同：本課程只走免費的 OpenCode Zen；Go 是付費訂閱制方案，不要選錯。</div>
           </div>
           <div class="quiz-q" data-answer="0">
-            <p><span class="q-num">5</span>調整 MCP 擴充元件之後，要做什麼新環境才會生效？</p>
+            <p><span class="q-num">3</span>連接供應商之後，要做什麼新的大腦才會出現在清單？</p>
             <div class="quiz-options">
-              <button class="quiz-opt" onclick="checkQuiz(this)">A. 到工作管理員把 OpenCode「結束工作」，再重新開啟</button>
-              <button class="quiz-opt" onclick="checkQuiz(this)">B. 它會自動重啟，什麼都不用做</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 完全關閉 OpenCode 再重新開啟</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 不用做任何事，會自動出現</button>
               <button class="quiz-opt" onclick="checkQuiz(this)">C. 把電腦重灌</button>
             </div>
-            <div class="quiz-explain">OpenCode 不會因為改了 MCP 就自動重啟——務必手動在工作管理員「結束工作」再重新開啟，新環境才會成功載入。</div>
+            <div class="quiz-explain">新加的供應商常常要重啟才載入：務必「完全關閉」（可用工作管理員結束工作）再重新開啟。</div>
+          </div>
+          <div class="quiz-q" data-answer="1">
+            <p><span class="q-num">4</span>怎麼確認 AI 真的能「動手做事」，而不只是會聊天？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 問它今天天氣如何</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 請它建立 test.txt 並讀出內容——三關全過才算通</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 看它回話速度快不快</button>
+            </div>
+            <div class="quiz-explain">三關驗證：①會回話 ②看得到它呼叫工具寫檔 ③test.txt 檔案真的存在。只有回話不動手＝這顆模型不會用工具，換一顆 Free 模型重測。</div>
+          </div>
+          <div class="quiz-q" data-answer="1">
+            <p><span class="q-num">5</span>懶人包「#00 環境建置」會幫你自動安裝哪些工具？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. Word 和 PowerPoint</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. Git、GitHub CLI（gh）、Node.js、uv</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. LINE 和 Discord</button>
+            </div>
+            <div class="quiz-explain">#00 會先偵測缺什麼才裝：Git（時光機）、GitHub CLI、Node.js（地基）、uv（工具箱），每項驗證版本最後回報結果表。</div>
+          </div>
+          <div class="quiz-q" data-answer="2">
+            <p><span class="q-num">6</span>使用免費模型時，哪種資料可以放心丟給它？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 學生的真實成績單</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 家長聯絡資料</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 公開教材和自己寫的教案（含示範用假資料）</button>
+            </div>
+            <div class="quiz-explain">免費期間輸入內容可能被用來訓練模型。學生姓名、學號、成績等個資絕對不打進去；需要處理真實學生資料時先匿名化（學生A、學生B）。</div>
           </div>
           <div class="quiz-score" id="score2"></div>
         </div>
         <div class="bento-card bento-full">
           <h3><span class="icon icon-orange">📌</span> 本節重點</h3>
-          <div class="concept"><p>opencode 是「AI 助理本體」，是整個系統的<strong>主角</strong>。四步流程背起來：<strong>① 官網下載 Desktop</strong>（Mac M 系列選 Apple Silicon）→ <strong>② OpenRouter 申請免費 API Key</strong>（Get API Key → New Key → 命名 → Create → 複製，只顯示一次！）→ <strong>③ 連接提供商</strong>（OpenRouter → 貼上 → 提交）→ <strong>④ 專案與語系初始設定</strong>（指定乾淨資料夾、改繁體中文、建立 Git 資料庫）。⚠️ 金鑰是私密資料，自己申請自己貼；模型推薦 DeepSeek V4 Flash (Free)；改了 MCP 記得手動重啟才生效。</p></div>
+          <div class="concept"><p>OpenCode 只是駕駛座，接上模型才會思考。流程背起來：<strong>① opencode.ai/auth 申請 Zen 金鑰</strong>（只顯示一次！）→ <strong>② Settings → Providers → OpenCode Zen → Connect → 貼上 → ⚠️ 完全關閉重啟</strong> → <strong>③ 專案設定</strong>（乾淨資料夾＋繁體中文＋Git 資料庫）→ <strong>④ 選 Free 模型</strong>（免費期會變，以官方 Pricing 表為準）。<strong>⑤ 三關驗證</strong>：會回話、會動手、檔案真的在。<strong>⑥ 貼懶人包咒語 → #00 讓 AI 自己裝環境</strong>（Git/GitHub CLI/Node.js/uv）；UAC 彈窗自己按「是」。<strong>⑦ #02 工具包選配</strong>：A 文件處理、B 影音（可跳過）、C 語音。🔒 隱私守則：免費模型可能拿輸入內容訓練，學生個資絕不打進去。</p></div>
         </div>
       </div>
     </div>
@@ -1468,24 +1489,20 @@ function updateModuleScore(module) {
 }
 
 var sim1Lines = [
-  ['$ winget install OpenJS.NodeJS.LTS', 'cmd'],
-  ['✔ 安裝完成 Node.js', 'success'],
-  ['$ node --version', 'cmd'],
-  ['v26.1.0', 'file'],
-  ['$ npm --version', 'cmd'],
-  ['11.13.0', 'file'],
-  ['$ winget install Git.Git', 'cmd'],
-  ['✔ 安裝完成 Git', 'success'],
-  ['$ git --version', 'cmd'],
-  ['git version 2.54.0', 'file']
+  ['── 第 1 步：到官網下載 ──', 'comment'],
+  ['opencode.ai/download → 選對版本下載', 'comment'],
+  ['✔ 下載完成！（Windows 版／Mac Apple Silicon 版）', 'success'],
+  ['── 第 2 步：雙擊安裝檔 ──', 'comment'],
+  ['✔ 安裝完成！一路下一步，像裝 LINE 一樣簡單', 'success'],
+  ['── 第 3 步：開啟 OpenCode ──', 'comment'],
+  ['✔ 視窗打開，AI 員工進公司了！（還不會說話，下一章接大腦）', 'success']
 ];
 function sim1Step(n) {
   var box = document.getElementById('sim1');
   if (n === 1) box.innerHTML = '';
-  if (n >= 1 && n <= 2) showSim(box, sim1Lines.slice(0, 4));
-  if (n === 3) showSim(box, sim1Lines.slice(0, 6));
-  if (n === 4) showSim(box, sim1Lines.slice(0, 8));
-  if (n === 5) showSim(box, sim1Lines.slice(0, 10));
+  if (n === 1) showSim(box, sim1Lines.slice(0, 3));
+  if (n === 2) showSim(box, sim1Lines.slice(0, 5));
+  if (n === 3) showSim(box, sim1Lines.slice(0, 7));
   var nb = document.getElementById('sim1b' + (n + 1));
   if (nb) nb.disabled = false;
 }
@@ -1505,33 +1522,40 @@ function showSim(box, lines) {
 }
 
 var sim2Lines = [
-  ['── Step 1：下載並安裝 OpenCode Desktop ──', 'comment'],
-  ['1. 前往官網下載桌面版（Google 搜尋 OpenCode desktop）', 'comment'],
-  ['2. Windows 版／Mac M 系列選 Apple Silicon 版', 'comment'],
-  ['✔ 安裝開啟，員工進公司了！', 'success'],
-  ['── Step 2：申請 OpenRouter 免費 API Key ──', 'comment'],
-  ['1. Google 搜尋 OpenRouter → 註冊帳號（完全免費）', 'comment'],
-  ['2. 點 Get API Key → New Key → 命名「open code 0517」→ Create', 'comment'],
+  ['── Step 1：申請 Zen 免費金鑰 ──', 'comment'],
+  ['1. 開 opencode.ai/auth → Email 註冊登入', 'comment'],
+  ['2. Console → API Keys → Create API Key', 'comment'],
   ['3. ⚠️ 金鑰只顯示一次，立刻複製存好！', 'comment'],
-  ['── Step 3：於 OpenCode 啟用免費 AI 連接 ──', 'comment'],
-  ['選擇「連接提供商」→ 點選 OpenRouter', 'comment'],
-  ['貼上 API Key：sk-or-v1-xxxx...（你複製的）→ 提交', 'file'],
-  ['✔ 提交成功，大腦（CPU）接上了！（推薦模型：DeepSeek V4 Flash Free）', 'success'],
-  ['── Step 4：專案與語系初始設定 ──', 'comment'],
-  ['1. 新建專案 → 指定本地資料夾「Open Code 0517」', 'comment'],
-  ['2. Settings → 語言改繁體中文', 'comment'],
-  ['3. ☑ 點選「建立 Git 資料庫」（時光機開始記錄）', 'comment'],
-  ['你：你好，請幫我介紹一下你自己，我是完全沒寫過程式的新手。', 'file'],
-  ['AI：你好！我是 opencode，你的 AI 助理。我可以聽懂你的需求，幫你讀寫檔案、執行指令，甚至建立整個專案。你不用寫程式，只要用白話跟我說想做的，我就動手做。', 'success']
+  ['── Step 2：連接 OpenCode Zen ＋ 重啟 ──', 'comment'],
+  ['Settings → Providers → 搜尋 zen → Connect', 'comment'],
+  ['貼上金鑰（你複製的那串）→ 確認', 'file'],
+  ['✔ 完全關閉再重開——大腦接上了！', 'success'],
+  ['── Step 3：專案與語系設定 ──', 'comment'],
+  ['1. 新建專案 → 指定乾淨資料夾「Open Code 0517」', 'comment'],
+  ['2. Settings 改繁體中文 ☑ 建立 Git 資料庫', 'comment'],
+  ['── Step 4：選免費模型＋三關驗證 ──', 'comment'],
+  ['模型清單挑名字有 Free 的（免費期會變，以官方 Pricing 表為準）', 'comment'],
+  ['你：請建立 test.txt 寫「OpenCode 連線成功」，再讀給我看', 'file'],
+  ['AI：已建立 test.txt ✔ 讀取內容：OpenCode 連線成功', 'file'],
+  ['✔ 三關通過：會回話、會動手、檔案真的在！', 'success'],
+  ['── Step 5：貼懶人包，AI 自己蓋地基 ──', 'comment'],
+  ['你：這是懶人包全集 github.com/mathruffian-dot/opencode-lazy-packs，請列出可用懶人包問我要裝哪些', 'file'],
+  ['AI：找到 11 包。建議先做 00 環境建置（Git／GitHub CLI／Node.js／uv），要開始嗎？', 'file'],
+  ['你：裝 00（過程配合 UAC 彈窗按「是」、重開終端機）', 'file'],
+  ['AI：偵測中…Git ✔ Node.js ✔ uv ✔ 全部驗證通過，回報表已生成', 'success'],
+  ['── Step 6（選配）：#02 內部工具包 ──', 'comment'],
+  ['A 文件處理 ✔ C 語音 Edge-TTS ✔（B 影音可課後補）', 'comment'],
+  ['🎉 環境全部就緒，AI 員工正式上工！', 'success']
 ];
 function sim2Step(n) {
   var box = document.getElementById('sim2');
   if (n === 1) box.innerHTML = '';
   if (n === 1) showSim(box, sim2Lines.slice(0, 4));
   if (n === 2) showSim(box, sim2Lines.slice(0, 8));
-  if (n === 3) showSim(box, sim2Lines.slice(0, 12));
+  if (n === 3) showSim(box, sim2Lines.slice(0, 11));
   if (n === 4) showSim(box, sim2Lines.slice(0, 16));
-  if (n === 5) showSim(box, sim2Lines.slice(0, 18));
+  if (n === 5) showSim(box, sim2Lines.slice(0, 21));
+  if (n === 6) showSim(box, sim2Lines.slice(0, 24));
   var nb = document.getElementById('sim2b' + (n + 1));
   if (nb) nb.disabled = false;
 }
