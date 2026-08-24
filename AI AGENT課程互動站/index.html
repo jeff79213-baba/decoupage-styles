@@ -590,6 +590,22 @@ body[data-theme="dark"] {
             </tbody>
           </table>
         </div>
+        <div class="bento-card">
+          <h3><span class="icon icon-orange">🍳</span> 生活比喻：兩種員工</h3>
+          <div class="concept"><h4>早餐店阿姨 ＝ 一般 AI</h4><p>你說：「火腿蛋吐司，不要小黃瓜，蛋要全熟。」阿姨照做、做完遞給你。<strong>交代清楚，員工照做</strong>——你問得越清楚，它做得越對；講得含糊，它就亂猜。</p></div>
+          <div class="concept"><h4>生日派對員工 ＝ AI Agent</h4><p>你只說：「這個月月底前，辦一場 20 人生日派對。」然後你去忙別的事。結果員工自己訂場地、買氣球、排菜單、發邀請、當天把派對辦起來——<strong>你只給目標，它自己做完整件事</strong>。</p></div>
+        </div>
+        <div class="bento-card">
+          <h3><span class="icon icon-blue">💬</span> 感受一下差別</h3>
+          <div class="concept"><h4>對一般 AI 說</h4><p>「今天台北天氣如何？」→ 它<strong>回答你</strong>，結束。</p></div>
+          <div class="concept"><h4>對 AI Agent 說</h4><p>「幫我整理這個資料夾裡所有檔案的清單。」→ 它說：「好的，我先把資料夾打開，逐個檔案看，再列成清單給您。」然後<strong>真的開始動手處理</strong>。</p></div>
+          <div class="concept"><p style="color:var(--text-secondary);font-size:13px;">記住這句話：「AI 是你的員工，Agent 是會自己把工作做完的員工。」</p></div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-dark">⚠️</span> 常見陷阱</h3>
+          <div class="concept"><h4>⚠️ 把 AI 當百科全書，只會查資料</h4><p>打開 AI 就只問「XXX 是什麼？」——這樣它就跟 Google 差不多。正確心態：把它當員工<strong>下指令</strong>，「幫我做到這個結果」，而不是「告訴我這是什麼」。</p></div>
+          <div class="concept"><h4>⚠️ 以為 AI 一次就能做對</h4><p>AI 不是神仙，就像新員工第一天上班一定有做不好的地方。做錯不要放棄，<strong>修正它</strong>：告訴它哪裡不對、你希望改成什麼。「會修正員工的老闆」，才是用好 AI 的關鍵。</p></div>
+        </div>
         <div class="bento-card bento-full">
           <h3><span class="icon icon-green">✏️</span> 小測驗</h3>
           <div class="quiz-q" data-answer="2">
@@ -664,6 +680,20 @@ body[data-theme="dark"] {
           <div class="concept"><p>用蓋房子來比喻：先打地基（Node.js），再架鋼骨（Git），後面才有能力裝上 AI Agent 跟各種輔助工具。</p></div>
         </div>
         <div class="bento-card bento-full">
+          <h3><span class="icon icon-dark">⚠️</span> 常見陷阱</h3>
+          <div class="concept"><h4>⚠️ 輸入 node 顯示「找不到」或「不是內部或外部命令」</h4><p>通常是 PATH 沒設好，或<strong>裝完沒有重開終端機</strong>。解法：關掉終端機重新開一個再試；還是不行就重裝 Node，確認「Add to PATH」保持打勾。</p></div>
+          <div class="concept"><h4>⚠️ 裝到錯的版本</h4><p>Node 官網有兩個按鈕：<strong>LTS（穩定）</strong>和 Current（最新測試）。初學者選到 Current 容易遇到怪問題。解法：一律裝 LTS，最穩定。</p></div>
+          <div class="concept"><h4>⚠️ Git 安裝時亂改設定</h4><p>安裝過程很多設定畫面（選編輯器、預設分支名稱…），看不懂亂選會用得卡卡的。解法：全部保持預設，一路「Next」到底。</p></div>
+          <div class="concept"><h4>⚠️ git config 打完沒反應，以為失敗</h4><p>Git 設定成功本來就<strong>不會顯示任何東西</strong>，沒報錯就是成功。解法：輸入 <code>git config --global user.name</code> 確認，會印出你的名字。</p></div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-purple">✏️</span> 課堂練習：驗證三連招</h3>
+          <div class="concept"><p>打開終端機，把這三個指令依序打一遍（打完按 Enter）：</p>
+            <div style="background:#1E293B;color:#E2E8F0;padding:12px 16px;border-radius:8px;font-family:monospace;margin-top:8px;font-size:14px;line-height:1.8;">node --version<br>npm --version<br>git --version</div></div>
+          <div class="concept"><h4>過關標準</h4><p><code>node --version</code> 看到 v 開頭版本號（v20 以上）｜<code>npm --version</code> 看到一長串數字 ｜<code>git --version</code> 看到「git version」開頭。三個都看得到，地基就打好了！</p></div>
+          <div class="concept"><h4>加碼：告訴 Git 你是誰</h4><p><code>git config --global user.name "你的名字"</code><br><code>git config --global user.email "your@email.com"</code><br>打完沒反應＝成功（用第一個指令確認名字有印出來）。</p></div>
+        </div>
+        <div class="bento-card bento-full">
           <h3><span class="icon icon-green">✏️</span> 小測驗</h3>
           <div class="quiz-q" data-answer="1">
             <p><span class="q-num">1</span>Node.js 在整個系統裡的角色？</p>
@@ -709,39 +739,55 @@ body[data-theme="dark"] {
       </div>
       <div class="bento">
         <div class="bento-card">
-          <h3><span class="icon icon-green">🏢</span> 僱用員工的第一天</h3>
-          <div class="concept"><h4>安裝 = 把員工帶進公司</h4><p>輸入 <code>npm install -g opencode-ai</code>，把 opencode 裝進電腦，就像跟員工喊一聲「今天開始你來上班」，員工就正式入職了。</p></div>
-          <div class="concept"><h4>設定 = 給員工發薪帳戶</h4><p>執行 <code>opencode auth login</code>，貼上你的 API 金鑰。金鑰要去 <strong>openrouter.ai</strong> 註冊帳號後產生（左選單 Keys → Create Key）。opencode 的「大腦」在雲端，沒有這張識別證，AI 助理只會發呆。</p></div>
-          <div class="concept"><h4>⏸ 授權點</h4><p>API 金鑰必須由你<strong>親手</strong>提供——AI 不能幫你申請、也不可以亂猜。</p></div>
+          <h3><span class="icon icon-green">⬇️</span> Step 1：下載並安裝 OpenCode Desktop</h3>
+          <div class="concept"><h4>到官網下載桌面版</h4><p>前往 OpenCode 官方網站下載桌面版；找不到就用 Google 搜尋「OpenCode desktop」，認明官網再下載。</p></div>
+          <div class="concept"><h4>選對你的作業系統版本</h4><p><strong>Windows</strong> 選 Windows 版；<strong>Mac M 系列晶片</strong>請選 Apple Silicon 版。下載後直接安裝、開啟，就像裝 LINE 一樣簡單。</p></div>
+          <div class="concept"><p style="color:var(--text-secondary);font-size:13px;">✅ 看到 opencode 視窗打開＝員工已經進公司了！</p></div>
         </div>
         <div class="bento-card">
-          <h3><span class="icon icon-blue">🖥️</span> 模擬：安裝並啟動</h3>
+          <h3><span class="icon icon-orange">🔑</span> Step 2：申請 OpenRouter 免費 API Key</h3>
+          <div class="concept" style="background:#FFFBEB;border-left:4px solid #F59E0B;"><h4 style="color:#92400E;">⏸ 授權點：這一步 AI 不能代辦</h4><p>API 金鑰是你的<strong>私密資料</strong>，必須由你本人申請、親手貼給 opencode。</p></div>
+          <div class="concept"><h4>四個小動作拿到金鑰</h4><p>① Google 搜尋 <strong>OpenRouter</strong> 註冊帳號（完全免費）<br>② 點「Get API Key」→「New Key」<br>③ 命名（例如：<code>open code 0517</code>）→ 點「Create」生成<br>④ <strong>複製那組金鑰字串</strong>——只顯示一次，立刻存好！</p></div>
+        </div>
+        <div class="bento-card">
+          <h3><span class="icon icon-blue">🔌</span> Step 3：於 OpenCode 啟用免費 AI 連接</h3>
+          <div class="concept"><h4>把大腦接上</h4><p>回到 OpenCode：選擇「<strong>連接提供商</strong>」→ 點選「<strong>OpenRouter</strong>」→ 把剛剛複製的 API Key <strong>貼上</strong> → 按「提交」。</p></div>
+          <div class="concept"><p style="color:var(--text-secondary);font-size:13px;">✅ 提交成功＝大腦（CPU）接上了！AI 從「只會發呆」變成「會思考做事」。之後想換大腦，可選推薦的 <strong>DeepSeek V4 Flash (Free)</strong>（200K 上下文，免費）。</p></div>
+        </div>
+        <div class="bento-card">
+          <h3><span class="icon icon-purple">📁</span> Step 4：專案與語系初始設定</h3>
+          <div class="concept"><h4>新建專案，指定本地資料夾</h4><p>在電腦上新增一個全新的空資料夾（例如：<code>Open Code 0517</code>），在 OpenCode 中新建專案並指定它——給員工一間「乾淨的辦公室」，他才不會弄亂你的檔案。</p></div>
+          <div class="concept"><h4>語言改繁體中文 ＋ 建立 Git 資料庫</h4><p>進入設定（Settings）把介面語言改成「<strong>繁體中文</strong>」，再點選「<strong>建立 Git 資料庫</strong>」——把上一章裝好的時光機接上新辦公室，從第一天起每次改動都有備份點。</p></div>
+        </div>
+        <div class="bento-card">
+          <h3><span class="icon icon-blue">🖥️</span> 模擬：Desktop 版完整流程</h3>
           <div class="sim-container" id="sim2"></div>
           <div class="sim-btn-row">
-            <button class="sim-btn" id="sim2b1" onclick="sim2Step(1)">① 安裝 opencode</button>
-            <button class="sim-btn" id="sim2b2" onclick="sim2Step(2)" disabled>② 驗證版本</button>
-            <button class="sim-btn" id="sim2b3" onclick="sim2Step(3)" disabled>③ 到 OpenRouter 申請金鑰</button>
-            <button class="sim-btn" id="sim2b4" onclick="sim2Step(4)" disabled>④ 設定 API 金鑰</button>
+            <button class="sim-btn" id="sim2b1" onclick="sim2Step(1)">① 下載安裝 Desktop</button>
+            <button class="sim-btn" id="sim2b2" onclick="sim2Step(2)" disabled>② 申請 API Key</button>
+            <button class="sim-btn" id="sim2b3" onclick="sim2Step(3)" disabled>③ 連接提供商</button>
+            <button class="sim-btn" id="sim2b4" onclick="sim2Step(4)" disabled>④ 專案與語系設定</button>
             <button class="sim-btn" id="sim2b5" onclick="sim2Step(5)" disabled>⑤ 第一次對話</button>
           </div>
         </div>
-        <div class="bento-card">
-          <h3><span class="icon icon-orange">🔑</span> API 金鑰 ⏸ 授權點</h3>
-          <div class="concept" style="background:#FFFBEB;border-left:4px solid #F59E0B;">
-            <h4 style="color:#92400E;">這一步，AI 不能代替你</h4>
-            <p>API 金鑰是你的<strong>私密資料</strong>，AI 不能幫你申請、也不可以亂猜。必須由你本人到提供者網站（例如 OpenRouter、NVIDIA）申請一組金鑰，再親手貼給 opencode。</p>
-          </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-dark">⚠️</span> 常見陷阱</h3>
+          <div class="concept"><h4>⚠️ 忘了設定金鑰，AI 完全不回應</h4><p>opencode 裝好了但「發薪帳戶」沒設定——沒有識別證就連不上雲端大腦，訊息全部石沉大海。解法：回 Step 2 申請金鑰，到 Step 3「連接提供商」貼上提交。</p></div>
+          <div class="concept"><h4>⚠️ 金鑰貼錯或失效</h4><p>前後多貼了空白、複製到舊金鑰。解法：回 OpenRouter 重新產生一組新金鑰，重新複製貼上一次。</p></div>
+          <div class="concept"><h4>⚠️ Mac 裝錯版本</h4><p>Mac 分 Intel 和 M 系列（Apple Silicon）兩種晶片，裝錯可能跑不動。解法：M 系列一律選 Apple Silicon 版。</p></div>
+          <div class="concept"><h4>⚠️ 改了 MCP 沒生效</h4><p>調整 MCP 擴充元件後 OpenCode 不會自動重啟，新環境載入不了。解法：工作管理員找到 OpenCode 按「結束工作」，再重新開啟。（進階：把「懶人包」丟給它可自動部署 MCP，連接本地硬碟、Obsidian、NotebookLM。）</p></div>
+          <div class="concept"><h4>⚠️ 免費模型連線卡住</h4><p>部分免費模型（如通義千問免費版）某些時段較不穩。解法：切換成 DeepSeek V4 Flash (Free)，或等幾分鐘再試。</p></div>
         </div>
         <div class="bento-card bento-full">
           <h3><span class="icon icon-green">✏️</span> 小測驗</h3>
-          <div class="quiz-q" data-answer="1">
-            <p><span class="q-num">1</span>安裝 opencode 的指令是？</p>
+          <div class="quiz-q" data-answer="0">
+            <p><span class="q-num">1</span>初學者要安裝 opencode，正確做法是？</p>
             <div class="quiz-options">
-              <button class="quiz-opt" onclick="checkQuiz(this)">A. opencode install</button>
-              <button class="quiz-opt" onclick="checkQuiz(this)">B. npm install -g opencode-ai</button>
-              <button class="quiz-opt" onclick="checkQuiz(this)">C. node install opencode</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 到官網下載 OpenCode Desktop，Mac M 系列選 Apple Silicon 版</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 一定要先背一堆指令才裝得起來</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 用手機下載 App 來裝</button>
             </div>
-            <div class="quiz-explain">用「應用程式商店」npm 安裝名為 opencode-ai 的全域工具，裝好後在任何資料夾都能呼叫它。</div>
+            <div class="quiz-explain">桌面版就像裝 LINE：官網下載 → 選對作業系統版本 → 安裝開啟。看到 opencode 視窗打開，員工就進公司了。</div>
           </div>
           <div class="quiz-q" data-answer="2">
             <p><span class="q-num">2</span>API key 應該怎麼處理？</p>
@@ -750,7 +796,7 @@ body[data-theme="dark"] {
               <button class="quiz-opt" onclick="checkQuiz(this)">B. 貼在筆記本裡公開分享</button>
               <button class="quiz-opt" onclick="checkQuiz(this)">C. 自己申請後貼上，它是私密資料</button>
             </div>
-            <div class="quiz-explain">API 金鑰是你的私密資料，必須由你本人申請後親手貼給 opencode，AI 不能代辦。</div>
+            <div class="quiz-explain">API 金鑰是你的私密資料，必須由你本人申請後親手貼給 opencode，AI 不能代辦。流程：OpenRouter 註冊 → Get API Key → New Key → 命名 → Create → 複製（只顯示一次！）。</div>
           </div>
           <div class="quiz-q" data-answer="0">
             <p><span class="q-num">3</span>opencode 是整個系統的什麼角色？</p>
@@ -761,11 +807,29 @@ body[data-theme="dark"] {
             </div>
             <div class="quiz-explain">opencode 就是「AI 助理本體」，你打字它做事，是整個課程的主角與靈魂。</div>
           </div>
+          <div class="quiz-q" data-answer="1">
+            <p><span class="q-num">4</span>「改繁體中文」和「建立 Git 資料庫」是在哪一步做？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 下載安裝前就要先做好</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 第四步：專案與語系初始設定</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 不用設定，預設就是最好的</button>
+            </div>
+            <div class="quiz-explain">第四步新建專案並指定本地資料夾後，進 Settings 把語言改成繁體中文，並點選「建立 Git 資料庫」——讓第 1 章裝好的時光機從第一天就開始記錄備份點。</div>
+          </div>
+          <div class="quiz-q" data-answer="0">
+            <p><span class="q-num">5</span>調整 MCP 擴充元件之後，要做什麼新環境才會生效？</p>
+            <div class="quiz-options">
+              <button class="quiz-opt" onclick="checkQuiz(this)">A. 到工作管理員把 OpenCode「結束工作」，再重新開啟</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">B. 它會自動重啟，什麼都不用做</button>
+              <button class="quiz-opt" onclick="checkQuiz(this)">C. 把電腦重灌</button>
+            </div>
+            <div class="quiz-explain">OpenCode 不會因為改了 MCP 就自動重啟——務必手動在工作管理員「結束工作」再重新開啟，新環境才會成功載入。</div>
+          </div>
           <div class="quiz-score" id="score2"></div>
         </div>
         <div class="bento-card bento-full">
           <h3><span class="icon icon-orange">📌</span> 本節重點</h3>
-          <div class="concept"><p>opencode 是「AI 助理本體」，是整個系統的<strong>主角</strong>——Node.js、npm 都是為了讓它跑起來，其他工具也都是為了讓它更強才存在的。裝好它、貼上你自己的 API 金鑰，你就有第一個會動手做事的 AI 員工了。</p></div>
+          <div class="concept"><p>opencode 是「AI 助理本體」，是整個系統的<strong>主角</strong>。四步流程背起來：<strong>① 官網下載 Desktop</strong>（Mac M 系列選 Apple Silicon）→ <strong>② OpenRouter 申請免費 API Key</strong>（Get API Key → New Key → 命名 → Create → 複製，只顯示一次！）→ <strong>③ 連接提供商</strong>（OpenRouter → 貼上 → 提交）→ <strong>④ 專案與語系初始設定</strong>（指定乾淨資料夾、改繁體中文、建立 Git 資料庫）。⚠️ 金鑰是私密資料，自己申請自己貼；模型推薦 DeepSeek V4 Flash (Free)；改了 MCP 記得手動重啟才生效。</p></div>
         </div>
       </div>
     </div>
@@ -810,6 +874,12 @@ body[data-theme="dark"] {
           <h3><span class="icon icon-dark">🧠</span> 陷阱提醒</h3>
           <div class="concept"><h4>⚠️ 沒講清楚需求就喊「全自動」</h4><p>只丟一句「幫我做一個點餐網站」就希望 AI 一次做對？這就像去餐廳只說「隨便」，廚師只能亂猜，端出來的往往不是你要的。需求不清楚沒關係，AI 會反問你，照實回答就好。</p></div>
           <div class="concept"><h4>⚠️ 跳過確認一路喊「快點做」</h4><p>AI 把文件拿給你看時，不理它或直接說「好好好快做」，就像開會時老闆不表示意見，最後交出來的東西跟你想的完全不一樣。</p></div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-purple">✏️</span> 課堂練習：看 AI 怎麼反問你</h3>
+          <div class="concept"><p>打一句話跟 AI 提出你的專案點子，例如：<strong>「我想做一個可以記錄運動的網頁。」</strong>（一句話就好，不用想得多完整。）</p></div>
+          <div class="concept"><h4>觀察重點</h4><p>送出之後注意看：AI 是不是<strong>沒有馬上動手</strong>，而是開始反問你問題？把反問的問題記下來——問了幾個？問了什麼？</p></div>
+          <div class="concept"><h4>想一想</h4><p>如果這些問題你都沒回答，AI 做出來的東西會跟你想的一樣嗎？——brainstorming 反問就是 AI 在「開會確認需求」，是整個專案最重要的一步。</p></div>
         </div>
         <div class="bento-card bento-full">
           <h3><span class="icon icon-green">✏️</span> 小測驗</h3>
@@ -893,6 +963,18 @@ body[data-theme="dark"] {
               <p>✨ 座右銘：慢慢來，比較快</p>
             </div>
           </div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-blue">💬</span> 完整對話示範（照著做就對了）</h3>
+          <div class="concept"><h4>① 你提出需求（一句話就好）</h4><p>「AI，我想做一個簡單的自我介紹網頁，介紹我自己。」——就像去餐廳說「我想吃牛肉麵」，店員自然會接著問。</p></div>
+          <div class="concept"><h4>② AI 反問（它在開會確認需求）</h4><p>「你的名字要放上網頁嗎？還想放哪些內容？希望簡單白底黑字，還是彩色有圖片？」——你照實回答：「我叫王小美。放名字、還有我喜歡的兩件事。樣式簡單就好。」不知道怎麼答就說「你幫我決定」也行。</p></div>
+          <div class="concept"><h4>③ AI 給設計說明 → 你花 10 秒確認</h4><p>「【設計說明】標題：王小美的自我介紹｜內容：名字、兩個興趣｜樣式：白底黑字不花俏。」你回一句：<strong>「OK，就照這個做。」</strong></p></div>
+          <div class="concept"><h4>④ AI 寫 code → ⑤ 本機預覽</h4><p>它自己建檔案、寫程式、自己檢查——你<strong>不用會寫程式</strong>，就像請木工做書桌不需要會鋸木頭。做完開瀏覽器輸入 <code>http://localhost:3000</code>，親眼看到成品！想改就繼續說，例如「把標題改成 XX」。</p></div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-dark">⚠️</span> 常見陷阱</h3>
+          <div class="concept"><h4>⚠️ 把「本機預覽」誤當成「已經上網」</h4><p>很多以為做完別人就看得到了。判斷方法很簡單：網址是 <code>localhost</code> ＝ 本機，只有你看得到；是 <code>https://xxx.web.app</code> 可以傳給別人 ＝ 才是真的上網。</p></div>
+          <div class="concept"><h4>⚠️ 改壞了不會回頭</h4><p>調整幾輪後發現「之前那版比較好」，卻回不去了！解法：養成習慣——每當覺得「這一版不錯」，就叫 AI「存備份」（Git commit）。改壞不可怕，可怕的是改壞了回不來。</p></div>
         </div>
         <div class="bento-card bento-full">
           <h3><span class="icon icon-green">✏️</span> 小測驗</h3>
@@ -1006,6 +1088,11 @@ body[data-theme="dark"] {
           </div>
         </div>
         <div class="bento-card bento-full">
+          <h3><span class="icon icon-dark">⚠️</span> 常見陷阱</h3>
+          <div class="concept"><h4>⚠️ 以為 Skill 是「咒語」</h4><p>很多人以為喊出關鍵字，AI 就會自動變厲害——錯！Skill 是「事先寫好的 SOP 說明書」，關鍵字只是「翻書的開關」。如果只喊了關鍵字、但 AI 沒照你想的做，代表那本說明書還不存在（或沒放對位置）——自己寫一份就行（下一章教你）。</p></div>
+          <div class="concept"><h4>⚠️ 以為說明書放哪裡都可以</h4><p>AI 只會翻<strong>特定位置</strong>的說明書：專案資料夾裡的 <code>.opencode/skills/</code>。把 SOP 寫成便條紙放在桌面、或隨便塞在別的資料夾，AI 就「看不到這本書」。Skill 不是「寫了就好」，是「寫了、還要放對位置」。</p></div>
+        </div>
+        <div class="bento-card bento-full">
           <h3><span class="icon icon-green">✏️</span> 小測驗</h3>
           <div class="quiz-q" data-answer="2">
             <p><span class="q-num">1</span>Skill 是什麼？</p>
@@ -1096,6 +1183,12 @@ description: 使用者說「早安」或「早上好」時，用固定格式問�
             <button class="sim-btn" id="sim6b3" onclick="sim6Step(3)" disabled>③ 寫觸發</button>
             <button class="sim-btn" id="sim6b4" onclick="sim6Step(4)" disabled>④ 測試「早安」</button>
           </div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-dark">⚠️</span> 陷阱提醒：Skill 寫好了卻沒反應？</h3>
+          <div class="concept"><h4>⚠️ frontmatter 格式錯，AI 根本不載入</h4><p>最常見的錯誤是「封面標籤」格式帶錯：<strong>少了最上面的 <code>---</code> 或最下面的 <code>---</code></strong>、name/description 後面忘了冒號、冒號後面忘了空格（要寫 <code>name: 早安問候</code>，不是 <code>name:早安問候</code>）、內容沒貼在檔案最上面。判斷方法：喊了關鍵字 AI 只普通回應、沒照你寫的格式答，九成就是格式問題。回去對照範例一個字一個字檢查，改完<strong>存檔＋重開 opencode</strong> 再測。</p></div>
+          <div class="concept"><h4>⚠️ 觸發關鍵字設太普通，被誤觸發</h4><p>關鍵字設「好」「嗨」「你」這種太常見的字，AI 幾乎每句話都會翻開這本書。要設「獨特一點」的字：「早安」「早安開始工作」。寫 SOP 內容時也一樣——一定會寫「遇到其他狀況以外來處理」，關鍵字越明確，誤觸發越少。</p></div>
+          <div class="concept"><h4>⚠️ 改完沒存檔／沒重啟就測試</h4><p>每次改完 SKILL.md 都要存檔，重新打開 opencode 讓 AI 重新讀一次這本書，再喊關鍵字測試。</p></div>
         </div>
         <div class="bento-card bento-full">
           <h3><span class="icon icon-green">✏️</span> 小測驗</h3>
@@ -1189,6 +1282,12 @@ opencode-sk-*.json</code>
               <code>{縮寫}-sk，不重複</code>
             </div>
           </div>
+        </div>
+        <div class="bento-card bento-full">
+          <h3><span class="icon icon-orange">⏸</span> 兩個「授權點」：只有你能做</h3>
+          <div class="concept" style="background:#FFFBEB;border-left:4px solid #F59E0B;"><h4 style="color:#92400E;">⚠️ GitHub 登入</h4><p>第一次部署時，瀏覽器會跳出 GitHub 登入授權頁——必須<strong>你本人</strong>輸入帳號密碼完成登入。AI 不能也不該代替你輸入密碼。</p></div>
+          <div class="concept" style="background:#FFFBEB;border-left:4px solid #F59E0B;"><h4 style="color:#92400E;">⚠️ Google（Firebase）登入</h4><p>部署到 Firebase 時也會跳出 Google 帳號授權——同樣必須<strong>你本人</strong>點擊同意。這兩個授權點是部署流程中 AI 會主動停下來等你的地方。</p></div>
+          <div class="concept"><p style="color:var(--text-secondary);font-size:13px;">之後每次修改，AI 都會自動 commit+push 部署（不用再重新授權），你的作品永遠保持最新版。</p></div>
         </div>
         <div class="bento-card bento-full">
           <h3><span class="icon icon-green">✏️</span> 小測驗</h3>
@@ -1406,30 +1505,33 @@ function showSim(box, lines) {
 }
 
 var sim2Lines = [
-  ['$ npm install -g opencode-ai', 'cmd'],
-  ['✔ added 1 package，員工正式入職！', 'success'],
-  ['$ opencode --version', 'cmd'],
-  ['1.16.2', 'file'],
-  ['── 請先到 OpenRouter 網站申請 API 金鑰 ──', 'comment'],
-  ['1. 瀏覽器開啟 https://openrouter.ai', 'comment'],
-  ['2. 點 Sign In → 用 Google 或 email 註冊', 'comment'],
-  ['3. 左側選單點 Keys → Create Key → 複製金鑰', 'comment'],
-  ['4. ⚠️ 金鑰只顯示一次，先複製存好！', 'comment'],
-  ['$ opencode auth login', 'cmd'],
-  ['? 選擇提供者：openrouter', 'comment'],
-  ['? 貼上你的 API 金鑰：sk-or-v1-xxxx...（你貼的）', 'comment'],
-  ['✔ API 金鑰設定完成，連上雲端大腦！', 'success'],
-  ['$ opencode', 'cmd'],
+  ['── Step 1：下載並安裝 OpenCode Desktop ──', 'comment'],
+  ['1. 前往官網下載桌面版（Google 搜尋 OpenCode desktop）', 'comment'],
+  ['2. Windows 版／Mac M 系列選 Apple Silicon 版', 'comment'],
+  ['✔ 安裝開啟，員工進公司了！', 'success'],
+  ['── Step 2：申請 OpenRouter 免費 API Key ──', 'comment'],
+  ['1. Google 搜尋 OpenRouter → 註冊帳號（完全免費）', 'comment'],
+  ['2. 點 Get API Key → New Key → 命名「open code 0517」→ Create', 'comment'],
+  ['3. ⚠️ 金鑰只顯示一次，立刻複製存好！', 'comment'],
+  ['── Step 3：於 OpenCode 啟用免費 AI 連接 ──', 'comment'],
+  ['選擇「連接提供商」→ 點選 OpenRouter', 'comment'],
+  ['貼上 API Key：sk-or-v1-xxxx...（你複製的）→ 提交', 'file'],
+  ['✔ 提交成功，大腦（CPU）接上了！（推薦模型：DeepSeek V4 Flash Free）', 'success'],
+  ['── Step 4：專案與語系初始設定 ──', 'comment'],
+  ['1. 新建專案 → 指定本地資料夾「Open Code 0517」', 'comment'],
+  ['2. Settings → 語言改繁體中文', 'comment'],
+  ['3. ☑ 點選「建立 Git 資料庫」（時光機開始記錄）', 'comment'],
   ['你：你好，請幫我介紹一下你自己，我是完全沒寫過程式的新手。', 'file'],
   ['AI：你好！我是 opencode，你的 AI 助理。我可以聽懂你的需求，幫你讀寫檔案、執行指令，甚至建立整個專案。你不用寫程式，只要用白話跟我說想做的，我就動手做。', 'success']
 ];
 function sim2Step(n) {
   var box = document.getElementById('sim2');
   if (n === 1) box.innerHTML = '';
-  if (n >= 1 && n <= 2) showSim(box, sim2Lines.slice(0, 4));
-  if (n === 3) showSim(box, sim2Lines.slice(0, 9));
-  if (n === 4) showSim(box, sim2Lines.slice(0, 13));
-  if (n === 5) showSim(box, sim2Lines.slice(0, 17));
+  if (n === 1) showSim(box, sim2Lines.slice(0, 4));
+  if (n === 2) showSim(box, sim2Lines.slice(0, 8));
+  if (n === 3) showSim(box, sim2Lines.slice(0, 12));
+  if (n === 4) showSim(box, sim2Lines.slice(0, 16));
+  if (n === 5) showSim(box, sim2Lines.slice(0, 18));
   var nb = document.getElementById('sim2b' + (n + 1));
   if (nb) nb.disabled = false;
 }
