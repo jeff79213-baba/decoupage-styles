@@ -418,7 +418,10 @@ async function loadTodayOrders() {
     list.innerHTML = todayOrders.map((order, i) => {
       const ts = order.createdAt?.toDate ? order.createdAt.toDate() : (order.timestamp ? new Date(order.timestamp) : null);
       const time = ts ? ts.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }) : '';
-      const itemsText = (order.items || []).map(it => it.name).join('、');
+      const itemsText = (order.items || []).map(it => {
+        const addons = (it.addons || []).map(a => a.name).join('+');
+        return it.name + (addons ? '+' + addons : '');
+      }).join('、');
       const typeLabel = order.dineType === 'dine' ? '內用' : order.dineType === 'takeout' ? '外帶' : '';
       return `
         <div class="today-order-item">
@@ -430,17 +433,100 @@ async function loadTodayOrders() {
         </div>
       `;
     }).join('');
+
+    _todayOrdersCache = todayOrders;
   } catch (e) {
     console.warn('Load today orders failed:', e);
   }
 }
 
-function toggleTodayOrders() {
-  const list = document.getElementById('todayOrdersList');
-  const toggle = document.getElementById('todayOrdersToggle');
-  const open = list.style.display === 'none';
-  list.style.display = open ? 'block' : 'none';
-  toggle.textContent = open ? '▾' : '▸';
+let _todayOrdersCache = [];
+
+function openOrdersOverlay() {
+  document.getElementById('ordersOverlay').style.display = 'flex';
+  renderOrdersOverlay();
+}
+
+function closeOrdersOverlay() {
+  document.getElementById('ordersOverlay').style.display = 'none';
+}
+
+function renderOrdersOverlay() {
+  const pending = [];
+  const completed = [];
+
+  _todayOrdersCache.forEach((order, i) => {
+    if (order.completed) {
+      completed.push(order);
+    } else {
+      pending.push(order);
+    }
+  });
+
+  pending.sort((a, b) => {
+    const ta = a.createdAt?.toDate ? a.createdAt.toDate() : (a.timestamp ? new Date(a.timestamp) : 0);
+    const tb = b.createdAt?.toDate ? b.createdAt.toDate() : (b.timestamp ? new Date(b.timestamp) : 0);
+    return ta - tb;
+  });
+  completed.sort((a, b) => {
+    const ta = a.createdAt?.toDate ? a.createdAt.toDate() : (a.timestamp ? new Date(a.timestamp) : 0);
+    const tb = b.createdAt?.toDate ? b.createdAt.toDate() : (b.timestamp ? new Date(b.timestamp) : 0);
+    return ta - tb;
+  });
+
+  const totalAll = _todayOrdersCache.length;
+  document.getElementById('pendingOrdersList').innerHTML = pending.length === 0
+    ? '<p style="color:var(--text-muted);font-size:14px;padding:8px 0">全部完成了！</p>'
+    : pending.map((order, i) => renderOrderCard(order, totalAll - _todayOrdersCache.indexOf(order), false)).join('');
+
+  document.getElementById('completedOrdersList').innerHTML = completed.length === 0
+    ? ''
+    : completed.map((order, i) => renderOrderCard(order, totalAll - _todayOrdersCache.indexOf(order), true)).join('');
+
+  const pendingTitle = document.querySelector('#pendingOrdersSection .orders-section-title');
+  const completedTitle = document.querySelector('#completedOrdersSection .orders-section-title');
+  if (pendingTitle) pendingTitle.textContent = `待處理 (${pending.length})`;
+  if (completedTitle) completedTitle.textContent = `已完成 (${completed.length})`;
+
+  document.getElementById('completedOrdersSection').style.display = completed.length === 0 ? 'none' : '';
+}
+
+function renderOrderCard(order, seqNum, isCompleted) {
+  const ts = order.createdAt?.toDate ? order.createdAt.toDate() : (order.timestamp ? new Date(order.timestamp) : null);
+  const time = ts ? ts.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' }) : '';
+  const itemsText = (order.items || []).map(it => {
+    const addons = (it.addons || []).map(a => a.name).join('+');
+    return it.name + (addons ? '+' + addons : '');
+  }).join('、');
+  const typeLabel = order.dineType === 'dine' ? '內用' : order.dineType === 'takeout' ? '外帶' : '';
+
+  return `
+    <div class="order-card${isCompleted ? ' completed' : ''}">
+      <button class="order-check${isCompleted ? ' checked' : ''}" onclick="toggleOrderCompleted('${order.id}', ${!isCompleted})">✓</button>
+      <div class="order-card-info">
+        <div class="order-card-top">
+          <span class="order-card-num">#${seqNum}</span>
+          <span class="order-card-time">${time}</span>
+          ${typeLabel ? '<span class="order-card-type">' + typeLabel + '</span>' : ''}
+        </div>
+        <div class="order-card-name">${itemsText}</div>
+      </div>
+      <div class="order-card-total">$${order.total}</div>
+    </div>
+  `;
+}
+
+async function toggleOrderCompleted(orderId, completed) {
+  const order = _todayOrdersCache.find(o => o.id === orderId);
+  if (order) order.completed = completed;
+  renderOrdersOverlay();
+  try {
+    await window.FirebaseCore.updateOrderCompleted(orderId, completed);
+  } catch (e) {
+    console.error('Update order failed:', e);
+    if (order) order.completed = !completed;
+    renderOrdersOverlay();
+  }
 }
 
 document.addEventListener('DOMContentLoaded', initConsumer);

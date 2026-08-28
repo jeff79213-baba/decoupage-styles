@@ -25,6 +25,7 @@ async function initAdmin() {
   // Highlight current theme
   document.getElementById('themeDark').classList.toggle('active', menuData.theme === 'dark');
   document.getElementById('themeSage').classList.toggle('active', menuData.theme === 'sage');
+  showThemeCustomSection(menuData.theme, menuData.themeColors);
 
   // Update nav links with shopId
   const shopId = window.APP_CONFIG.shopId;
@@ -54,11 +55,75 @@ async function setTheme(theme) {
   try {
     await window.FirebaseCore.saveMenu(menuData);
     window.ThemeManager.setTheme(theme);
+    window.ThemeManager.applyCustomColors(menuData.themeColors);
     document.getElementById('themeDark').classList.toggle('active', theme === 'dark');
     document.getElementById('themeSage').classList.toggle('active', theme === 'sage');
+    showThemeCustomSection(theme, menuData.themeColors);
   } catch (e) {
     console.error('Theme save failed:', e);
     alert('主題儲存失敗：' + e.message);
+  }
+}
+
+function showThemeCustomSection(theme, themeColors) {
+  const section = document.getElementById('themeCustomSection');
+  if (!section) return;
+  section.style.display = '';
+
+  const defaults = theme === 'dark'
+    ? { primary: '#F27D42', bg: '#1A1A1A', surface: '#262626', text: '#FFFFFF' }
+    : { primary: '#B58D3D', bg: '#F2F5F0', surface: '#E0E8DE', text: '#1A2E28' };
+
+  const colors = themeColors || defaults;
+  document.getElementById('colorPrimary').value = colors.primary || defaults.primary;
+  document.getElementById('colorBg').value = colors.bg || defaults.bg;
+  document.getElementById('colorSurface').value = colors.surface || defaults.surface;
+  document.getElementById('colorText').value = colors.text || defaults.text;
+  document.getElementById('colorPrimaryHex').textContent = colors.primary || defaults.primary;
+  document.getElementById('colorBgHex').textContent = colors.bg || defaults.bg;
+  document.getElementById('colorSurfaceHex').textContent = colors.surface || defaults.surface;
+  document.getElementById('colorTextHex').textContent = colors.text || defaults.text;
+
+  ['colorPrimary', 'colorBg', 'colorSurface', 'colorText'].forEach(id => {
+    document.getElementById(id).addEventListener('input', e => {
+      document.getElementById(id + 'Hex').textContent = e.target.value;
+    });
+  });
+}
+
+async function saveThemeColors() {
+  if (!menuData) return;
+  const colors = {
+    primary: document.getElementById('colorPrimary').value,
+    bg: document.getElementById('colorBg').value,
+    surface: document.getElementById('colorSurface').value,
+    text: document.getElementById('colorText').value
+  };
+  menuData.themeColors = colors;
+  try {
+    await window.FirebaseCore.saveMenu(menuData);
+    window.ThemeManager.applyCustomColors(colors);
+    alert('顏色已儲存');
+  } catch (e) {
+    console.error('Save colors failed:', e);
+    alert('儲存失敗：' + e.message);
+  }
+}
+
+async function resetThemeColors() {
+  if (!menuData) return;
+  menuData.themeColors = null;
+  try {
+    await window.FirebaseCore.saveMenu(menuData);
+    window.ThemeManager.applyCustomColors(null);
+    const defaults = menuData.theme === 'dark'
+      ? { primary: '#F27D42', bg: '#1A1A1A', surface: '#262626', text: '#FFFFFF' }
+      : { primary: '#B58D3D', bg: '#F2F5F0', surface: '#E0E8DE', text: '#1A2E28' };
+    showThemeCustomSection(menuData.theme, null);
+    alert('已恢復預設顏色');
+  } catch (e) {
+    console.error('Reset colors failed:', e);
+    alert('重設失敗：' + e.message);
   }
 }
 

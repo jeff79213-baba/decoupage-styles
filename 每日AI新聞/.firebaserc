@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "opencode-sk"
+  },
+  "targets": {
+    "opencode-sk": {
+      "hosting": {
+        "daily-ai-news": [
+          "daily-ai-news-sk"
+        ]
+      }
+    }
+  }
+}

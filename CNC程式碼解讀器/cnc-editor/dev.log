@@ -1,0 +1,73 @@
+
+> cnc-editor@1.0.0 dev
+> vite
+
+
+  [32m[1mVITE[22m v6.4.3[39m  [2mready in [0m[1m807[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m3000[22m/[39m
+[2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+[2m下午11:18:26[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/SearchBar.vue[22m
+[2m上午7:12:02[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/EditorPanel.vue[22m
+[2m上午7:40:32[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/EditorPanel.vue[22m
+[2m上午7:40:46[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/EditorPanel.vue?vue&type=style&index=0&scoped=66b3ca9d&lang.css[22m
+[2m上午7:40:53[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/EditorPanel.vue?vue&type=style&index=0&scoped=66b3ca9d&lang.css[22m
+[2m下午12:41:29[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.vue?vue&type=style&index=0&scoped=7a7a37b1&lang.css[22m
+[2m下午12:41:46[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.vue?vue&type=style&index=0&scoped=7a7a37b1&lang.css[22m
+[2m下午12:43:04[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/SimCanvas.vue?vue&type=style&index=0&scoped=b3d2b9cd&lang.css[22m
+[2m下午12:44:44[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/SimCanvas.vue[22m
+[2m下午12:45:39[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/App.vue?vue&type=style&index=0&scoped=7a7a37b1&lang.css[22m
+[2m下午5:59:18[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/utils/codeChecker.js[22m
+[2m下午5:59:39[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/utils/codeChecker.js[22m
+[2m下午5:59:49[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/utils/codeChecker.js[22m
+[2m下午6:00:00[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/utils/codeChecker.js[22m
+[2m下午6:36:40[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/EditorPanel.vue?vue&type=style&index=0&scoped=66b3ca9d&lang.css[22m
+[2m上午7:10:06[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/parsers/ncParser.js[22m
+[2m上午7:10:16[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/ToolTable.vue[22m
+[2m上午7:10:21[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/stores/editor.js[22m
+[2m上午7:10:33[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/EditorPanel.vue?vue&type=style&index=0&scoped=66b3ca9d&lang.css[22m
+[2m上午7:31:39[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/parsers/ncParser.js[22m
+[2m上午7:32:41[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/ToolTable.vue[22m
+[2m上午7:32:53[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/EditorPanel.vue?vue&type=style&index=0&scoped=66b3ca9d&lang.css[22m
+[2m上午7:32:58[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/SearchBar.vue?vue&type=style&index=0&scoped=6ab8b910&lang.css[22m
+[2m上午7:33:53[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/EditorPanel.vue[22m
+[2m上午7:33:59[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/EditorPanel.vue?vue&type=style&index=0&scoped=66b3ca9d&lang.css[22m
+[2m下午1:38:35[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mindex.html[22m
+[2m下午1:38:35[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mscripts/install-template.html[22m
+[2m下午1:38:35[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/EditorPanel.vue[22m
+[2m下午1:38:35[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/stores/editor.js[22m
+[2m下午1:38:35[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/utils/codeChecker.js[22m
+[2m下午1:38:35[22m [36m[1m[vite][22m[39m [32mvite.config.js changed, restarting server...[39m
+[2m下午1:38:35[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/main.js[22m
+[2m下午1:38:35[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/EditorPanel.vue[22m
+[2m下午1:38:35[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/parsers/ncParser.js[22m
+[2m下午1:38:35[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/stores/editor.js[22m
+[2m下午1:38:35[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/utils/codeChecker.js[22m
+[2m下午1:38:35[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/SimCanvas.vue[22m
+[2m下午1:38:36[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m Re-optimizing dependencies because lockfile has changed
+[2m下午1:38:36[22m [36m[1m[vite][22m[39m server restarted.
+[2m上午6:53:57[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mindex.html[22m
+[2m上午6:53:57[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mindex.html[22m
+[2m上午6:53:57[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mscripts/install-template.html[22m
+[2m上午6:53:57[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/EditorPanel.vue[22m
+[2m上午6:53:57[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/main.js[22m
+[2m上午6:53:57[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/ColorSettings.vue, /src/App.vue, /src/components/EditorPanel.vue, /src/components/LeftNav.vue, /src/components/SimCanvas.vue, /src/components/SearchBar.vue, /src/components/ToolTable.vue, /src/components/VariableTable.vue, /src/components/CoordViewer.vue, /src/components/ErrorList.vue[22m
+[2m上午6:53:57[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/ColorSettings.vue, /src/App.vue, /src/components/EditorPanel.vue, /src/components/LeftNav.vue, /src/components/SimCanvas.vue, /src/components/SearchBar.vue, /src/components/ToolTable.vue, /src/components/VariableTable.vue, /src/components/CoordViewer.vue, /src/components/ErrorList.vue[22m
+[2m上午6:53:57[22m [36m[1m[vite][22m[39m [32mvite.config.js changed, restarting server...[39m
+[2m上午6:53:57[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/EditorPanel.vue[22m
+[2m上午6:53:57[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/ColorSettings.vue, /src/App.vue, /src/components/EditorPanel.vue, /src/components/LeftNav.vue, /src/components/SimCanvas.vue, /src/components/SearchBar.vue, /src/components/ToolTable.vue, /src/components/VariableTable.vue, /src/components/CoordViewer.vue, /src/components/ErrorList.vue[22m
+[2m上午6:53:57[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/SimCanvas.vue[22m
+[2m上午6:53:57[22m [36m[1m[vite][22m[39m server restarted.
+[2m下午5:12:12[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mindex.html[22m
+[2m下午5:12:12[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/EditorPanel.vue[22m
+[2m下午5:12:12[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/CoordViewer.vue, /src/components/VariableTable.vue, /src/components/ErrorList.vue, /src/components/ToolTable.vue, /src/App.vue, /src/components/EditorPanel.vue, /src/components/SimCanvas.vue, /src/components/LeftNav.vue, /src/components/SearchBar.vue, /src/components/ColorSettings.vue[22m
+[2m下午5:12:12[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mscripts/install-template.html[22m
+[2m下午5:12:12[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/main.js[22m
+[2m下午5:12:12[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/CoordViewer.vue, /src/components/VariableTable.vue, /src/components/ErrorList.vue, /src/components/ToolTable.vue, /src/App.vue, /src/components/EditorPanel.vue, /src/components/SimCanvas.vue, /src/components/LeftNav.vue, /src/components/SearchBar.vue, /src/components/ColorSettings.vue[22m
+[2m下午5:12:12[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/CoordViewer.vue, /src/components/VariableTable.vue, /src/components/ErrorList.vue, /src/components/ToolTable.vue, /src/App.vue, /src/components/EditorPanel.vue, /src/components/SimCanvas.vue, /src/components/LeftNav.vue, /src/components/SearchBar.vue, /src/components/ColorSettings.vue[22m
+[2m下午5:12:12[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/CoordViewer.vue, /src/components/VariableTable.vue, /src/components/ErrorList.vue, /src/components/ToolTable.vue, /src/App.vue, /src/components/EditorPanel.vue, /src/components/SimCanvas.vue, /src/components/LeftNav.vue, /src/components/SearchBar.vue, /src/components/ColorSettings.vue[22m
+[2m下午5:12:12[22m [36m[1m[vite][22m[39m [32mvite.config.js changed, restarting server...[39m
+[2m下午5:12:12[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/CoordViewer.vue, /src/components/VariableTable.vue, /src/components/ErrorList.vue, /src/components/ToolTable.vue, /src/App.vue, /src/components/EditorPanel.vue, /src/components/SimCanvas.vue, /src/components/LeftNav.vue, /src/components/SearchBar.vue, /src/components/ColorSettings.vue[22m
+[2m下午5:12:12[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/components/SimCanvas.vue[22m
+[2m下午5:12:12[22m [36m[1m[vite][22m[39m server restarted.

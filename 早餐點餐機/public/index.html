@@ -13,8 +13,6 @@
     <header class="header">
       <div class="header-title" id="storeName">載入中...</div>
       <div class="header-actions">
-        <button class="dine-btn" id="btnDineIn" onclick="selectDineType('dine')">內用</button>
-        <button class="dine-btn" id="btnTakeout" onclick="selectDineType('takeout')">外帶</button>
         <button class="header-btn mode-toggle" id="modeToggle" onclick="toggleScrollMode()" title="切換滑動/固定">滑動</button>
         <a id="adminLink" href="#" class="header-btn" style="text-decoration:none" title="後台管理">⚙</a>
       </div>
@@ -32,7 +30,6 @@
         <div class="addon-bar" id="addonBar">
           <span class="addon-label" id="addonLabel">配料</span>
           <div class="addon-list" id="addonButtons"></div>
-          <button class="add-to-cart-btn" onclick="confirmOrder()">確認訂單</button>
         </div>
       </main>
 
@@ -43,21 +40,25 @@
           <button class="btn-clear-cart" onclick="clearCart()">全部取消</button>
         </div>
         <div class="cart-items" id="cartItems"></div>
-        <div class="cart-footer">
-          <div class="cart-total">
-            <span class="cart-total-label">總計</span>
-            <span class="cart-total-amount" id="cartTotal">$0</span>
-          </div>
-          <div class="cart-actions">
-            <button class="cart-action-btn primary" id="btnConfirm" onclick="confirmOrder()">確認訂單</button>
-          </div>
+      <div class="cart-footer">
+        <div class="cart-dine-row">
+          <button class="dine-btn" id="btnDineIn" onclick="selectDineType('dine')">內用</button>
+          <button class="dine-btn" id="btnTakeout" onclick="selectDineType('takeout')">外帶</button>
         </div>
+        <div class="cart-total">
+          <span class="cart-total-label">總計</span>
+          <span class="cart-total-amount" id="cartTotal">$0</span>
+        </div>
+        <div class="cart-actions">
+          <button class="cart-action-btn primary" id="btnConfirm" onclick="confirmOrder()">確認訂單</button>
+        </div>
+      </div>
       </aside>
     </div>
 
     <!-- Today's Orders -->
     <div class="today-orders" id="todayOrders">
-      <div class="today-orders-header" onclick="toggleTodayOrders()">
+      <div class="today-orders-header" onclick="openOrdersOverlay()">
         <span id="todayOrdersTitle">今日訂單 (0)</span>
         <span class="today-orders-toggle" id="todayOrdersToggle">▸</span>
       </div>
@@ -87,6 +88,24 @@
       <div class="modal-actions">
         <button class="cart-action-btn secondary" onclick="closeCartEdit()">取消</button>
         <button class="cart-action-btn primary" onclick="saveCartEdit()">儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Today's Orders Fullscreen Overlay -->
+  <div class="orders-overlay" id="ordersOverlay" style="display:none">
+    <div class="orders-overlay-header">
+      <button class="orders-overlay-back" onclick="closeOrdersOverlay()">← 返回菜單</button>
+      <h2>今日訂單</h2>
+    </div>
+    <div class="orders-overlay-body">
+      <div class="orders-section" id="pendingOrdersSection">
+        <h3 class="orders-section-title">待處理</h3>
+        <div id="pendingOrdersList"></div>
+      </div>
+      <div class="orders-section" id="completedOrdersSection">
+        <h3 class="orders-section-title">已完成</h3>
+        <div id="completedOrdersList"></div>
       </div>
     </div>
   </div>

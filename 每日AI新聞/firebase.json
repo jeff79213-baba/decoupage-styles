@@ -1,0 +1,15 @@
+{
+  "hosting": {
+    "site": "daily-ai-news-sk",
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      ".firebaserc",
+      "**/.*",
+      "fetch_news.py",
+      "README.md",
+      "run_log.txt",
+      "網址.txt"
+    ]
+  }
+}

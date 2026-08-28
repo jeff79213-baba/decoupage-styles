@@ -328,4 +328,30 @@ describe('editor store 錯誤偵測整合', () => {
     await new Promise(r => setTimeout(r, 400))
     expect(store.errors.some(p => p.code === 'E-STR-002')).toBe(true)
   })
+
+  it('關閉一支程式再拉入新程式，其餘程式錯誤狀態不殘留', async () => {
+    const store = useEditorStore()
+    const goodText = '%\nO1000\nN1(T1)\nT1M6\nG28\n'
+    store.$patch({
+      files: [
+        { id: 1, fileName: 'A.NC', rawText: goodText, parsed: parseNC(goodText), currentLine: -1, bookmarks: [] },
+        { id: 2, fileName: 'B.NC', rawText: 'END1\n', parsed: parseNC('END1\n'), currentLine: -1, bookmarks: [] }
+      ],
+      activeFileId: 1,
+      nextFileId: 3
+    })
+    store.runCheck(1)
+    store.runCheck(2)
+    expect(store.errorsByFile[1]).toEqual([])
+
+    global.FileReader = class {
+      readAsText() { this.result = goodText; this.onload() }
+    }
+    store.removeFile(1)
+    store.addFile({ name: 'C.NC' })
+
+    expect(store.errorsByFile[1]).toBeUndefined()
+    expect(store.errorsByFile[2].some(p => p.code === 'E-STR-002')).toBe(true)
+    expect(store.errorsByFile[3]).toEqual([])
+  })
 })

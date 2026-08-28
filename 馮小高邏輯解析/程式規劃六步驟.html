@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>程式規劃六步驟</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Geist:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+    --font-body: "Geist", ui-sans-serif, system-ui, sans-serif;
+
+    --color-bg:      oklch(13% 0.020 250);
+    --color-surface: oklch(17% 0.018 250);
+    --color-surface-2: oklch(20% 0.016 250);
+    --color-border:  oklch(28% 0.015 250);
+    --color-muted:   oklch(55% 0.012 250);
+    --color-text:    oklch(90% 0.008 250);
+
+    --color-cyan:    oklch(78% 0.14 200);
+    --color-blue:    oklch(72% 0.15 250);
+    --color-purple:  oklch(68% 0.14 300);
+
+    --space-3xs: 0.125rem;
+    --space-2xs: 0.25rem;
+    --space-xs:  0.5rem;
+    --space-sm:  0.75rem;
+    --space-md:  1rem;
+    --space-lg:  1.5rem;
+    --space-xl:  2.5rem;
+    --space-2xl: 4rem;
+    --space-3xl: 6rem;
+
+    --text-xs:   0.64rem;
+    --text-sm:   0.8rem;
+    --text-base: 1rem;
+    --text-md:   1.25rem;
+    --text-lg:   1.5625rem;
+    --text-xl:   1.9531rem;
+    --text-2xl:  2.4414rem;
+    --text-3xl:  clamp(2rem, 5vw + 1rem, 3.2rem);
+
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --dur-micro: 120ms;
+    --dur-short: 220ms;
+    --dur-long:  420ms;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { overflow-x: clip; }
+  body {
+    overflow-x: clip;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.65;
+    color: var(--color-text);
+    background:
+      linear-gradient(oklch(13% 0.020 250 / 0.97), oklch(13% 0.020 250 / 0.97)),
+      repeating-linear-gradient(0deg, oklch(30% 0.010 250 / 0.08) 0 1px, transparent 1px 40px),
+      repeating-linear-gradient(90deg, oklch(30% 0.010 250 / 0.08) 0 1px, transparent 1px 40px);
+    background-size: 100% 100%, 40px 40px, 40px 40px;
+    padding: var(--space-2xl) 0;
+  }
+
+  .page {
+    position: relative;
+    width: 100%;
+    padding: 0 var(--space-lg);
+  }
+  .page-inner {
+    max-width: 62ch;
+    margin: 0 auto;
+  }
+
+  /* ── hero ── */
+  .hero {
+    margin-bottom: var(--space-2xl);
+    padding-bottom: var(--space-xl);
+    position: relative;
+  }
+  .hero-badge {
+    display: inline-block;
+    padding: var(--space-2xs) var(--space-sm);
+    background: oklch(78% 0.14 200 / 0.15);
+    color: var(--color-cyan);
+    border: 1px solid oklch(78% 0.14 200 / 0.3);
+    border-radius: 999px;
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: var(--space-md);
+  }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: var(--color-text);
+    margin-bottom: var(--space-md);
+  }
+  .hero h1 .hl {
+    background: linear-gradient(135deg, var(--color-cyan), var(--color-blue), var(--color-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-sub {
+    font-size: var(--text-md);
+    color: var(--color-muted);
+    max-width: 48ch;
+    line-height: 1.6;
+  }
+
+  /* ── steps ── */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .step {
+    position: relative;
+    padding: var(--space-lg) var(--space-lg) var(--space-lg) calc(var(--space-xl) + 1.5rem);
+    background: var(--color-surface);
+    border-radius: 12px;
+    border: 1px solid var(--color-border);
+    transition: border-color var(--dur-short) var(--ease-out),
+                box-shadow var(--dur-short) var(--ease-out),
+                transform var(--dur-short) var(--ease-out);
+  }
+  .step:hover {
+    border-color: oklch(78% 0.14 200 / 0.4);
+    box-shadow: 0 0 20px oklch(78% 0.14 200 / 0.08),
+                0 4px 12px oklch(0% 0 0 / 0.3);
+    transform: translateY(-1px);
+  }
+
+  .step-num {
+    position: absolute;
+    left: var(--space-md);
+    top: var(--space-lg);
+    width: 1.75rem;
+    height: 1.75rem;
+    background: linear-gradient(135deg, var(--color-cyan), var(--color-blue));
+    color: oklch(13% 0.02 250);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .step-title {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    margin-bottom: var(--space-2xs);
+    color: var(--color-text);
+  }
+  .step-desc {
+    font-size: var(--text-base);
+    color: var(--color-muted);
+    line-height: 1.65;
+    margin-bottom: var(--space-xs);
+    max-width: 52ch;
+  }
+  .step-q {
+    font-size: var(--text-sm);
+    color: var(--color-cyan);
+    font-weight: 600;
+    margin-bottom: var(--space-sm);
+  }
+
+  /* ── details / summary ── */
+  details { margin-top: 0; }
+  details summary {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-md);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-cyan);
+    background: oklch(78% 0.14 200 / 0.08);
+    border: 1px solid oklch(78% 0.14 200 / 0.25);
+    border-radius: 999px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    transition: background var(--dur-micro) var(--ease-out),
+                border-color var(--dur-micro) var(--ease-out),
+                transform var(--dur-micro) var(--ease-out);
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before {
+    content: "+";
+    font-size: 0.85rem;
+    font-weight: 700;
+    line-height: 1;
+    transition: transform var(--dur-short) var(--ease-out);
+  }
+  details[open] summary::before { content: "−"; }
+  details summary:hover {
+    background: oklch(78% 0.14 200 / 0.15);
+    border-color: oklch(78% 0.14 200 / 0.4);
+    transform: translateY(-1px);
+  }
+  details summary:active { transform: translateY(0); }
+  details[open] summary {
+    background: oklch(78% 0.14 200 / 0.12);
+    border-color: oklch(78% 0.14 200 / 0.35);
+  }
+
+  .ai-panel {
+    margin-top: var(--space-sm);
+    padding: var(--space-md) var(--space-lg);
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    font-size: var(--text-base);
+    color: var(--color-text);
+    line-height: 1.65;
+    max-width: 52ch;
+  }
+  .ai-panel ul { margin: var(--space-xs) 0 0 var(--space-lg); }
+  .ai-panel li { margin-bottom: var(--space-2xs); }
+  .ai-panel .ai-label { font-weight: 700; color: var(--color-cyan); }
+  .ai-panel .ai-hint {
+    margin-top: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: oklch(78% 0.14 200 / 0.06);
+    border: 1px solid oklch(78% 0.14 200 / 0.12);
+    border-radius: 8px;
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    line-height: 1.6;
+  }
+  .ai-panel .ai-hint::before { content: "💡 "; }
+
+  /* ── footer ── */
+  .foot {
+    margin-top: var(--space-3xl);
+    padding-top: var(--space-lg);
+    border-top: 1px solid var(--color-border);
+    font-size: var(--text-xs);
+    color: var(--color-muted);
+    text-align: left;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── decorations ── */
+  .deco {
+    position: absolute;
+    pointer-events: none;
+  }
+  .deco-robot {
+    top: 80px;
+    right: 5%;
+    color: var(--color-cyan);
+    opacity: 0.20;
+  }
+  .deco-gear {
+    top: 460px;
+    left: 5%;
+    color: var(--color-blue);
+    opacity: 0.18;
+    animation: spin-slow 30s linear infinite;
+  }
+  .deco-circuit {
+    top: 860px;
+    right: 8%;
+    color: var(--color-purple);
+    opacity: 0.22;
+  }
+  .deco-screen {
+    top: 1280px;
+    left: 6%;
+    color: var(--color-cyan);
+    opacity: 0.20;
+  }
+  @keyframes spin-slow { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .deco-gear { animation: none; } }
+
+  /* ── page-load reveal ── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: reveal var(--dur-long) var(--ease-out) forwards;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+  @keyframes reveal { to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 150ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 150ms !important;
+    }
+    .reveal { animation: reveal-reduced 150ms linear forwards; }
+    @keyframes reveal-reduced { to { opacity: 1; transform: none; } }
+  }
+
+  /* ── responsive ── */
+  @media (max-width: 640px) {
+    body { padding: var(--space-xl) 0; }
+    .page { padding: 0 var(--space-md); }
+    .step { padding: var(--space-md) var(--space-md) var(--space-md) calc(var(--space-lg) + 1.25rem); }
+    .step-num {
+      left: var(--space-sm);
+      top: var(--space-md);
+      width: 1.5rem;
+      height: 1.5rem;
+      font-size: var(--text-xs);
+    }
+    .hero h1 { font-size: clamp(1.6rem, 6vw, 2.2rem); }
+    .deco { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <svg class="deco deco-robot" width="120" height="140" viewBox="0 0 120 140" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect x="25" y="40" width="70" height="65" rx="14" stroke="currentColor" stroke-width="2.5"/>
+    <rect x="35" y="55" width="14" height="10" rx="3" fill="currentColor" opacity="0.5"/>
+    <rect x="71" y="55" width="14" height="10" rx="3" fill="currentColor" opacity="0.5"/>
+    <circle cx="42" cy="60" r="3" fill="currentColor"/>
+    <circle cx="78" cy="60" r="3" fill="currentColor"/>
+    <path d="M48 78 Q60 86 72 78" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <line x1="60" y1="105" x2="60" y2="125" stroke="currentColor" stroke-width="2.5"/>
+    <line x1="40" y1="125" x2="80" y2="125" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="25" y1="65" x2="10" y2="65" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="95" y1="65" x2="110" y2="65" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="10" cy="65" r="4" fill="currentColor" opacity="0.4"/>
+    <circle cx="110" cy="65" r="4" fill="currentColor" opacity="0.4"/>
+    <line x1="45" y1="40" x2="45" y2="25" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="45" cy="22" r="3.5" fill="currentColor" opacity="0.5"/>
+    <line x1="75" y1="40" x2="75" y2="25" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="75" cy="22" r="3.5" fill="currentColor" opacity="0.5"/>
+  </svg>
+
+  <svg class="deco deco-gear" width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M40 12 L44 20 L52 16 L50 25 L58 24 L54 32 L62 34 L56 40 L62 46 L54 48 L58 56 L50 55 L52 64 L44 60 L40 68 L36 60 L28 64 L30 55 L22 56 L26 48 L18 46 L24 40 L16 34 L24 32 L20 24 L28 25 L30 16 L38 20 Z" stroke="currentColor" stroke-width="2" fill="currentColor" fill-opacity="0.1"/>
+    <circle cx="40" cy="40" r="12" stroke="currentColor" stroke-width="2" fill="none"/>
+  </svg>
+
+  <svg class="deco deco-circuit" width="200" height="60" viewBox="0 0 200 60" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle cx="10" cy="30" r="5" fill="currentColor" opacity="0.4"/>
+    <line x1="15" y1="30" x2="50" y2="30" stroke="currentColor" stroke-width="1.5" opacity="0.25"/>
+    <circle cx="50" cy="30" r="3.5" fill="currentColor" opacity="0.3"/>
+    <line x1="50" y1="26" x2="50" y2="10" stroke="currentColor" stroke-width="1.5" opacity="0.25"/>
+    <circle cx="50" cy="10" r="2.5" fill="currentColor" opacity="0.25"/>
+    <line x1="54" y1="30" x2="95" y2="30" stroke="currentColor" stroke-width="1.5" opacity="0.25"/>
+    <circle cx="95" cy="30" r="5" fill="currentColor" opacity="0.4"/>
+    <line x1="100" y1="30" x2="140" y2="30" stroke="currentColor" stroke-width="1.5" opacity="0.25"/>
+    <circle cx="140" cy="30" r="3.5" fill="currentColor" opacity="0.3"/>
+    <line x1="140" y1="26" x2="140" y2="8" stroke="currentColor" stroke-width="1.5" opacity="0.25"/>
+    <circle cx="140" cy="8" r="2.5" fill="currentColor" opacity="0.25"/>
+    <line x1="144" y1="30" x2="190" y2="30" stroke="currentColor" stroke-width="1.5" opacity="0.25"/>
+    <circle cx="190" cy="30" r="5" fill="currentColor" opacity="0.4"/>
+  </svg>
+
+  <svg class="deco deco-screen" width="60" height="50" viewBox="0 0 60 50" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect x="5" y="5" width="50" height="32" rx="4" stroke="currentColor" stroke-width="2.5"/>
+    <line x1="20" y1="42" x2="40" y2="42" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="30" y1="37" x2="30" y2="42" stroke="currentColor" stroke-width="2.5"/>
+    <line x1="14" y1="15" x2="30" y2="15" stroke="currentColor" stroke-width="2" opacity="0.5" stroke-linecap="round"/>
+    <line x1="14" y1="22" x2="38" y2="22" stroke="currentColor" stroke-width="2" opacity="0.35" stroke-linecap="round"/>
+    <line x1="14" y1="29" x2="26" y2="29" stroke="currentColor" stroke-width="2" opacity="0.25" stroke-linecap="round"/>
+  </svg>
+
+  <div class="page-inner">
+
+  <header class="hero reveal" style="--i:0">
+    <span class="hero-badge">AI 時代思考框架</span>
+    <h1>程式規劃<span class="hl">六步驟</span></h1>
+    <p class="hero-sub">從腦中模糊的想法，到跑得出來的程式。每一步都有明確的思考方向，AI 可以在各步驟中協助你。</p>
+  </header>
+
+  <div class="steps">
+
+    <div class="step reveal" style="--i:1">
+      <div class="step-num">1</div>
+      <h2 class="step-title">把「想要」變成「具體」</h2>
+      <p class="step-desc">你腦中有一個模糊的想法，先用一句話說清楚：這程式給誰用、解決什麼問題。</p>
+      <p class="step-q">這東西到底要做什麼？誰會用它？</p>
+      <details>
+        <summary>AI 可以幫忙什麼</summary>
+        <div class="ai-panel">
+          <p><span class="ai-label">AI 能做的：</span></p>
+          <ul>
+            <li>幫你把模糊的想法整理成條列式的需求清單</li>
+            <li>追問你沒想到的細節（例如：資料從哪來？要存在哪裡？）</li>
+            <li>幫你發現需求裡的矛盾或漏洞</li>
+          </ul>
+          <p class="ai-hint">你可以對 AI 說：「我想做一個 ____，幫我釐清需要考慮哪些面向」</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="step reveal" style="--i:2">
+      <div class="step-num">2</div>
+      <h2 class="step-title">拆解成小單元</h2>
+      <p class="step-desc">一個大功能通常由多個小功能組成。把大問題切成可處理的小塊。</p>
+      <p class="step-q">這可以再拆成更小的步驟嗎？</p>
+      <details>
+        <summary>AI 可以幫忙什麼</summary>
+        <div class="ai-panel">
+          <p><span class="ai-label">AI 能做的：</span></p>
+          <ul>
+            <li>幫你列出所有需要的功能，不遺漏</li>
+            <li>把每個功能再拆成更小的子任務</li>
+            <li>幫你畫出功能之間的關聯（哪個功能需要用到哪個）</li>
+          </ul>
+          <p class="ai-hint">你可以對 AI 說：「幫我把 ____ 功能拆成小任務，列出所有需要做的事」</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="step reveal" style="--i:3">
+      <div class="step-num">3</div>
+      <h2 class="step-title">決定先後順序</h2>
+      <p class="step-desc">不是所有功能都一樣重要。先做出最核心的，再慢慢加功能。</p>
+      <p class="step-q">沒有這個，其他還能動嗎？</p>
+      <details>
+        <summary>AI 可以幫忙什麼</summary>
+        <div class="ai-panel">
+          <p><span class="ai-label">AI 能做的：</span></p>
+          <ul>
+            <li>幫你判斷哪些是「地基功能」，必須先做</li>
+            <li>幫你排出執行順序，避免做到一半卡住</li>
+            <li>幫你標記哪些功能可以之後再加（不影響主流程）</li>
+          </ul>
+          <p class="ai-hint">你可以對 AI 說：「我有這些功能 ____，幫我排出先後順序」</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="step reveal" style="--i:4">
+      <div class="step-num">4</div>
+      <h2 class="step-title">實作寫程式</h2>
+      <p class="step-desc">開始動手做。可以自己寫，也可以用工具輔助。重點是要看得懂你寫出來的東西。</p>
+      <p class="step-q">我寫的這段程式，到底在做什麼？</p>
+      <details>
+        <summary>AI 可以幫忙什麼</summary>
+        <div class="ai-panel">
+          <p><span class="ai-label">AI 能做的：</span></p>
+          <ul>
+            <li>根據你的需求直接生成程式碼</li>
+            <li>逐行解釋程式碼在做什麼</li>
+            <li>幫你修改現有程式碼，加入新功能</li>
+            <li>幫你把複雜的邏輯用白話文說明</li>
+          </ul>
+          <p class="ai-hint">你可以對 AI 說：「幫我寫一個 ____ 的程式，用簡單的方式解釋給我聽」</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="step reveal" style="--i:5">
+      <div class="step-num">5</div>
+      <h2 class="step-title">邊做邊驗證</h2>
+      <p class="step-desc">每做完一小步就測試，不要等全部做完才發現錯了。發現問題就修，沒問題就繼續。</p>
+      <p class="step-q">我怎麼知道現在做出來的是對的？</p>
+      <details>
+        <summary>AI 可以幫忙什麼</summary>
+        <div class="ai-panel">
+          <p><span class="ai-label">AI 能做的：</span></p>
+          <ul>
+            <li>幫你寫測試，自動檢查功能是否正確</li>
+            <li>你貼錯誤訊息給它，幫你找出 Bug 原因</li>
+            <li>幫你設計測試情境，確認各種情況都正常</li>
+          </ul>
+          <p class="ai-hint">你可以對 AI 說：「這個功能跑出來 ____，哪裡出問題了？」</p>
+        </div>
+      </details>
+    </div>
+
+    <div class="step reveal" style="--i:6">
+      <div class="step-num">6</div>
+      <h2 class="step-title">回頭檢視</h2>
+      <p class="step-desc">做出來了，但回到第一步的問題：這東西真的解決了那個問題嗎？拿給真實的人用看看。</p>
+      <p class="step-q">用戶實際用起來，是我要的嗎？</p>
+      <details>
+        <summary>AI 可以幫忙什麼</summary>
+        <div class="ai-panel">
+          <p><span class="ai-label">AI 能做的：</span></p>
+          <ul>
+            <li>幫你整理用戶回饋，歸納出改進方向</li>
+            <li>幫你分析哪些功能常用、哪些沒人用</li>
+            <li>幫你規劃下一版要加什麼功能</li>
+          </ul>
+          <p class="ai-hint">你可以對 AI 說：「用戶回饋了這些 ____，幫我整理出可以改進的地方」</p>
+        </div>
+      </details>
+    </div>
+
+  </div>
+
+  </div><!-- /page-inner -->
+
+  <footer class="foot reveal" style="--i:7">程式規劃六步驟 — 從想法到成品的思考框架</footer>
+
+</div>
+
+</body>
+</html>

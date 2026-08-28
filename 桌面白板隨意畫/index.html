@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>桌面白板隨意畫</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; font-family: "Segoe UI", Arial, sans-serif; background: #e8e8e8; }
+body { display: flex; flex-direction: column; }
+.toolbar {
+  display: flex; align-items: center; gap: 6px; padding: 8px 12px;
+  background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.12); flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.tool-btn {
+  width: 40px; height: 40px; border: 1.5px solid #ddd; border-radius: 8px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  background: #fafafa; font-size: 16px; transition: .15s;
+}
+.tool-btn:hover { background: #eef; border-color: #aac; }
+.tool-btn.active { background: #e8f0fe; border-color: #007aff; }
+.tool-btn svg { width: 22px; height: 22px; stroke: #444; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.tool-btn.active svg { stroke: #007aff; }
+.tool-btn:active { transform: scale(.94); }
+input[type="color"] { width: 34px; height: 34px; border: 1.5px solid #ddd; border-radius: 6px; cursor: pointer; padding: 1px; background: #fff; }
+input[type="range"] { width: 100px; cursor: pointer; accent-color: #007aff; }
+.sep { width: 1px; height: 28px; background: #ddd; margin: 0 4px; }
+.size-label { font-size: 12px; color: #666; min-width: 24px; text-align: center; }
+#fileInput { display: none; }
+.canvas-container {
+  flex: 1; position: relative; overflow: hidden; margin: 8px;
+  border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+.canvas-container canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+#bgCanvas { z-index: 1; }
+#drawCanvas { z-index: 2; cursor: crosshair; }
+.circle-preview {
+  position: absolute; pointer-events: none; border-radius: 50%;
+  border: 2px dashed #888; z-index: 10; display: none;
+  transform: translate(-50%, -50%);
+}
+.swatch-wrap { display: flex; align-items: center; gap: 3px; }
+.swatch {
+  width: 22px; height: 22px; border-radius: 50%; border: 2px solid #ddd;
+  cursor: pointer; position: relative; flex-shrink: 0; transition: .1s;
+}
+.swatch:hover { transform: scale(1.15); }
+.swatch.active { border-color: #007aff; box-shadow: 0 0 0 2px #007aff44; }
+.text-el {
+  position: absolute; z-index: 5; cursor: move; user-select: none;
+  padding: 2px 6px; min-width: 10px; min-height: 16px; line-height: 1.2;
+  white-space: nowrap; border: 1px solid transparent;
+}
+.text-el:hover { border-color: #007aff44; background: rgba(0,122,255,.05); }
+.text-el .resize-handle {
+  position: absolute; width: 10px; height: 10px; background: #007aff;
+  border: 1.5px solid #fff; border-radius: 2px; z-index: 7;
+}
+.text-el .resize-handle.tl { top: -5px; left: -5px; cursor: nwse-resize; }
+.text-el .resize-handle.tr { top: -5px; right: -5px; cursor: nesw-resize; }
+.text-el .resize-handle.bl { bottom: -5px; left: -5px; cursor: nesw-resize; }
+.text-el .resize-handle.br { bottom: -5px; right: -5px; cursor: nwse-resize; }
+.text-el .rotate-handle {
+  position: absolute; top: -24px; left: 50%; margin-left: -6px;
+  width: 12px; height: 12px; background: #007aff; border: 2px solid #fff;
+  border-radius: 50%; cursor: grab; z-index: 7;
+}
+.text-el .rotate-handle::before {
+  content: ''; position: absolute; top: 10px; left: 4px;
+  width: 2px; height: 12px; background: #007aff;
+}
+.text-el .text-del {
+  position: absolute; top: -12px; right: -12px; width: 22px; height: 22px;
+  border-radius: 50%; background: #ff4444; color: #fff; border: 2px solid #fff;
+  font-size: 14px; line-height: 18px; text-align: center; cursor: pointer;
+  z-index: 8; display: none;
+}
+.text-el.selected { border-color: #007aff; }
+.text-el.selected .text-del { display: block; }
+.btn-sm {
+  padding: 4px 10px; font-size: 12px; border: 1px solid #ddd;
+  border-radius: 6px; cursor: pointer; background: #fafafa;
+}
+.btn-sm:hover { background: #eef; }
+.tool-group { display: flex; align-items: center; gap: 2px; }
+.fill-select { padding: 4px 6px; font-size: 12px; border: 1px solid #ddd; border-radius: 6px; background: #fafafa; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <div class="tool-group">
+    <button class="tool-btn active" id="penBtn" title="畫筆（自由繪畫）">
+      <svg viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+    </button>
+    <button class="tool-btn" id="eraserBtn" title="橡皮擦">
+      <svg viewBox="0 0 24 24"><path d="M20 20H7L3 16c-.8-.8-.8-2 0-2.8L14.6 1.6c.8-.8 2-.8 2.8 0L21 5.2c.8.8.8 2 0 2.8L11 18"/><path d="M6 11l4 4"/></svg>
+    </button>
+    <button class="tool-btn" id="textBtn" title="文字（點擊輸入）">
+      <svg viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+    </button>
+    <button class="tool-btn" id="copyToolBtn" title="複製文字（點選來源，再點位置貼上）">
+      <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+    </button>
+  </div>
+  <div class="sep"></div>
+  <div class="tool-group">
+    <button class="tool-btn" id="lineBtn" title="直線（拖曳繪製）">
+      <svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="4"/></svg>
+    </button>
+    <button class="tool-btn" id="hlineBtn" title="橫線（拖曳繪製）">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/></svg>
+    </button>
+    <button class="tool-btn" id="vlineBtn" title="垂直線（拖曳繪製）">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="3" x2="12" y2="21"/></svg>
+    </button>
+    <button class="tool-btn" id="rectBtn" title="方框（從左上往右下拖曳）">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18"/></svg>
+    </button>
+    <button class="tool-btn" id="circleBtn" title="圓形（點中心往外拖曳）">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>
+    </button>
+  </div>
+  <select id="shapeFillSelect" class="fill-select" style="display:none" title="形狀填色方式">
+    <option value="none">透明（只有邊框）</option>
+    <option value="fill">填滿（中間染色）</option>
+  </select>
+  <div class="sep"></div>
+  <button class="tool-btn" id="undoBtn" title="返回 (Ctrl+Z)">
+    <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+  </button>
+  <div class="sep"></div>
+  <div class="swatch-wrap" id="swatchWrap"></div>
+  <input type="color" id="penColor" value="#000000" title="自訂顏色">
+  <button class="btn-sm" id="resetSwatchesBtn" title="回復預設色票">回復預設</button>
+  <div class="sep"></div>
+  <input type="range" id="penSize" min="1" max="100" value="3">
+  <span class="size-label" id="sizeLabel">3</span>
+  <div class="sep"></div>
+  <button class="tool-btn" id="uploadBtn" title="上傳照片">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+  </button>
+  <input type="color" id="bgColor" value="#ffffff" title="底圖顏色">
+  <div class="sep"></div>
+  <button class="tool-btn" id="clearBtn" title="全擦（清空繪圖）">
+    <svg viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+  </button>
+  <button class="tool-btn" id="newBtn" title="新畫面">
+    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+  </button>
+  <div class="sep"></div>
+  <button class="tool-btn" id="downloadBtn" title="下載 PNG">
+    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  </button>
+  <button class="tool-btn" id="copyBtn" title="複製到剪貼簿">
+    <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+  </button>
+  <input type="file" id="fileInput" accept="image/*">
+</div>
+
+<div class="canvas-container" id="canvasContainer">
+  <canvas id="bgCanvas"></canvas>
+  <canvas id="drawCanvas"></canvas>
+  <div class="circle-preview" id="circlePreview"></div>
+  <div id="textLayer" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:4;pointer-events:none;"></div>
+  <div id="copyGhost" style="position:absolute;pointer-events:none;z-index:20;display:none;opacity:.6;white-space:nowrap;padding:2px 6px;"></div>
+</div>
+
+<script>
+const bgCanvas = document.getElementById('bgCanvas');
+const drawCanvas = document.getElementById('drawCanvas');
+const canvasContainer = document.getElementById('canvasContainer');
+const textLayer = document.getElementById('textLayer');
+const bgCtx = bgCanvas.getContext('2d');
+const ctx = drawCanvas.getContext('2d');
+const circlePreview = document.getElementById('circlePreview');
+
+const SHAPE_TOOLS = ['line', 'hline', 'vline', 'rect', 'circle'];
+const ALL_TOOLS = ['pen', 'eraser', 'text', 'copyTool', ...SHAPE_TOOLS];
+
+let tool = 'pen';
+let penColor = '#000000';
+let penSize = 3;
+let eraserSize = 20;
+let bgColor = '#ffffff';
+let bgImage = null;
+let isDrawing = false;
+let isDraggingText = false;
+let dragTextEl = null;
+let dragOffsetX = 0, dragOffsetY = 0;
+
+let shapeStart = null;
+let shapeSaved = null;
+let lastMouseX = 0, lastMouseY = 0;
+
+const MAX_UNDO = 20;
+let undoStack = [];
+let undoLock = false;
+
+let texts = [];
+let textIdCounter = 0;
+let copySource = null;
+const copyGhost = document.getElementById('copyGhost');
+
+const DEFAULT_SWATCHES = ['#000000', '#ff0000', '#ff8800', '#ffff00', '#00cc00', '#0088ff', '#8800ff', '#ffffff'];
+let swatches = [];
+let shapeFill = 'none';
+
+function isShapeTool(t) { return SHAPE_TOOLS.includes(t); }
+function getCurrentSize() { return tool === 'eraser' ? eraserSize : penSize; }
+function setCurrentSize(v) {
+  if (tool === 'eraser') eraserSize = v;
+  else penSize = v;
+}
+
+function resizeCanvases() {
+  const w = canvasContainer.clientWidth;
+  const h = canvasContainer.clientHeight;
+  if (w === 0 || h === 0) return;
+
+  let savedUrl = null;
+  if (drawCanvas.width > 0 && drawCanvas.height > 0 && !isDrawing) {
+    savedUrl = drawCanvas.toDataURL();
+  }
+
+  bgCanvas.width = w;
+  bgCanvas.height = h;
+  drawCanvas.width = w;
+  drawCanvas.height = h;
+
+  renderBg();
+
+  if (savedUrl) {
+    const img = new Image();
+    img.onload = () => { ctx.drawImage(img, 0, 0, w, h); };
+    img.src = savedUrl;
+  }
+  repositionTexts();
+}
+window.addEventListener('resize', resizeCanvases);
+
+function getPos(e) {
+  const rect = drawCanvas.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+// ----- Drawing engine -----
+drawCanvas.addEventListener('mousedown', (e) => {
+  if (tool === 'text') return;
+  pushUndo();
+  isDrawing = true;
+  const pos = getPos(e);
+  if (isShapeTool(tool)) {
+    shapeStart = pos;
+    shapeSaved = ctx.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+  }
+});
+
+drawCanvas.addEventListener('mousemove', (e) => {
+  const pos = getPos(e);
+  lastMouseX = pos.x;
+  lastMouseY = pos.y;
+  if (!isDrawing || tool === 'text') {
+    updateCirclePreview(pos);
+    return;
+  }
+  if (tool === 'pen' || tool === 'eraser') {
+    updateCirclePreview(pos);
+    const size = getCurrentSize();
+    ctx.lineWidth = size;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    if (tool === 'eraser') {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.strokeStyle = 'rgba(0,0,0,1)';
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = penColor;
+    }
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+  } else if (isShapeTool(tool) && shapeSaved) {
+    drawShapePreview(pos);
+  }
+});
+
+drawCanvas.addEventListener('mouseup', (e) => {
+  if (!isDrawing) return;
+  isDrawing = false;
+  if (isShapeTool(tool) && shapeSaved) {
+    ctx.putImageData(shapeSaved, 0, 0);
+    const pos = getPos(e);
+    finalizeShape(pos);
+    shapeStart = null;
+    shapeSaved = null;
+  } else {
+    ctx.closePath();
+  }
+  saveState();
+});
+
+drawCanvas.addEventListener('mouseleave', () => {
+  circlePreview.style.display = 'none';
+  if (tool !== 'copyTool' && copySource) { copyGhost.style.display = 'none'; }
+  if (isDrawing) {
+    isDrawing = false;
+    if (isShapeTool(tool)) { shapeStart = null; shapeSaved = null; }
+    else ctx.closePath();
+    saveState();
+  }
+});
+
+drawCanvas.addEventListener('mouseenter', () => {
+  if (tool !== 'text') circlePreview.style.display = 'block';
+  if (tool === 'copyTool' && copySource) copyGhost.style.display = 'block';
+});
+
+// ----- Shape drawing -----
+function drawShapePreview(pos) {
+  if (!shapeStart || !shapeSaved) return;
+  ctx.putImageData(shapeSaved, 0, 0);
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.lineWidth = penSize;
+  ctx.strokeStyle = penColor;
+  ctx.lineCap = 'round';
+  ctx.setLineDash([6, 4]);
+  renderShape(shapeStart.x, shapeStart.y, pos.x, pos.y);
+  ctx.setLineDash([]);
+}
+
+function finalizeShape(pos) {
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.lineWidth = penSize;
+  ctx.strokeStyle = penColor;
+  ctx.lineCap = 'round';
+  renderShape(shapeStart.x, shapeStart.y, pos.x, pos.y);
+}
+
+function renderShape(sx, sy, ex, ey) {
+  switch (tool) {
+    case 'line':
+      ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.stroke();
+      break;
+    case 'hline':
+      ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, sy); ctx.stroke();
+      break;
+    case 'vline':
+      ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx, ey); ctx.stroke();
+      break;
+    case 'rect': {
+      const x = Math.min(sx, ex), y = Math.min(sy, ey);
+      const w = Math.abs(ex - sx), h = Math.abs(ey - sy);
+      if (shapeFill === 'fill') { ctx.fillStyle = penColor; ctx.fillRect(x, y, w, h); }
+      else ctx.strokeRect(x, y, w, h);
+      break;
+    }
+    case 'circle': {
+      const r = Math.sqrt((ex - sx) ** 2 + (ey - sy) ** 2);
+      ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2);
+      if (shapeFill === 'fill') { ctx.fillStyle = penColor; ctx.fill(); }
+      else ctx.stroke();
+      break;
+    }
+  }
+}
+
+// Touch
+drawCanvas.addEventListener('touchstart', (e) => {
+  if (tool === 'text') return;
+  e.preventDefault();
+  pushUndo();
+  const touch = e.touches[0];
+  const rect = drawCanvas.getBoundingClientRect();
+  const pos = { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+  isDrawing = true;
+  if (isShapeTool(tool)) {
+    shapeStart = pos;
+    shapeSaved = ctx.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+  }
+}, { passive: false });
+
+drawCanvas.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  const touch = e.touches[0];
+  const rect = drawCanvas.getBoundingClientRect();
+  const pos = { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+  lastMouseX = pos.x;
+  lastMouseY = pos.y;
+  if (!isDrawing) return;
+  if (tool === 'pen' || tool === 'eraser') {
+    const size = getCurrentSize();
+    ctx.lineWidth = size; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    if (tool === 'eraser') { ctx.globalCompositeOperation = 'destination-out'; ctx.strokeStyle = 'rgba(0,0,0,1)'; }
+    else { ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = penColor; }
+    ctx.lineTo(pos.x, pos.y); ctx.stroke();
+  } else if (isShapeTool(tool) && shapeSaved) {
+    drawShapePreview(pos);
+  }
+}, { passive: false });
+
+drawCanvas.addEventListener('touchend', () => {
+  if (!isDrawing) return;
+  isDrawing = false;
+  if (isShapeTool(tool) && shapeSaved) {
+    ctx.putImageData(shapeSaved, 0, 0);
+    finalizeShape({ x: lastMouseX, y: lastMouseY });
+    shapeStart = null; shapeSaved = null;
+  } else { ctx.closePath(); }
+  saveState();
+});
+
+// ----- Circle preview -----
+function updateCirclePreview(pos) {
+  if (tool === 'text') { circlePreview.style.display = 'none'; return; }
+  if (isDrawing && isShapeTool(tool)) { circlePreview.style.display = 'none'; return; }
+  const size = getCurrentSize();
+  circlePreview.style.width = size + 'px';
+  circlePreview.style.height = size + 'px';
+  circlePreview.style.left = pos.x + 'px';
+  circlePreview.style.top = pos.y + 'px';
+  circlePreview.style.display = 'block';
+}
+
+// ----- Bg rendering -----
+function renderBg() {
+  bgCtx.fillStyle = bgColor;
+  bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+  if (bgImage) {
+    const iw = bgImage.width, ih = bgImage.height;
+    const cw = bgCanvas.width, ch = bgCanvas.height;
+    const scale = Math.max(cw / iw, ch / ih);
+    const sw = iw * scale, sh = ih * scale;
+    bgCtx.drawImage(bgImage, (cw - sw) / 2, (ch - sh) / 2, sw, sh);
+  }
+}
+
+// ----- Undo -----
+function pushUndo() {
+  if (undoLock) return;
+  const data = ctx.getImageData(0, 0, drawCanvas.width, drawCanvas.height);
+  undoStack.push(data);
+  if (undoStack.length > MAX_UNDO) undoStack.shift();
+}
+
+function undo() {
+  if (undoStack.length === 0) return;
+  undoLock = true;
+  const data = undoStack.pop();
+  ctx.putImageData(data, 0, 0);
+  undoLock = false;
+  saveState();
+}
+
+// ----- Text tool -----
+let textInputEl = null;
+let textInputStartId = null;
+let selectedTextId = null;
+let textWasDragged = false;
+
+function startTextInput(x, y, existingText) {
+  if (textInputEl) return;
+  deselectText();
+  textInputEl = document.createElement('div');
+  textInputEl.className = 'text-el';
+  textInputEl.style.left = x + 'px';
+  textInputEl.style.top = y + 'px';
+  textInputEl.style.pointerEvents = 'auto';
+  textInputEl.contentEditable = true;
+  if (existingText) {
+    textInputEl.textContent = existingText.content;
+    textInputEl.style.fontSize = existingText.fontSize + 'px';
+    textInputEl.style.color = existingText.color;
+    textInputEl.style.transform = 'rotate(' + (existingText.rotation || 0) + 'deg)';
+    textInputStartId = existingText.id;
+  } else {
+    textInputEl.style.fontSize = '50px';
+    textInputEl.style.color = penColor;
+    textInputEl.style.transform = 'rotate(0deg)';
+    textInputStartId = null;
+  }
+  textLayer.appendChild(textInputEl);
+  textInputEl.focus();
+  if (existingText) {
+    const r = document.createRange();
+    r.selectNodeContents(textInputEl);
+    const s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+  }
+}
+
+function finishTextInput() {
+  if (!textInputEl) return;
+  const content = textInputEl.textContent.trim();
+  const fs = parseInt(textInputEl.style.fontSize) || penSize;
+  const clr = textInputEl.style.color || penColor;
+  const left = parseInt(textInputEl.style.left) || 0;
+  const top = parseInt(textInputEl.style.top) || 0;
+
+  if (content) {
+    pushUndo();
+    if (textInputStartId !== null) {
+      const t = texts.find(t => t.id === textInputStartId);
+      if (t) { t.content = content; t.fontSize = fs; t.color = clr; }
+    } else {
+      const id = textIdCounter++;
+      texts.push({ id, content, x: left, y: top, fontSize: fs, color: clr, rotation: 0 });
+    }
+  }
+  textInputEl.remove();
+  textInputEl = null;
+  textInputStartId = null;
+  renderTexts();
+  saveState();
+}
+
+function selectText(id) {
+  if (selectedTextId !== null && selectedTextId !== id) {
+    const oldEl = textLayer.querySelector('[data-id="' + selectedTextId + '"]');
+    if (oldEl) {
+      oldEl.classList.remove('selected');
+      oldEl.querySelectorAll('.resize-handle, .rotate-handle').forEach(h => h.remove());
+    }
+  }
+  selectedTextId = id;
+  const el = textLayer.querySelector('[data-id="' + id + '"]');
+  if (!el) return;
+  el.classList.add('selected');
+  const t = texts.find(t => t.id === id);
+  if (!t) return;
+  ['tl','tr','bl','br'].forEach(pos => {
+    const h = document.createElement('div');
+    h.className = 'resize-handle ' + pos;
+    h.addEventListener('mousedown', (e) => { e.stopPropagation(); startResizeText(t.id, pos, e); });
+    el.appendChild(h);
+  });
+  const rh = document.createElement('div');
+  rh.className = 'rotate-handle';
+  rh.addEventListener('mousedown', (e) => { e.stopPropagation(); startRotateText(t.id, e); });
+  el.appendChild(rh);
+}
+
+function deselectText() {
+  if (selectedTextId !== null) {
+    const el = textLayer.querySelector('[data-id="' + selectedTextId + '"]');
+    if (el) {
+      el.classList.remove('selected');
+      el.querySelectorAll('.resize-handle, .rotate-handle').forEach(h => h.remove());
+    }
+  }
+  selectedTextId = null;
+}
+
+function renderTexts() {
+  textLayer.innerHTML = '';
+  texts.forEach(t => {
+    // Skip the text currently being edited
+    if (textInputStartId !== null && t.id === textInputStartId) return;
+
+    const div = document.createElement('div');
+    div.className = 'text-el' + (selectedTextId === t.id ? ' selected' : '');
+    div.textContent = t.content;
+    div.style.left = t.x + 'px';
+    div.style.top = t.y + 'px';
+    div.style.fontSize = t.fontSize + 'px';
+    div.style.color = t.color;
+    div.style.transform = 'rotate(' + (t.rotation || 0) + 'deg)';
+    div.style.pointerEvents = 'auto';
+    div.dataset.id = t.id;
+
+    const del = document.createElement('button');
+    del.className = 'text-del';
+    del.textContent = '×';
+    del.title = '刪除';
+    del.addEventListener('click', (e) => { e.stopPropagation(); deleteText(t.id); });
+    div.appendChild(del);
+
+
+
+    // Handles when selected
+    if (selectedTextId === t.id) {
+      const positions = ['tl', 'tr', 'bl', 'br'];
+      positions.forEach(pos => {
+        const h = document.createElement('div');
+        h.className = 'resize-handle ' + pos;
+        h.addEventListener('mousedown', (e) => {
+          e.stopPropagation();
+          startResizeText(t.id, pos, e);
+        });
+        div.appendChild(h);
+      });
+      // Rotation handle
+      const rotH = document.createElement('div');
+      rotH.className = 'rotate-handle';
+      rotH.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        startRotateText(t.id, e);
+      });
+      div.appendChild(rotH);
+    }
+
+    div.addEventListener('mousedown', (e) => {
+      if (e.target === del || e.target.classList.contains('resize-handle') || e.target.classList.contains('rotate-handle')) return;
+      textWasDragged = false;
+      isDraggingText = true;
+      dragTextEl = div;
+      const rect = canvasContainer.getBoundingClientRect();
+      dragOffsetX = e.clientX - rect.left - t.x;
+      dragOffsetY = e.clientY - rect.top - t.y;
+    });
+
+    div.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (textWasDragged) return;
+      if (tool === 'copyTool') {
+        copySource = { content: t.content, fontSize: t.fontSize, color: t.color, rotation: t.rotation || 0 };
+        copyGhost.textContent = t.content;
+        copyGhost.style.fontSize = t.fontSize + 'px';
+        copyGhost.style.color = t.color;
+        copyGhost.style.transform = 'rotate(' + (t.rotation || 0) + 'deg)';
+        copyGhost.style.display = 'block';
+        return;
+      }
+      selectText(t.id);
+    });
+
+    div.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      finishTextInput();
+      startTextInput(t.x, t.y, t);
+      selectedTextId = null;
+    });
+
+    textLayer.appendChild(div);
+  });
+}
+
+// ----- Rotate text by handle drag -----
+let rotateTextId = null;
+let rotateStartAngle = 0;
+
+function startRotateText(id, e) {
+  rotateTextId = id;
+  const t = texts.find(t => t.id === id);
+  if (!t) return;
+  const rect = textLayer.getBoundingClientRect();
+  const cx = t.x + rect.left + 50;
+  const cy = t.y + rect.top + 20;
+  rotateStartAngle = Math.atan2(e.clientY - cy, e.clientX - cx) * (180 / Math.PI) - (t.rotation || 0);
+  textWasDragged = false;
+}
+
+// ----- Resize text by corner drag -----
+let resizeTextId = null;
+let resizeStartFS = 0;
+let resizeStartX = 0, resizeStartY = 0;
+let resizeCorner = '';
+
+function startResizeText(id, corner, e) {
+  resizeTextId = id;
+  resizeCorner = corner;
+  const t = texts.find(t => t.id === id);
+  if (!t) return;
+  resizeStartFS = t.fontSize;
+  resizeStartX = e.clientX;
+  resizeStartY = e.clientY;
+  textWasDragged = false;
+}
+
+document.addEventListener('mousemove', (e) => {
+  // Copy ghost follow mouse
+  if (copySource && tool === 'copyTool') {
+    const rect = canvasContainer.getBoundingClientRect();
+    copyGhost.style.left = (e.clientX - rect.left) + 'px';
+    copyGhost.style.top = (e.clientY - rect.top) + 'px';
+  }
+  // Rotation drag
+  if (rotateTextId !== null) {
+    const t = texts.find(t => t.id === rotateTextId);
+    if (t) {
+      const div = textLayer.querySelector('[data-id="' + rotateTextId + '"]');
+      if (!div) return;
+      const rect = div.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const angle = Math.atan2(e.clientY - cy, e.clientX - cx) * (180 / Math.PI) - rotateStartAngle;
+      let raw = ((angle % 360) + 360) % 360;
+      const snap = Math.round(raw / 45) * 45;
+      if (Math.abs(raw - snap) <= 8) raw = snap;
+      t.rotation = Math.round(raw);
+      div.style.transform = 'rotate(' + t.rotation + 'deg)';
+    }
+    return;
+  }
+  // Resize drag
+  if (resizeTextId !== null) {
+    const dx = e.clientX - resizeStartX;
+    const dy = e.clientY - resizeStartY;
+    let delta;
+    if (resizeCorner === 'tl') delta = -dx - dy;
+    else if (resizeCorner === 'tr') delta = dx - dy;
+    else if (resizeCorner === 'bl') delta = -dx + dy;
+    else delta = dx + dy;
+    const newFS = Math.max(4, Math.min(200, resizeStartFS + delta));
+    const t = texts.find(t => t.id === resizeTextId);
+    if (t) {
+      t.fontSize = newFS;
+      renderTexts();
+    }
+    return;
+  }
+  // Text drag
+  if (!isDraggingText || !dragTextEl) return;
+  textWasDragged = true;
+  const rect = canvasContainer.getBoundingClientRect();
+  const x = e.clientX - rect.left - dragOffsetX;
+  const y = e.clientY - rect.top - dragOffsetY;
+  const id = parseInt(dragTextEl.dataset.id);
+  moveText(id, x, y);
+});
+
+document.addEventListener('mouseup', () => {
+  if (rotateTextId !== null) {
+    rotateTextId = null;
+    saveState();
+  }
+  if (resizeTextId !== null) {
+    resizeTextId = null;
+    saveState();
+  }
+  if (isDraggingText) {
+    isDraggingText = false;
+    dragTextEl = null;
+    saveState();
+  }
+});
+
+function moveText(id, x, y) {
+  const t = texts.find(t => t.id === id);
+  if (!t) return;
+  t.x = x;
+  t.y = y;
+  renderTexts();
+}
+
+function deleteText(id) {
+  pushUndo();
+  texts = texts.filter(t => t.id !== id);
+  if (selectedTextId === id) selectedTextId = null;
+  renderTexts();
+  saveState();
+}
+
+drawCanvas.addEventListener('click', (e) => {
+  const pos = getPos(e);
+  if (tool === 'copyTool') {
+    if (copySource) {
+      pushUndo();
+      const id = textIdCounter++;
+      texts.push({ id, content: copySource.content, x: pos.x, y: pos.y, fontSize: copySource.fontSize, color: copySource.color, rotation: copySource.rotation || 0 });
+      renderTexts();
+      saveState();
+    }
+    return;
+  }
+  if (tool !== 'text') return;
+  if (textInputEl) { finishTextInput(); return; }
+  deselectText();
+  startTextInput(pos.x, pos.y, null);
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey && textInputEl) {
+    e.preventDefault();
+    finishTextInput();
+    return;
+  }
+  if (e.key === 'Escape') {
+    // Cancel text input
+    if (textInputEl) {
+      textInputEl.remove();
+      textInputEl = null;
+      textInputStartId = null;
+      renderTexts();
+      setActiveTool('pen');
+      return;
+    }
+    // Cancel shape drawing
+    if (shapeStart) {
+      if (shapeSaved) ctx.putImageData(shapeSaved, 0, 0);
+      shapeStart = null;
+      shapeSaved = null;
+      isDrawing = false;
+      setActiveTool('pen');
+      return;
+    }
+    // Deselect text
+    if (selectedTextId !== null) {
+      deselectText();
+      setActiveTool('pen');
+      return;
+    }
+    // Exit copy mode
+    if (copySource) { copySource = null; copyGhost.style.display = 'none'; }
+    // Default back to pen
+    setActiveTool('pen');
+  }
+});
+
+document.addEventListener('mousedown', (e) => {
+  if (textInputEl && e.target !== textInputEl && !textInputEl.contains(e.target)) {
+    finishTextInput();
+  }
+});
+
+function repositionTexts() { renderTexts(); }
+function getTextsData() { return texts.map(t => ({ ...t })); }
+function setTextsData(data) {
+  texts = data || [];
+  textIdCounter = texts.length > 0 ? Math.max(...texts.map(t => t.id)) + 1 : 0;
+  renderTexts();
+}
+
+// ----- Swatches -----
+function initSwatches() {
+  const saved = localStorage.getItem('whiteboard-swatches');
+  swatches = saved ? JSON.parse(saved) : [...DEFAULT_SWATCHES];
+  renderSwatches();
+}
+
+function renderSwatches() {
+  const wrap = document.getElementById('swatchWrap');
+  wrap.innerHTML = '';
+  swatches.forEach((color) => {
+    const sw = document.createElement('div');
+    sw.className = 'swatch' + (color === penColor ? ' active' : '');
+    sw.style.background = color;
+    sw.title = color;
+    sw.addEventListener('click', () => {
+      penColor = color;
+      document.getElementById('penColor').value = color;
+      document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+      sw.classList.add('active');
+    });
+    wrap.appendChild(sw);
+  });
+}
+
+document.getElementById('resetSwatchesBtn').addEventListener('click', () => {
+  localStorage.removeItem('whiteboard-swatches');
+  swatches = [...DEFAULT_SWATCHES];
+  renderSwatches();
+});
+
+// ----- Persistence -----
+function saveState() {
+  localStorage.setItem('whiteboard-draw', drawCanvas.toDataURL());
+  const bgData = { color: bgColor, image: bgImage ? bgCanvas.toDataURL() : null };
+  localStorage.setItem('whiteboard-bg', JSON.stringify(bgData));
+  localStorage.setItem('whiteboard-texts', JSON.stringify(getTextsData()));
+}
+
+function restoreDrawing() {
+  const drawData = localStorage.getItem('whiteboard-draw');
+  if (drawData) {
+    const img = new Image();
+    img.onload = () => { ctx.drawImage(img, 0, 0, drawCanvas.width, drawCanvas.height); };
+    img.src = drawData;
+  }
+}
+
+function loadState() {
+  const bgData = JSON.parse(localStorage.getItem('whiteboard-bg'));
+  if (bgData) {
+    if (bgData.color) {
+      bgColor = bgData.color;
+      document.getElementById('bgColor').value = bgColor;
+    }
+    if (bgData.image) {
+      const img = new Image();
+      img.onload = () => { bgImage = img; renderBg(); };
+      img.src = bgData.image;
+    } else { renderBg(); }
+  } else { renderBg(); }
+  const textsData = JSON.parse(localStorage.getItem('whiteboard-texts'));
+  if (textsData) setTextsData(textsData);
+}
+
+// ----- Tool buttons -----
+function syncSliderToTool() {
+  const v = getCurrentSize();
+  document.getElementById('penSize').value = v;
+  document.getElementById('sizeLabel').textContent = v;
+}
+
+function setActiveTool(t) {
+  // Exit copy mode
+  if (tool === 'copyTool') { copySource = null; copyGhost.style.display = 'none'; }
+  tool = t;
+  ALL_TOOLS.forEach(t => {
+    const el = document.getElementById(t + 'Btn');
+    if (el) el.classList.remove('active');
+  });
+  const btn = document.getElementById(t + 'Btn');
+  if (btn) btn.classList.add('active');
+  if (t === 'eraser') eraserSize = penSize;
+  if (t === 'pen' || isShapeTool(t)) drawCanvas.style.cursor = 'crosshair';
+  else if (t === 'eraser') drawCanvas.style.cursor = 'cell';
+  else if (t === 'text') drawCanvas.style.cursor = 'text';
+  else if (t === 'copyTool') drawCanvas.style.cursor = 'copy';
+  if (t === 'text' || t === 'copyTool') circlePreview.style.display = 'none';
+  document.getElementById('shapeFillSelect').style.display = (t === 'rect' || t === 'circle') ? 'block' : 'none';
+  syncSliderToTool();
+}
+
+document.getElementById('penBtn').addEventListener('click', () => setActiveTool('pen'));
+document.getElementById('eraserBtn').addEventListener('click', () => setActiveTool('eraser'));
+document.getElementById('textBtn').addEventListener('click', () => setActiveTool('text'));
+document.getElementById('copyToolBtn').addEventListener('click', () => setActiveTool('copyTool'));
+document.getElementById('lineBtn').addEventListener('click', () => setActiveTool('line'));
+document.getElementById('hlineBtn').addEventListener('click', () => setActiveTool('hline'));
+document.getElementById('vlineBtn').addEventListener('click', () => setActiveTool('vline'));
+document.getElementById('rectBtn').addEventListener('click', () => setActiveTool('rect'));
+document.getElementById('circleBtn').addEventListener('click', () => setActiveTool('circle'));
+document.getElementById('shapeFillSelect').addEventListener('change', (e) => { shapeFill = e.target.value; });
+
+document.getElementById('undoBtn').addEventListener('click', undo);
+document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); } });
+
+document.getElementById('penColor').addEventListener('input', (e) => {
+  penColor = e.target.value;
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+});
+
+document.getElementById('penSize').addEventListener('input', (e) => {
+  const v = parseInt(e.target.value);
+  setCurrentSize(v);
+  document.getElementById('sizeLabel').textContent = v;
+});
+
+document.getElementById('bgColor').addEventListener('input', (e) => {
+  bgColor = e.target.value;
+  renderBg();
+  saveState();
+});
+
+document.getElementById('uploadBtn').addEventListener('click', () => { document.getElementById('fileInput').click(); });
+function pasteAsBgImage(img) {
+  if (!img || !img.width) return;
+  bgImage = img; renderBg(); saveState();
+}
+
+document.getElementById('uploadBtn').addEventListener('click', () => { document.getElementById('fileInput').click(); });
+document.getElementById('fileInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => pasteAsBgImage(img);
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+document.addEventListener('paste', (e) => {
+  const items = e.clipboardData && e.clipboardData.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type && item.type.indexOf('image') === 0) {
+      e.preventDefault();
+      const blob = item.getAsFile();
+      if (!blob) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => pasteAsBgImage(img);
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(blob);
+      return;
+    }
+  }
+});
+
+document.getElementById('clearBtn').addEventListener('click', () => {
+  pushUndo();
+  ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+  saveState();
+});
+
+document.getElementById('newBtn').addEventListener('click', () => {
+  bgImage = null;
+  bgColor = '#ffffff';
+  document.getElementById('bgColor').value = '#ffffff';
+  ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+  texts = [];
+  textIdCounter = 0;
+  renderTexts();
+  renderBg();
+  localStorage.removeItem('whiteboard-draw');
+  localStorage.removeItem('whiteboard-bg');
+  localStorage.removeItem('whiteboard-texts');
+});
+
+function mergeCanvas(cb) {
+  const tmp = document.createElement('canvas');
+  tmp.width = bgCanvas.width;
+  tmp.height = bgCanvas.height;
+  const tmpCtx = tmp.getContext('2d');
+  tmpCtx.drawImage(bgCanvas, 0, 0);
+  tmpCtx.drawImage(drawCanvas, 0, 0);
+  texts.forEach(t => {
+    const rot = (t.rotation || 0) * Math.PI / 180;
+    tmpCtx.save();
+    tmpCtx.translate(t.x, t.y);
+    tmpCtx.rotate(rot);
+    tmpCtx.font = t.fontSize + 'px "Segoe UI", Arial, sans-serif';
+    tmpCtx.fillStyle = t.color;
+    tmpCtx.textBaseline = 'top';
+    tmpCtx.fillText(t.content, 0, 0);
+    tmpCtx.restore();
+  });
+  cb(tmp);
+}
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  mergeCanvas((tmp) => {
+    tmp.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'whiteboard.png';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  });
+});
+
+document.getElementById('copyBtn').addEventListener('click', () => {
+  mergeCanvas(async (tmp) => {
+    tmp.toBlob(async (blob) => {
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      } catch (err) { alert('複製失敗，請使用下載功能'); }
+    });
+  });
+});
+
+window.addEventListener('beforeunload', saveState);
+
+drawCanvas.addEventListener('dblclick', (e) => {
+  if (tool !== 'text') {
+    if (!document.fullscreenElement) canvasContainer.requestFullscreen();
+    else document.exitFullscreen();
+  }
+});
+
+// Init
+setActiveTool('pen');
+resizeCanvases();
+loadState();
+initSwatches();
+</script>
+</body>
+</html>

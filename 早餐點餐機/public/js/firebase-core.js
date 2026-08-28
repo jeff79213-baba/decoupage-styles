@@ -40,6 +40,7 @@ window.FirebaseCore = {
           storeName: data.storeName || '新店家',
           subtitle: data.subtitle || '請到後台設定菜單',
           theme: data.theme || 'sage',
+          themeColors: data.themeColors || null,
           addonLibrary: data.addonLibrary || [],
           categories: data.categories || [],
           dailyStats: data.dailyStats || {},
@@ -61,6 +62,7 @@ window.FirebaseCore = {
       storeName: '新店家',
       subtitle: '請到後台設定菜單',
       theme: 'sage',
+      themeColors: null,
       addonLibrary: [],
       categories: [],
       dailyStats: {},
@@ -70,9 +72,9 @@ window.FirebaseCore = {
 
   async saveMenu(menuData) {
     // Save only menu-related fields, preserve stats
-    const { storeName, subtitle, theme, addonLibrary, categories } = menuData;
+    const { storeName, subtitle, theme, themeColors, addonLibrary, categories } = menuData;
     await this.shopDoc().set({
-      storeName, subtitle, theme, addonLibrary, categories
+      storeName, subtitle, theme, themeColors, addonLibrary, categories
     }, { merge: true });
     this._updateStatsLocal('writes', 1);
   },
@@ -81,6 +83,7 @@ window.FirebaseCore = {
   async saveOrder(orderData) {
     const orderRef = await this.shopOrders().add({
       ...orderData,
+      completed: false,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     this._updateStatsLocal('writes', 1);
@@ -97,6 +100,11 @@ window.FirebaseCore = {
 
   async deleteOrder(orderId) {
     await this.shopOrders().doc(orderId).delete();
+    this._updateStatsLocal('writes', 1);
+  },
+
+  async updateOrderCompleted(orderId, completed) {
+    await this.shopOrders().doc(orderId).update({ completed });
     this._updateStatsLocal('writes', 1);
   },
 

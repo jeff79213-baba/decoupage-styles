@@ -1,44 +1,57 @@
 /* Reset + Base */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { height: 100%; }
+html { height: 100%; transition: background-color 0.4s ease; }
 
 /* Theme Variables - Dark (default) */
 :root {
   --bg: #1A1A1A;
-  --surface: #2A2A2A;
+  --surface: #262626;
   --surface-hover: #333333;
   --primary: #F27D42;
-  --primary-hover: #E06B30;
+  --primary-hover: #E06C30;
+  --primary-glow: rgba(242,125,66,0.25);
   --text: #FFFFFF;
-  --text-muted: #AAAAAA;
-  --border: #444444;
-  --card-bg: #2A2A2A;
+  --text-muted: #A0A0A0;
+  --border: #333333;
+  --card-bg: #262626;
   --card-selected: #F27D42;
+  --danger: #FF4444;
   --font-main: 'Inter', sans-serif;
-  --radius: 16px;
-  --radius-sm: 12px;
+  --radius: 20px;
+  --radius-sm: 14px;
   --radius-pill: 999px;
 }
 
 /* Sage Theme */
 [data-theme="sage"] {
-  --bg: #0E3E37;
-  --surface: #1A5C52;
-  --surface-hover: #247065;
+  --bg: #F2F5F0;
+  --surface: #E0E8DE;
+  --surface-hover: #C8D4CC;
   --primary: #B58D3D;
-  --primary-hover: #9A7830;
-  --text: #FFFFFF;
-  --text-muted: #B0C4B8;
-  --border: #2A7A6A;
-  --card-bg: #1A5C52;
+  --primary-hover: #A07C33;
+  --primary-glow: rgba(181,141,61,0.2);
+  --text: #1A2E28;
+  --text-muted: #5A7A6A;
+  --border: #C8D4CC;
+  --card-bg: #E0E8DE;
   --card-selected: #B58D3D;
+  --danger: #C0392B;
   --font-main: 'Montserrat', sans-serif;
+  --radius: 20px;
+  --radius-sm: 14px;
+  --radius-pill: 999px;
 }
 
 body {
   font-family: var(--font-main);
   background-color: var(--bg);
   color: var(--text);
+  transition: background-color 0.4s ease, color 0.4s ease;
+  min-height: 100vh;
+}
+
+input, textarea, button {
+  font-family: inherit;
 }
 
 /* Utility Classes */
@@ -49,13 +62,13 @@ body {
   border-radius: var(--radius-pill);
   border: none;
   cursor: pointer;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   transition: all 0.2s;
 }
 .btn-primary {
   background-color: var(--primary);
-  color: var(--text);
+  color: #fff;
 }
 .btn-primary:hover {
   background-color: var(--primary-hover);
@@ -63,6 +76,7 @@ body {
 .btn-secondary {
   background-color: var(--surface);
   color: var(--text);
+  border: 1px solid var(--border);
 }
 .btn-secondary:hover {
   background-color: var(--surface-hover);
@@ -75,5 +89,5 @@ body {
 }
 .card-selected {
   background-color: var(--card-selected);
-  color: var(--text);
+  color: #fff;
 }

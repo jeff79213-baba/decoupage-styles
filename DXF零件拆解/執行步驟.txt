@@ -1,0 +1,45 @@
+DXF 圖檔零件拆解系統 - 執行步驟
+================================
+
+方法一：Python 直接執行（開發測試）
+----------------------------------
+cd C:\Users\TW-10\Documents\firebase雲端資料夾\DXF零件拆解
+C:\Users\TW-10\Documents\firebase雲端資料夾\.venv\Scripts\python.exe main.py
+
+方法二：執行打包好的 exe
+------------------------
+dist\DXF零件拆解系統.exe
+
+或帶檔案參數：
+dist\DXF零件拆解系統.exe sample.dxf
+
+方法三：重新打包 exe
+--------------------
+cd C:\Users\TW-10\Documents\firebase雲端資料夾\DXF零件拆解
+C:\Users\TW-10\Documents\firebase雲端資料夾\.venv\Scripts\python.exe -m PyInstaller --onefile --windowed --icon icon.ico --name "DXF零件拆解系統" --hidden-import matplotlib --hidden-import matplotlib.backends.backend_agg --hidden-import ezdxf --hidden-import openpyxl --hidden-import PIL --hidden-import PIL._tkinter_finder --hidden-import PIL.ImageDraw --collect-all matplotlib --collect-all ezdxf --add-data "icon.ico;." main.py
+
+檔案結構
+--------
+DXF零件拆解/
+├── main.py              主程式 UI + 編輯互動
+├── dxf_parser.py        DXF 解析 + Pillow 渲染
+├── dxf_editor.py        DXF 寫入/Undo/Redo/圖層管理
+├── part_analyzer.py     零件分組 + 問題偵測
+├── report_generator.py  Excel 報表匯出
+├── sample.dxf           測試用 DXF
+├── dist/
+│   └── DXF零件拆解系統.exe   打包好的執行檔
+└── output/              預覽圖暫存
+
+操作說明
+--------
+1. 點「選取 DXF」載入檔案
+2. 上方工具列選工具（選取/直線/矩形/圓形/文字/刪除）
+3. 在圖面上拖曳繪製
+4. 圖層下拉選切換當前圖層
+5. + 新增圖層 / - 刪除圖層 / 改名 / 改顏色
+6. 顯示 checkbox 切換圖層可見度
+7. 鎖定 checkbox 切換圖層鎖定
+8. Ctrl+Z 復原 / Ctrl+Y 重做 / Delete 刪除選取
+9. 右鍵或 Escape 回復選取模式
+10. 點「儲存」覆蓋原檔 / 「另存新檔」存新檔

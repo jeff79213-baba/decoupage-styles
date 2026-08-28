@@ -28,16 +28,68 @@
       <button class="btn btn-primary" onclick="saveStoreInfo()">儲存</button>
     </div>
 
+    <!-- Navigation -->
+    <div class="nav-links">
+      <a href="admin-menu.html" class="nav-link" id="linkMenu">
+        <h3>菜單管理</h3>
+        <p>管理品項、配料、分類</p>
+      </a>
+      <a href="admin-orders.html" class="nav-link" id="linkOrders">
+        <h3>訂單紀錄</h3>
+        <p>查看歷史訂單、統計</p>
+      </a>
+    </div>
+
     <!-- Theme Switch -->
     <div class="admin-section">
       <h2>主題切換</h2>
       <div class="theme-buttons">
         <button class="theme-btn" id="themeDark" onclick="setTheme('dark')">
-          Dark
+          夜焰
         </button>
         <button class="theme-btn" id="themeSage" onclick="setTheme('sage')">
-          Sage
+          晨露
         </button>
+      </div>
+    </div>
+
+    <!-- Theme Color Customization -->
+    <div class="admin-section" id="themeCustomSection" style="display:none">
+      <h2>微調顏色</h2>
+      <p style="margin-bottom:12px;color:var(--text-muted);font-size:13px">選擇主題後，可在此自訂各區域色彩</p>
+      <div class="color-custom-grid">
+        <div class="color-custom-item">
+          <label>主色（強調色）</label>
+          <div class="color-pick-row">
+            <input type="color" id="colorPrimary" value="#F27D42">
+            <span class="color-hex" id="colorPrimaryHex">#F27D42</span>
+          </div>
+        </div>
+        <div class="color-custom-item">
+          <label>背景</label>
+          <div class="color-pick-row">
+            <input type="color" id="colorBg" value="#1A1A1A">
+            <span class="color-hex" id="colorBgHex">#1A1A1A</span>
+          </div>
+        </div>
+        <div class="color-custom-item">
+          <label>表面（卡片/區塊）</label>
+          <div class="color-pick-row">
+            <input type="color" id="colorSurface" value="#262626">
+            <span class="color-hex" id="colorSurfaceHex">#262626</span>
+          </div>
+        </div>
+        <div class="color-custom-item">
+          <label>文字</label>
+          <div class="color-pick-row">
+            <input type="color" id="colorText" value="#FFFFFF">
+            <span class="color-hex" id="colorTextHex">#FFFFFF</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn btn-primary" onclick="saveThemeColors()">儲存顏色</button>
+        <button class="btn btn-secondary" onclick="resetThemeColors()">恢復預設</button>
       </div>
     </div>
 
@@ -61,18 +113,6 @@
       <div id="qrCode" style="text-align:center; margin:16px 0;"></div>
       <button class="btn btn-primary" onclick="downloadQR()">下載 QR Code</button>
     </div>
-
-    <!-- Navigation -->
-    <div class="nav-links">
-      <a href="admin-menu.html" class="nav-link" id="linkMenu">
-        <h3>菜單管理</h3>
-        <p>管理品項、配料、分類</p>
-      </a>
-      <a href="admin-orders.html" class="nav-link" id="linkOrders">
-        <h3>訂單紀錄</h3>
-        <p>查看歷史訂單、統計</p>
-      </a>
-    </div>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -82,6 +122,7 @@
   <script src="js/config.js"></script>
   <script src="js/firebase-core.js"></script>
   <script src="js/theme.js"></script>
+  <script>ThemeManager.init();</script>
   <script src="js/admin-home.js"></script>
 </body>
 </html>
