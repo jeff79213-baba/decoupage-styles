@@ -72,6 +72,24 @@ class TestAgentQuery(unittest.TestCase):
         self.assertIn("deepseek", q.lower())
 
 
+class TestIsEnglish(unittest.TestCase):
+    def test_english_detected(self):
+        self.assertTrue(fn.is_english("Neocloud Lambda secures $1B in debt to buy more chips"))
+        self.assertTrue(fn.is_english("An Anthropic researcher just gave us a peek at self-improving AI"))
+
+    def test_chinese_not_detected(self):
+        self.assertFalse(fn.is_english("台積電先進製程 晶圓代工增溫，需求回溫"))
+
+    def test_mixed_chinese_title_not_detected(self):
+        self.assertFalse(fn.is_english("ChatGPT續宰AI流量龍頭 泰國全球排名第26"))
+
+    def test_mixed_openai_title_not_detected(self):
+        self.assertFalse(fn.is_english("OpenAI提出網路集體防禦行動，獲Google、Anthropic及微軟等上百家企業呼應"))
+
+    def test_empty_false(self):
+        self.assertFalse(fn.is_english(""))
+
+
 class TestBuildPageHtml(unittest.TestCase):
     def test_page_has_tabs_and_agent_badges(self):
         results = {

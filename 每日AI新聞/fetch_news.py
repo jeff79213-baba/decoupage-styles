@@ -88,6 +88,18 @@ def strip_html(text):
     return re.sub(r"\s+", " ", text).strip()
 
 
+def is_english(text):
+    """粗略判定文字是否以英文為主（拉丁字母比例 > 0.5）。"""
+    if not text:
+        return False
+    latin = sum(1 for ch in text if ch.isascii() and ch.isalpha())
+    cjk = sum(1 for ch in text if "\u4e00" <= ch <= "\u9fff")
+    total = latin + cjk
+    if total == 0:
+        return False
+    return latin / total > 0.5
+
+
 def summarize(text, limit=160):
     text = strip_html(text)
     if len(text) > limit:
