@@ -89,8 +89,9 @@ def strip_html(text):
     return re.sub(r"\s+", " ", text).strip()
 
 
-def is_english(text):
-    """粗略判定文字是否以英文為主（拉丁字母比例 > 0.5）。"""
+def is_english(text, threshold=0.5):
+    """粗略判定文字是否以英文為主（拉丁字母比例 > threshold）。
+    註：僅統計 ASCII 拉丁字母與基本 CJK（U+4E00–U+9FFF）；é、ü 等非 ASCII 拉丁字母不計入，對亞洲語料影響甚微。"""
     if not text:
         return False
     latin = sum(1 for ch in text if ch.isascii() and ch.isalpha())
@@ -98,16 +99,18 @@ def is_english(text):
     total = latin + cjk
     if total == 0:
         return False
-    return latin / total > 0.5
+    return latin / total > threshold
 
 
-def translate_if_english(item):
+def translate_if_english(item, lang="zh"):
     """將 item 的英文標題/摘要翻譯成中文，原文保留於 item['orig']。
-    翻譯失敗（結果等於原文）時不寫 orig。原地修改並回傳 item。"""
+    lang 決定門檻：en 來源用 0.5；zh/未知來源用 0.8，避免中文 Google News
+    標題因「 - Publisher」英文出版者名而被誤判為英文。翻譯失敗不寫 orig。"""
+    threshold = 0.5 if lang == "en" else 0.8
     orig = {}
     for field in ("title", "summary"):
         text = item.get(field) or ""
-        if not is_english(text):
+        if not is_english(text, threshold):
             continue
         trans = google_translate(text)
         if trans and trans != text:
@@ -200,12 +203,12 @@ def fetch_feed(feed):
     if lang == "en":
         print(f"  [{name}] {len(items)} 則（翻譯中…）")
         for it in items:
-            translate_if_english(it)
+            translate_if_english(it, lang)
             time.sleep(0.6)
     else:
         print(f"  [{name}] {len(items)} 則")
         for it in items:
-            translate_if_english(it)
+            translate_if_english(it, lang)
 
     return items
 
@@ -268,12 +271,12 @@ def fetch_google_news():
         if cfg["lang"] == "en":
             print(f"  [Google News {cfg['hl']}] {len(items)} 則（翻譯中…）")
             for it in items:
-                translate_if_english(it)
+                translate_if_english(it, cfg["lang"])
                 time.sleep(0.6)
         else:
             print(f"  [Google News {cfg['hl']}] {len(items)} 則")
             for it in items:
-                translate_if_english(it)
+                translate_if_english(it, cfg["lang"])
         all_items.extend(items)
     return all_items
 
@@ -290,9 +293,7 @@ def agent_section_html(items):
         tags = "".join(f"<span class='brand-tag'>{html.escape(b)}</span>" for b in it.get("brands", []))
         badge = f"<span class='badge'>{html.escape(it.get('source', ''))}</span>"
         t = fmt_time(it.get("time"))
-        o = it.get("orig", {})
-        orig_title = f"<div class='orig'>{html.escape(o['title'])}</div>" if o.get("title") else ""
-        orig_summary = f"<div class='orig'>{html.escape(o['summary'])}</div>" if o.get("summary") else ""
+        orig_title, orig_summary = orig_lines(it.get("orig", {}))
         sec.append(
             f"<div class='card'><div class='tags'>{tags}</div>"
             f"<a href='{html.escape(it.get('link', ''))}' target='_blank' rel='noopener'>{html.escape(it.get('title', ''))}</a>"
@@ -301,6 +302,14 @@ def agent_section_html(items):
             f"<div class='meta'>{badge}<span>{t}</span></div></div>"
         )
     return "\n".join(sec)
+
+
+def orig_lines(orig):
+    """把 item['orig']（若有）轉成 .orig 小字行 HTML，回傳 (標題行, 摘要行)。"""
+    o = orig or {}
+    t = f"<div class='orig'>{html.escape(o['title'])}</div>" if o.get("title") else ""
+    s = f"<div class='orig'>{html.escape(o['summary'])}</div>" if o.get("summary") else ""
+    return t, s
 
 
 def build_page_html(results, agent_items, generated_at):
@@ -314,9 +323,7 @@ def build_page_html(results, agent_items, generated_at):
         for it in items:
             badge = "<span class='badge'>翻譯</span>" if cards[name]["lang"] == "en" else ""
             t = fmt_time(it["time"])
-            o = it.get("orig", {})
-            orig_title = f"<div class='orig'>{html.escape(o['title'])}</div>" if o.get("title") else ""
-            orig_summary = f"<div class='orig'>{html.escape(o['summary'])}</div>" if o.get("summary") else ""
+            orig_title, orig_summary = orig_lines(it.get("orig", {}))
             sec.append(
                 f"<div class='card'><a href='{html.escape(it['link'])}' target='_blank' rel='noopener'>"
                 f"{html.escape(it['title'])}</a>{orig_title}"

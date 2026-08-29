@@ -90,16 +90,37 @@ class TestIsEnglish(unittest.TestCase):
     def test_empty_false(self):
         self.assertFalse(fn.is_english(""))
 
+    def test_zh_google_news_title_with_publisher_suffix(self):
+        title = "創作者因推廣Claude慘遭「微取消」，她說使用AI正成社會禁忌 - Business Insider Taiwan"
+        self.assertTrue(fn.is_english(title, 0.5))
+        self.assertFalse(fn.is_english(title, 0.8))
+
 
 class TestTranslateIfEnglish(unittest.TestCase):
     def test_translates_english_keeps_orig(self):
         item = {"title": "Neocloud secures $1B", "summary": "English summary here", "link": "http://x"}
         with mock.patch("fetch_news.google_translate", return_value="中文翻譯") as mt:
-            fn.translate_if_english(item)
+            fn.translate_if_english(item, "en")
         self.assertEqual(item["title"], "中文翻譯")
         self.assertEqual(item["summary"], "中文翻譯")
         self.assertEqual(item["orig"], {"title": "Neocloud secures $1B", "summary": "English summary here"})
         self.assertEqual(mt.call_count, 2)
+
+    def test_zh_item_with_publisher_suffix_untouched(self):
+        item = {"title": "創作者因推廣Claude慘遭「微取消」，她說使用AI正成社會禁忌 - Business Insider Taiwan",
+                "summary": "她說使用AI正成社會禁忌 Business Insider Taiwan", "link": "http://x"}
+        with mock.patch("fetch_news.google_translate", side_effect=AssertionError("不應呼叫翻譯")):
+            fn.translate_if_english(item, "zh")
+        self.assertEqual(item["title"], "創作者因推廣Claude慘遭「微取消」，她說使用AI正成社會禁忌 - Business Insider Taiwan")
+        self.assertNotIn("orig", item)
+
+    def test_pure_english_title_translated_even_in_zh_feed(self):
+        item = {"title": "Researcher shows how Claude Code can be tricked by asking it to summarize a website",
+                "summary": "A short English summary here.", "link": "http://x"}
+        with mock.patch("fetch_news.google_translate", return_value="中文翻譯") as mt:
+            fn.translate_if_english(item, "zh")
+        self.assertEqual(item["title"], "中文翻譯")
+        self.assertEqual(item["orig"]["title"], "Researcher shows how Claude Code can be tricked by asking it to summarize a website")
 
     def test_translation_failure_no_orig(self):
         item = {"title": "Neocloud secures $1B", "summary": "English summary here", "link": "http://x"}
