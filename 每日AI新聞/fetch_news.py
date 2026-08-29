@@ -100,6 +100,23 @@ def is_english(text):
     return latin / total > 0.5
 
 
+def translate_if_english(item):
+    """將 item 的英文標題/摘要翻譯成中文，原文保留於 item['orig']。
+    翻譯失敗（結果等於原文）時不寫 orig。原地修改並回傳 item。"""
+    orig = {}
+    for field in ("title", "summary"):
+        text = item.get(field) or ""
+        if not is_english(text):
+            continue
+        trans = google_translate(text)
+        if trans and trans != text:
+            item[field] = trans
+            orig[field] = text
+    if orig:
+        item["orig"] = orig
+    return item
+
+
 def summarize(text, limit=160):
     text = strip_html(text)
     if len(text) > limit:
@@ -180,12 +197,12 @@ def fetch_feed(feed):
     if lang == "en":
         print(f"  [{name}] {len(items)} 則（翻譯中…）")
         for it in items:
-            it["title"] = google_translate(it["title"]) or it["title"]
-            if it["summary"]:
-                it["summary"] = google_translate(it["summary"]) or it["summary"]
+            translate_if_english(it)
             time.sleep(0.6)
     else:
         print(f"  [{name}] {len(items)} 則")
+        for it in items:
+            translate_if_english(it)
 
     return items
 
@@ -248,12 +265,12 @@ def fetch_google_news():
         if cfg["lang"] == "en":
             print(f"  [Google News {cfg['hl']}] {len(items)} 則（翻譯中…）")
             for it in items:
-                it["title"] = google_translate(it["title"]) or it["title"]
-                if it["summary"]:
-                    it["summary"] = google_translate(it["summary"]) or it["summary"]
+                translate_if_english(it)
                 time.sleep(0.6)
         else:
             print(f"  [Google News {cfg['hl']}] {len(items)} 則")
+            for it in items:
+                translate_if_english(it)
         all_items.extend(items)
     return all_items
 

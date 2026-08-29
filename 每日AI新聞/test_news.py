@@ -5,6 +5,7 @@
 import sys
 import os
 import unittest
+from unittest import mock
 from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -88,6 +89,31 @@ class TestIsEnglish(unittest.TestCase):
 
     def test_empty_false(self):
         self.assertFalse(fn.is_english(""))
+
+
+class TestTranslateIfEnglish(unittest.TestCase):
+    def test_translates_english_keeps_orig(self):
+        item = {"title": "Neocloud secures $1B", "summary": "English summary here", "link": "http://x"}
+        with mock.patch("fetch_news.google_translate", return_value="中文翻譯") as mt:
+            fn.translate_if_english(item)
+        self.assertEqual(item["title"], "中文翻譯")
+        self.assertEqual(item["summary"], "中文翻譯")
+        self.assertEqual(item["orig"], {"title": "Neocloud secures $1B", "summary": "English summary here"})
+        self.assertEqual(mt.call_count, 2)
+
+    def test_translation_failure_no_orig(self):
+        item = {"title": "Neocloud secures $1B", "summary": "English summary here", "link": "http://x"}
+        with mock.patch("fetch_news.google_translate", side_effect=lambda s: s):
+            fn.translate_if_english(item)
+        self.assertEqual(item["title"], "Neocloud secures $1B")
+        self.assertNotIn("orig", item)
+
+    def test_chinese_item_untouched(self):
+        item = {"title": "台積電先進製程 需求回溫", "summary": "晶圓代工出貨成長", "link": "http://x"}
+        with mock.patch("fetch_news.google_translate", side_effect=AssertionError("不應呼叫翻譯")):
+            fn.translate_if_english(item)
+        self.assertEqual(item["title"], "台積電先進製程 需求回溫")
+        self.assertNotIn("orig", item)
 
 
 class TestBuildPageHtml(unittest.TestCase):
