@@ -149,14 +149,16 @@ def google_translate(text, src="en", dst="zh-TW"):
     if not text:
         return ""
     url = "https://translate.googleapis.com/translate_a/single"
-    params = {"client": "gtx", "sl": src, "tl": dst, "dt": "t", "q": text}
-    try:
-        r = requests.get(url, params=params, headers=UA, timeout=15)
-        r.raise_for_status()
-        parts = r.json()[0]
-        return "".join(p[0] for p in parts if p and p[0])
-    except Exception:
-        return text
+    for client in ("dict-chrome-ex", "gtx"):
+        params = {"client": client, "sl": src, "tl": dst, "dt": "t", "q": text}
+        try:
+            r = requests.get(url, params=params, headers=UA, timeout=15)
+            r.raise_for_status()
+            parts = r.json()[0]
+            return "".join(p[0] for p in parts if p and p[0])
+        except Exception:
+            continue
+    return text
 
 
 def parse_time(entry):

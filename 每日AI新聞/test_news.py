@@ -116,6 +116,36 @@ class TestTranslateIfEnglish(unittest.TestCase):
         self.assertNotIn("orig", item)
 
 
+class TestGoogleTranslate(unittest.TestCase):
+    def test_falls_back_when_first_client_blocked(self):
+        calls = []
+
+        def fake_get(url, params=None, headers=None, timeout=None):
+            calls.append(params["client"])
+
+            class R:
+                pass
+
+            r = R()
+            if params["client"] == "dict-chrome-ex":
+                r.raise_for_status = lambda: (_ for _ in ()).throw(
+                    Exception("429 Too Many Requests")
+                )
+            else:
+                r.raise_for_status = lambda: None
+                r.json = lambda: [[["你好世界", "Hello world", None, None]]]
+            return r
+
+        with mock.patch("fetch_news.requests.get", side_effect=fake_get):
+            result = fn.google_translate("Hello world")
+        self.assertEqual(result, "你好世界")
+        self.assertEqual(calls, ["dict-chrome-ex", "gtx"])
+
+    def test_returns_original_on_all_fail(self):
+        with mock.patch("fetch_news.requests.get", side_effect=Exception("network down")):
+            self.assertEqual(fn.google_translate("Hello world"), "Hello world")
+
+
 class TestBuildPageHtml(unittest.TestCase):
     def test_page_has_tabs_and_agent_badges(self):
         results = {
