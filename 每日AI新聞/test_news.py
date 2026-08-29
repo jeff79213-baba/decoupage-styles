@@ -137,6 +137,33 @@ class TestBuildPageHtml(unittest.TestCase):
         html = fn.build_page_html({}, [], "2026-08-15 00:00")
         self.assertIn("今天沒有抓到品牌 AI 新聞", html)
 
+    def test_bilingual_item_renders_orig(self):
+        results = {
+            "TechCrunch AI": [{"title": "中文標題", "summary": "中文摘要", "link": "http://a",
+                               "time": None, "source": "TechCrunch AI", "brands": [],
+                               "orig": {"title": "English title", "summary": "English summary"}}],
+        }
+        html = fn.build_page_html(results, [], "2026-08-29 00:00")
+        self.assertIn("class='orig'", html)
+        self.assertIn("English title", html)
+        self.assertIn("English summary", html)
+
+    def test_chinese_item_no_orig_line(self):
+        results = {
+            "iThome": [{"title": "一般新聞", "summary": "一般摘要", "link": "http://a",
+                        "time": None, "source": "iThome", "brands": []}],
+        }
+        html = fn.build_page_html(results, [], "2026-08-29 00:00")
+        self.assertNotIn("class='orig'", html)
+
+    def test_agent_bilingual_renders_orig(self):
+        agent = [{"title": "中文標題", "summary": "中文摘要", "link": "http://b", "time": None,
+                  "brands": ["Gemini"], "source": "Google News",
+                  "orig": {"title": "English title", "summary": "English summary"}}]
+        html = fn.build_page_html({}, agent, "2026-08-29 00:00")
+        self.assertIn("English title", html)
+        self.assertIn("English summary", html)
+
 
 if __name__ == "__main__":
     unittest.main()

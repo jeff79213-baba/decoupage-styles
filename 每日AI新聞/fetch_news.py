@@ -72,6 +72,7 @@ CSS = """
     .tags{margin-bottom:6px}
     .brand-tag{background:#ecfdf5;color:#047857;padding:2px 9px;border-radius:99px;font-size:11px;margin-right:6px;display:inline-block}
     footer{color:var(--muted);font-size:12px;text-align:center;margin-top:40px}
+    .orig{color:var(--muted);font-size:12px;margin-top:2px;line-height:1.4}
     """
 
 UA = {
@@ -287,10 +288,14 @@ def agent_section_html(items):
         tags = "".join(f"<span class='brand-tag'>{html.escape(b)}</span>" for b in it.get("brands", []))
         badge = f"<span class='badge'>{html.escape(it.get('source', ''))}</span>"
         t = fmt_time(it.get("time"))
+        o = it.get("orig", {})
+        orig_title = f"<div class='orig'>{html.escape(o['title'])}</div>" if o.get("title") else ""
+        orig_summary = f"<div class='orig'>{html.escape(o['summary'])}</div>" if o.get("summary") else ""
         sec.append(
             f"<div class='card'><div class='tags'>{tags}</div>"
             f"<a href='{html.escape(it.get('link', ''))}' target='_blank' rel='noopener'>{html.escape(it.get('title', ''))}</a>"
-            f"<div class='summary'>{html.escape(it.get('summary', ''))}</div>"
+            f"{orig_title}"
+            f"<div class='summary'>{html.escape(it.get('summary', ''))}</div>{orig_summary}"
             f"<div class='meta'>{badge}<span>{t}</span></div></div>"
         )
     return "\n".join(sec)
@@ -307,10 +312,13 @@ def build_page_html(results, agent_items, generated_at):
         for it in items:
             badge = "<span class='badge'>翻譯</span>" if cards[name]["lang"] == "en" else ""
             t = fmt_time(it["time"])
+            o = it.get("orig", {})
+            orig_title = f"<div class='orig'>{html.escape(o['title'])}</div>" if o.get("title") else ""
+            orig_summary = f"<div class='orig'>{html.escape(o['summary'])}</div>" if o.get("summary") else ""
             sec.append(
                 f"<div class='card'><a href='{html.escape(it['link'])}' target='_blank' rel='noopener'>"
-                f"{html.escape(it['title'])}</a>"
-                f"<div class='summary'>{html.escape(it['summary'])}</div>"
+                f"{html.escape(it['title'])}</a>{orig_title}"
+                f"<div class='summary'>{html.escape(it['summary'])}</div>{orig_summary}"
                 f"<div class='meta'>{badge}<span>{t}</span></div></div>"
             )
         sec.append("</section>")
