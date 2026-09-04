@@ -242,6 +242,30 @@ class TestChApi(unittest.TestCase):
         self.assertEqual([i["title"] for i in items], ["主題文"])
 
 
+class TestBuildHealthHtml(unittest.TestCase):
+    def _item(self, title, channel="營養", time=None):
+        return {"title": title, "link": "http://c", "summary": "摘要",
+                "time": time, "channel": channel}
+
+    def test_latest_section(self):
+        html = fn.build_health_html([self._item("健康文章")], None, None, [])
+        self.assertIn("最新健康內容", html)
+        self.assertIn("健康文章", html)
+        self.assertIn("康健", html)
+        self.assertIn("營養", html)
+
+    def test_theme_section(self):
+        html = fn.build_health_html([], "AI上工你準備好了嗎？", "主題描述",
+                                    [self._item("主題文章", "運動")])
+        self.assertIn("熱門話題：AI上工你準備好了嗎？", html)
+        self.assertIn("主題文章", html)
+        self.assertIn("主題描述", html)
+
+    def test_empty_state(self):
+        html = fn.build_health_html([], None, None, [])
+        self.assertIn("今天抓不到康健內容，請稍後再試。", html)
+
+
 class TestBuildPageHtml(unittest.TestCase):
     def test_page_has_tabs_and_agent_badges(self):
         results = {

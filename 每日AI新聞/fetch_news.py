@@ -383,6 +383,40 @@ def orig_lines(orig):
     return t, s
 
 
+def ch_card_html(it):
+    """康健文章卡 HTML：標題連結 + 摘要 + meta（康健 badge、頻道、時間）。"""
+    badge = "<span class='badge'>康健</span>"
+    ch = f"<span class='badge'>{html.escape(it['channel'])}</span>" if it.get("channel") else ""
+    t = fmt_time(it.get("time"))
+    return (
+        f"<div class='card'><a href='{html.escape(it.get('link', ''))}' target='_blank' rel='noopener'>"
+        f"{html.escape(it.get('title', ''))}</a>"
+        f"<div class='summary'>{html.escape(it.get('summary', ''))}</div>"
+        f"<div class='meta'>{badge}{ch}<span>{t}</span></div></div>"
+    )
+
+
+def build_health_html(latest, theme_title, theme_desc, theme_items):
+    """產生健康分頁 HTML。任一來源無資料時顯示空訊息。"""
+    if latest:
+        cards = "\n".join(ch_card_html(it) for it in latest)
+        sec = (f"<section><h2>🍏 最新健康內容 <span class='count'>({len(latest)} 則)</span></h2>"
+               f"{cards}</section>")
+    else:
+        sec = ("<section><h2>🍏 最新健康內容</h2>"
+               "<p>今天抓不到康健內容，請稍後再試。</p></section>")
+    if theme_title:
+        head = f"<h2>🔥 熱門話題：{html.escape(theme_title)}</h2>"
+        desc = f"<p class='summary'>{html.escape(theme_desc)}</p>" if theme_desc else ""
+        cards = "\n".join(ch_card_html(it) for it in theme_items) if theme_items else (
+            "<p>今天抓不到熱門話題，請稍後再試。</p>")
+        sec += f"<section>{head}{desc}{cards}</section>"
+    else:
+        sec += ("<section><h2>🔥 熱門話題</h2>"
+                "<p>今天抓不到康健內容，請稍後再試。</p></section>")
+    return sec
+
+
 def build_page_html(results, agent_items, generated_at):
     cards = {f["name"]: f for f in FEEDS}
     general = []
