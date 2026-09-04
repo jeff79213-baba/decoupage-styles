@@ -413,7 +413,7 @@ def build_health_html(latest, theme_title, theme_desc, theme_items):
         sec += f"<section>{head}{desc}{cards}</section>"
     else:
         sec += ("<section><h2>🔥 熱門話題</h2>"
-                "<p>今天抓不到康健內容，請稍後再試。</p></section>")
+                "<p>今天抓不到熱門話題，請稍後再試。</p></section>")
     return sec
 
 

@@ -264,6 +264,7 @@ class TestBuildHealthHtml(unittest.TestCase):
     def test_empty_state(self):
         html = fn.build_health_html([], None, None, [])
         self.assertIn("今天抓不到康健內容，請稍後再試。", html)
+        self.assertIn("今天抓不到熱門話題，請稍後再試。", html)
 
 
 class TestBuildPageHtml(unittest.TestCase):
