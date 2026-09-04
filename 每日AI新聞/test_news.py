@@ -315,6 +315,27 @@ class TestBuildPageHtml(unittest.TestCase):
         self.assertIn("English title", html)
         self.assertIn("English summary", html)
 
+    def test_page_has_health_tab_and_panel(self):
+        health = {"latest": [{"title": "健康文章", "link": "http://c", "summary": "摘要",
+                              "time": None, "channel": "營養"}],
+                  "theme_title": "AI上工你準備好了嗎？", "theme_desc": "主題描述",
+                  "theme_items": [{"title": "主題文章", "link": "http://d", "summary": "",
+                                   "time": None, "channel": "醫療"}]}
+        html = fn.build_page_html({}, [], "2026-09-05 00:00", health=health)
+        self.assertIn('data-tab="health"', html)
+        self.assertIn('id="health"', html)
+        self.assertIn("最新健康內容", html)
+        self.assertIn("熱門話題：AI上工你準備好了嗎？", html)
+        self.assertIn("健康文章", html)
+        self.assertIn("主題文章", html)
+        self.assertIn("每日新聞", html)
+        self.assertNotIn("每日 AI 新聞", html)
+
+    def test_health_none_renders_empty_state(self):
+        html = fn.build_page_html({}, [], "2026-09-05 00:00")
+        self.assertIn('data-tab="health"', html)
+        self.assertIn("今天抓不到康健內容", html)
+
 
 if __name__ == "__main__":
     unittest.main()

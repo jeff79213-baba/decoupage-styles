@@ -417,7 +417,12 @@ def build_health_html(latest, theme_title, theme_desc, theme_items):
     return sec
 
 
-def build_page_html(results, agent_items, generated_at):
+def build_page_html(results, agent_items, generated_at, health=None):
+    if health:
+        health_frag = build_health_html(health.get("latest") or [], health.get("theme_title"),
+                                        health.get("theme_desc"), health.get("theme_items") or [])
+    else:
+        health_frag = build_health_html([], None, None, [])
     cards = {f["name"]: f for f in FEEDS}
     general = []
     for name in [f["name"] for f in FEEDS]:
@@ -445,18 +450,19 @@ def build_page_html(results, agent_items, generated_at):
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>每日 AI 新聞</title>
+<title>每日新聞</title>
 <style>{CSS}</style>
 </head>
 <body>
 <div class="wrap">
 <header>
-  <h1>📰 每日 AI 新聞</h1>
+  <h1>📰 每日新聞</h1>
   <div class="date">更新時間：{html.escape(generated_at)}　｜　AI Agent 欄來源：Google News、數位時代 + 品牌關鍵字搜尋</div>
 </header>
 <div class="tabs">
   <button type="button" class="tab active" data-tab="ai-news" onclick="switchTab('ai-news')">AI 新聞</button>
   <button type="button" class="tab" data-tab="ai-agent" onclick="switchTab('ai-agent')">AI Agent</button>
+  <button type="button" class="tab" data-tab="health" onclick="switchTab('health')">健康</button>
 </div>
 <div id="ai-news" class="panel active">
 {''.join(general)}
@@ -464,7 +470,10 @@ def build_page_html(results, agent_items, generated_at):
 <div id="ai-agent" class="panel">
 <section>{agent}</section>
 </div>
-<footer>由 fetch_news.py 自動產生　・　每日自動更新</footer>
+<div id="health" class="panel">
+{health_frag}
+</div>
+<footer>由 fetch_news.py 自動產生　・　每日自動更新　・　健康欄來源：康健</footer>
 </div>
 <script>
 function switchTab(id){{
