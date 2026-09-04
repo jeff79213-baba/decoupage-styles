@@ -164,6 +164,32 @@ def google_translate(text, src="en", dst="zh-TW"):
     return text
 
 
+def parse_ch_time(raw):
+    """解析康健 API 時間字串（'2026-09-04 14:27:08'，台灣時區），失敗回 None。"""
+    if not raw or not isinstance(raw, str):
+        return None
+    try:
+        return datetime.strptime(raw, "%Y-%m-%d %H:%M:%S").replace(tzinfo=TAIWAN_TZ)
+    except ValueError:
+        return None
+
+
+def parse_ch_article(item):
+    """從康健 API item dict 抽出文章欄位；非 article 型別或無標題回 None。"""
+    if not isinstance(item, dict) or item.get("type") != "article":
+        return None
+    title = strip_html(str(item.get("title") or "")).strip()
+    if not title:
+        return None
+    return {
+        "title": title,
+        "link": item.get("link") or "",
+        "summary": (item.get("preface") or "").strip(),
+        "time": parse_ch_time(item.get("item_datetime")),
+        "channel": item.get("channel_name") or "",
+    }
+
+
 def parse_time(entry):
     ts = entry.get("published_parsed") or entry.get("updated_parsed")
     if not ts:

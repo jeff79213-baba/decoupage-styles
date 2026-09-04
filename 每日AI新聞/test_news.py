@@ -167,6 +167,46 @@ class TestGoogleTranslate(unittest.TestCase):
             self.assertEqual(fn.google_translate("Hello world"), "Hello world")
 
 
+class TestChTime(unittest.TestCase):
+    def test_parses_valid_datetime(self):
+        dt = fn.parse_ch_time("2026-09-04 14:27:08")
+        self.assertEqual(dt, datetime(2026, 9, 4, 14, 27, 8, tzinfo=TW))
+
+    def test_invalid_returns_none(self):
+        self.assertIsNone(fn.parse_ch_time("not a date"))
+        self.assertIsNone(fn.parse_ch_time(""))
+        self.assertIsNone(fn.parse_ch_time(None))
+
+
+class TestChArticle(unittest.TestCase):
+    def _raw(self, **over):
+        base = {"id": 1, "type": "article", "item_id": 94534,
+                "title": "兩大癲癇藥成做菜辛香料？",
+                "preface": "前言摘要", "item_datetime": "2026-09-04 14:27:08",
+                "channel_name": "生活智慧", "link": "https://www.commonhealth.com.tw/article/94534"}
+        base.update(over)
+        return base
+
+    def test_parses_article_fields(self):
+        a = fn.parse_ch_article(self._raw())
+        self.assertEqual(a["title"], "兩大癲癇藥成做菜辛香料？")
+        self.assertEqual(a["link"], "https://www.commonhealth.com.tw/article/94534")
+        self.assertEqual(a["summary"], "前言摘要")
+        self.assertEqual(a["channel"], "生活智慧")
+        self.assertEqual(a["time"], datetime(2026, 9, 4, 14, 27, 8, tzinfo=TW))
+
+    def test_skips_non_article_type(self):
+        expert = {"id": 1, "type": "expert", "title": "專家", "link": "http://x"}
+        self.assertIsNone(fn.parse_ch_article(expert))
+
+    def test_skips_missing_title(self):
+        self.assertIsNone(fn.parse_ch_article(self._raw(title="   ")))
+
+    def test_bad_time_gives_none(self):
+        a = fn.parse_ch_article(self._raw(item_datetime="bad"))
+        self.assertIsNone(a["time"])
+
+
 class TestBuildPageHtml(unittest.TestCase):
     def test_page_has_tabs_and_agent_badges(self):
         results = {
