@@ -22,6 +22,9 @@ TAIWAN_TZ = timezone(timedelta(hours=8))
 HOURS_WINDOW = 30
 MAX_PER_FEED = 6
 
+API_CH_BASE = "https://api-ch.commonhealth.com.tw/api/v3.0"
+API_CH_KEY = "Cah2snYi52eJjpshbIfof1Tpx8ZhzXqh"  # 康健前端公開 client key
+
 BRANDS = [
     ("Gemini", ("gemini",)),
     ("ChatGPT", ("chatgpt", "openai", "gpt")),
@@ -188,6 +191,48 @@ def parse_ch_article(item):
         "time": parse_ch_time(item.get("item_datetime")),
         "channel": item.get("channel_name") or "",
     }
+
+
+def ch_api_get(path, **params):
+    """呼叫康健 v3 API，回傳 JSON dict；任何失敗回 {}（不拋例外）。"""
+    url = API_CH_BASE + path
+    headers = {**UA, "api-key": API_CH_KEY}
+    try:
+        r = requests.get(url, params=params, headers=headers, timeout=15)
+        r.raise_for_status()
+        data = r.json()
+        return data if isinstance(data, dict) else {}
+    except Exception as e:
+        print(f"  [康健] API 抓取失敗: {e}")
+        return {}
+
+
+def fetch_ch_latest(limit=10):
+    """康健最新內容（全部頻道）。回傳依時間降冪的 article 清單。"""
+    data = ch_api_get("/latest_article/channel/focus/list", page=1, limit=limit)
+    items = []
+    for it in (data.get("items") or {}).get("list") or []:
+        a = parse_ch_article(it)
+        if a:
+            items.append(a)
+    items.sort(key=lambda x: x["time"] or datetime.min.replace(tzinfo=TAIWAN_TZ), reverse=True)
+    print(f"  [康健] 最新內容 {len(items)} 則")
+    return items
+
+
+def fetch_ch_theme():
+    """康健目前上線的熱門話題主題。回傳 (title, description, article 清單)，失敗時 (None, None, [])。"""
+    data = ch_api_get("/theme/online")
+    obj = data.get("items") or {}
+    title = obj.get("title")
+    desc = obj.get("description")
+    items = []
+    for it in obj.get("items") or []:
+        a = parse_ch_article(it)
+        if a:
+            items.append(a)
+    print(f"  [康健] 熱門話題{'：' + str(title) if title else ''} {len(items)} 則")
+    return title, desc, items
 
 
 def parse_time(entry):

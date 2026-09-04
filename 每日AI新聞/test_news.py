@@ -207,6 +207,41 @@ class TestChArticle(unittest.TestCase):
         self.assertIsNone(a["time"])
 
 
+class TestChApi(unittest.TestCase):
+    def test_latest_failure_returns_empty(self):
+        with mock.patch("fetch_news.ch_api_get", return_value={}):
+            self.assertEqual(fn.fetch_ch_latest(), [])
+
+    def test_latest_parses_filters_and_sorts(self):
+        data = {"items": {"list": [
+            {"type": "article", "title": "舊新聞", "preface": "p",
+             "item_datetime": "2026-09-03 10:00:00", "channel_name": "醫療", "link": "http://a"},
+            {"type": "article", "title": "新新聞", "preface": "q",
+             "item_datetime": "2026-09-04 10:00:00", "channel_name": "運動", "link": "http://b"},
+            {"type": "expert", "title": "要跳過", "preface": "", "id": 99},
+        ]}}
+        with mock.patch("fetch_news.ch_api_get", return_value=data):
+            items = fn.fetch_ch_latest()
+        self.assertEqual([i["title"] for i in items], ["新新聞", "舊新聞"])
+        self.assertEqual(items[0]["channel"], "運動")
+
+    def test_theme_failure_returns_empty_tuple(self):
+        with mock.patch("fetch_news.ch_api_get", return_value={}):
+            self.assertEqual(fn.fetch_ch_theme(), (None, None, []))
+
+    def test_theme_parses(self):
+        data = {"items": {"title": "AI上工你準備好了嗎？", "description": "主題描述",
+                          "items": [
+                              {"type": "article", "title": "主題文", "preface": "s",
+                               "item_datetime": "2026-04-15 16:30:25", "channel_name": "醫療",
+                               "link": "http://t"}]}}
+        with mock.patch("fetch_news.ch_api_get", return_value=data):
+            title, desc, items = fn.fetch_ch_theme()
+        self.assertEqual(title, "AI上工你準備好了嗎？")
+        self.assertEqual(desc, "主題描述")
+        self.assertEqual([i["title"] for i in items], ["主題文"])
+
+
 class TestBuildPageHtml(unittest.TestCase):
     def test_page_has_tabs_and_agent_badges(self):
         results = {
