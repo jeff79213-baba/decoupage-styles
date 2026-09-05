@@ -486,8 +486,8 @@ function switchTab(id){{
     return page
 
 
-def render_html(results, agent_items, generated_at):
-    page = build_page_html(results, agent_items, generated_at)
+def render_html(results, agent_items, generated_at, health=None):
+    page = build_page_html(results, agent_items, generated_at, health)
     with open(OUT_FILE, "w", encoding="utf-8") as f:
         f.write(page)
     total = sum(len(v) for v in results.values()) + len(agent_items)
@@ -516,12 +516,17 @@ def main():
     source_items["Google News"] = google_items
     agent_pool.extend(google_items)
     agent_items = merge_agent_items(agent_pool)
+    print("▸ 抓取康健健康新聞…")
+    ch_latest = fetch_ch_latest(10)
+    ch_theme_title, ch_theme_desc, ch_theme_items = fetch_ch_theme()
+    health = {"latest": ch_latest, "theme_title": ch_theme_title,
+              "theme_desc": ch_theme_desc, "theme_items": ch_theme_items}
     generated_at = datetime.now(TAIWAN_TZ).strftime("%Y-%m-%d %H:%M")
-    render_html(results, agent_items, generated_at)
+    render_html(results, agent_items, generated_at, health)
 
     sources = [f["name"] for f in FEEDS] + [f["name"] for f in AGENT_FEEDS] + ["Google News"]
     ok = sum(1 for name in sources if source_items.get(name))
-    total = sum(len(v) for v in results.values()) + len(agent_items)
+    total = sum(len(v) for v in results.values()) + len(agent_items) + len(ch_latest) + len(ch_theme_items)
     line = f"[{generated_at}] 完成：{ok}/{len(sources)} 來源成功，共 {total} 則\n"
     with open("run_log.txt", "a", encoding="utf-8") as f:
         f.write(line)
