@@ -1,6 +1,6 @@
-# 每日 AI 新聞抓取器
+# 每日新聞抓取器
 
-每天 07:00 自動抓取 AI 新聞，生成單一 HTML 檔案（每天覆蓋）。
+每天 07:00 自動抓取 AI 新聞與康健健康新聞，生成單一 HTML 檔案（每天覆蓋）。
 
 ## 檔案說明
 
@@ -38,6 +38,17 @@ C:\Users\TW-10\Documents\firebase雲端資料夾\.venv\Scripts\python.exe fetch_
 | MIT Technology Review | 英文（自動翻中文） | https://www.technologyreview.com/feed/ |
 
 > 註：原本想用的 INSIDE 已停用 RSS（各網址皆 404），故以 iThome 替代。
+
+## 健康欄來源（康健）
+
+健康分頁來源為康健官網 API（`https://api-ch.commonhealth.com.tw/api/v3.0`，非 RSS）：
+
+| 區塊 | 端點 | 說明 |
+|------|------|------|
+| 最新健康內容 | `/api/v3.0/latest_article/channel/focus/list?page=1&limit=10` | 全部頻道最新 10 篇 |
+| 熱門話題 | `/api/v3.0/theme/online` | 每日輪播主題（每天 00:00 換檔），內文全列 |
+
+> API 需帶 `api-key` header（康健前端公開 client key，定義於 `fetch_news.py` 的 `API_CH_KEY`）。
 
 ## 排程任務
 
