@@ -426,10 +426,16 @@ async function handleFiles(files){
     loadSingleImage(imgs[0]);
   }
 }
+function resetTextState(){
+  textLayers=[];
+  textState.text=''; textState.x=0; textState.y=0; textState.placed=false;
+  octx.clearRect(0,0,ocan.width,ocan.height);
+}
 function loadSingleImage(img){
   hasImage=true;
   emptyHint.style.display='none';
   layers=[]; selectedLayer=-1; hideLayerBox();
+  resetTextState();
   let w=img.width, h=img.height;
   const max=2600;
   if(w>max||h>max){
@@ -448,6 +454,7 @@ function loadSingleImage(img){
 function initLayersFromImages(imgs, mode, tplId){
   hasImage=true; emptyHint.style.display='none';
   layers=[]; selectedLayer=-1;
+  resetTextState();
   if(mode==='free'){
     const outW=1200, outH=1200;
     main.width=outW; main.height=outH; ocan.width=outW; ocan.height=outH;
@@ -773,11 +780,13 @@ function commitText(){
     ctx.restore();
   }
   pushHistory();
+  textState.text=''; textState.placed=false;
+  const ti=$('#txtInput'); if(ti) ti.value='';
   toast(layers.length?'文字已置頂顯示（長按可刪除）':'文字已合併');
   return;
 }
 
-let longPressTimer=null, longPressTarget=-1;
+let longPressTimer=null, longPressTarget=-1, longPressStart=null;
 function hitText(px,py){
   for(let i=textLayers.length-1;i>=0;i--){
     const t=textLayers[i];
@@ -824,36 +833,37 @@ wrap.querySelectorAll('#cropBox .handle').forEach(h=>{
 
 function onPointerDown(e){
   if(!hasImage) return;
+  const p=canvasPoint(e);
+  // 編輯中（尚未合併）的新文字優先拖曳，避免與已合併文字長按刪除衝突
+  if(currentTool==='text'){
+    octx.font=`700 ${textState.size}px "${textState.font}", sans-serif`;
+    const m=octx.measureText(textState.text);
+    const tw=m.width, th=textState.size*1.1;
+    const bx=textState.x-tw/2-10, by=textState.y-th/2-8, bw=tw+20, bh=th+16;
+    if(p.x>=bx && p.x<=bx+bw && p.y>=by && p.y<=by+bh){
+      textState.dragging=true;
+      activePointer={dx:p.x-textState.x, dy:p.y-textState.y};
+      enableOverlayEvents(true);
+      e.preventDefault(); return;
+    }
+  }
   // 多圖層拖曳與文字長按刪除
   if(layers.length>0 && currentTool!=='brush' && currentTool!=='mosaic' && currentTool!=='crop'){
-    const p=canvasPoint(e);
-    // 文字長按刪除優先（已合併的跨照片文字）
+    // 已合併文字：長按刪除（return 避免同時拖曳底下照片）
     const th=hitText(p.x,p.y);
     if(th!==-1){
       longPressTarget=th;
+      longPressStart={x:p.x,y:p.y};
       clearTimeout(longPressTimer);
       longPressTimer=setTimeout(()=>{
         if(longPressTarget===th){
-          if(confirm('長按偵測：刪除此文字？')){
+          if(confirm('長按刪除此文字？')){
             textLayers.splice(th,1); renderLayers(); pushHistory(); toast('已刪除文字');
           }
           longPressTarget=-1;
         }
       }, 650);
-      // 同時允許拖動該文字（若不長按則拖動）
-      // 暫不return，讓後續可拖動照片，長按才刪除
-    }
-    // 若正在文字拖曳，優先文字
-    if(currentTool==='text'){
-      octx.font=`700 ${textState.size}px "${textState.font}", sans-serif`;
-      const m=octx.measureText(textState.text);
-      const tw=m.width, th=textState.size*1.1;
-      const bx=textState.x-tw/2-10, by=textState.y-th/2-8, bw=tw+20, bh=th+16;
-      if(p.x>=bx && p.x<=bx+bw && p.y>=by && p.y<=by+bh){
-        textState.dragging=true;
-        activePointer={dx:p.x-textState.x, dy:p.y-textState.y};
-        enableOverlayEvents(true); return;
-      }
+      e.preventDefault(); return;
     }
     const hit=hitLayer(p.x,p.y);
     if(hit!==-1){
@@ -865,14 +875,15 @@ function onPointerDown(e){
       // 點空白處不取消選取，保持
     }
   } else if(textLayers.length && currentTool!=='brush' && currentTool!=='mosaic' && currentTool!=='crop'){
-    const p=canvasPoint(e);
+    // 單張模式：長按已合併文字刪除
     const th=hitText(p.x,p.y);
     if(th!==-1){
       longPressTarget=th;
+      longPressStart={x:p.x,y:p.y};
       clearTimeout(longPressTimer);
       longPressTimer=setTimeout(()=>{
         if(longPressTarget===th){
-          if(confirm('長按偵測：刪除此文字？')){
+          if(confirm('長按刪除此文字？')){
             textLayers.splice(th,1);
             // 單張模式需重繪底圖
             if(layers.length) renderLayers(); else { ctx.clearRect(0,0,main.width,main.height); ctx.fillStyle='#fff'; ctx.fillRect(0,0,main.width,main.height); /* 需還原底圖？簡化：重新繪製 */ }
@@ -900,17 +911,7 @@ function onPointerDown(e){
     pushHistory();
     e.preventDefault();
   } else if(currentTool==='text'){
-    const p=canvasPoint(e);
-    if(layers.length>0){ /* 文字可直接在圖層上，暫不扁平 */ }
-    octx.font=`700 ${textState.size}px "${textState.font}", sans-serif`;
-    const m=octx.measureText(textState.text);
-    const tw=m.width, th=textState.size*1.1;
-    const bx=textState.x-tw/2-10, by=textState.y-th/2-8, bw=tw+20, bh=th+16;
-    if(p.x>=bx && p.x<=bx+bw && p.y>=by && p.y<=by+bh){
-      textState.dragging=true;
-      activePointer={dx:p.x-textState.x, dy:p.y-textState.y};
-      enableOverlayEvents(true);
-    }
+    // 新文字拖曳已由上方統一處理（避免與已合併文字長按刪除衝突）
   } else if(currentTool==='crop'){
     const p=canvasPoint(e);
     const r=cropState;
@@ -929,7 +930,14 @@ function onPointerDown(e){
   }
 }
 function onPointerMove(e){
-  if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer=null; longPressTarget=-1; }
+  // 長按刪除：僅在移動超過 8px 時取消，容忍手指細微抖動
+  if(longPressTimer && longPressTarget>=0){
+    const p0=canvasPoint(e);
+    if(!longPressStart) longPressStart={x:p0.x,y:p0.y};
+    else if(Math.hypot(p0.x-longPressStart.x, p0.y-longPressStart.y) > 8){
+      clearTimeout(longPressTimer); longPressTimer=null; longPressTarget=-1; longPressStart=null;
+    }
+  }
   if(!hasImage) return;
   const p=canvasPoint(e);
   if(layerDrag){
@@ -1079,6 +1087,7 @@ function onPointerMove(e){
 function onPointerUp(e){
   if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer=null; }
   longPressTarget=-1;
+  longPressStart=null;
   if(layerDrag){
     layerDrag=null;
     pushHistory();
