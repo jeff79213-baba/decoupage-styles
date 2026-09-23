@@ -1,0 +1,4 @@
+{
+  "projects": { "default": "opencode-sk" },
+  "targets": { "opencode-sk": { "hosting": { "bbq-support-front": ["bbq-support-front-sk"] } } }
+}

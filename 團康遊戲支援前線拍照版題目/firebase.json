@@ -1,0 +1,7 @@
+{
+  "hosting": {
+    "site": "bbq-support-front-sk",
+    "public": ".",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**", "tests/**", "docs/**", "*.txt"]
+  }
+}
