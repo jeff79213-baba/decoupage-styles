@@ -172,7 +172,7 @@ function renderEdit(){
 // ---------- 事件 ----------
 function toggleEnabled(id,el){
   if(el.checked) enabled.delete(id); else enabled.add(id);
-  requireOneEnabled();
+  renderItems();requireOneEnabled();
 }
 function toggleAll(){
   const allOn=[...ITEMS].every(p=>enabled.has(p.id));
