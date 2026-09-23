@@ -17,15 +17,15 @@
   .round{font-size:14px;color:var(--muted)}
   .question{font-size:20px;font-weight:700;line-height:1.6;margin:12px 0}
   .item{display:flex;align-items:center;gap:10px;padding:6px 0}
-  .checkitem{display:flex;align-items:center;gap:10px;padding:4px 0;font-size:16px}
-  .checkitem input{width:20px;height:20px;accent-color:var(--accent)}
-  .checkitem small{color:var(--muted);margin-left:auto;font-size:12px}
+  .itemrow{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:16px}
+  .itemrow input[type=number]{width:68px;text-align:center;background:#151515;color:white;border:1px solid #444;border-radius:10px;padding:8px;font-size:15px}
+  .itemrow small{color:var(--muted);margin-left:auto;font-size:12px}
   .emoji{font-size:22px;width:30px;text-align:center;flex-shrink:0}
   .editbox{display:none;margin-top:14px;border-top:1px solid var(--line);padding-top:14px}
   .editrow{display:grid;grid-template-columns:1fr 90px;gap:8px;margin:8px 0}
   input[type=number],input[type=text]{width:100%;background:#151515;color:white;border:1px solid #444;border-radius:10px;padding:10px;font-size:16px}
   .people{display:flex;align-items:center;gap:10px;margin-top:8px}
-  .people input{width:90px;text-align:center;font-size:22px;font-weight:800}
+  .people input{width:110px;text-align:center;font-size:22px;font-weight:800}
   button{border:0;border-radius:12px;padding:12px 15px;font-size:16px;font-weight:700;cursor:pointer}
   .primary{background:var(--accent);color:#111;width:100%;font-size:19px;padding:15px}
   .secondary{background:#383838;color:#fff}
@@ -36,27 +36,26 @@
   .timer small{display:block;font-size:13px;color:var(--muted);font-weight:400}
   .tip{font-size:13px;color:var(--muted);line-height:1.6}
   .copied{color:var(--green);font-weight:700;min-height:22px;text-align:center;margin-top:8px}
-  .rowbtn{display:flex;gap:9px;margin:0 0 10px}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>🔥 烤肉團康支援前線</h1>
-  <div class="sub">主持人：設定人數 → 勾選可用物品 → 隨機出題 → 複製貼到 LINE</div>
+  <div class="sub">主持人：設定人數 → 勾選物品+填數量 → 隨機出題 → 複製貼到 LINE</div>
 
   <div class="card">
     <div class="row"><b>👥 人數</b><span class="label" id="countHint"></span></div>
     <div class="people">
       <button class="secondary" onclick="changePeople(-1)">−</button>
-      <input id="people" type="number" min="2" max="30" value="10" onchange="setPeople(this.value)">
+      <input id="people" type="number" value="10" onchange="setPeople(this.value)">
       <button class="secondary" onclick="changePeople(1)">＋</button>
     </div>
   </div>
 
   <div class="card">
-    <div class="row"><b>✅ 可用物品</b><button class="secondary" onclick="toggleAll()">全選/全不選</button></div>
+    <div class="row"><b>🧺 可用物品</b><button class="secondary" onclick="toggleAll()">全部啟動/取消</button></div>
     <div id="itemList"></div>
-    <p class="tip">器官類（手指/手/腳/臉）數量依人數隨機；其餘物品數量固定 1。取消勾選就不會出。</p>
+    <p class="tip">數量留空或 0＝自動（器官依人數、其餘 1）；輸入數字＝直接用該數量。停用勾＝完全不出這項。</p>
   </div>
 
   <div class="card">
@@ -67,13 +66,12 @@
     <div id="question" class="question"></div>
     <div class="buttons">
       <button class="secondary" onclick="newQuestion()">🎲 重新出題</button>
-      <button class="secondary" onclick="addAll()">📸 加全員題</button>
-    </div>
-    <div class="buttons">
-      <button class="primary" onclick="copyQuestion()">📋 複製題目</button>
       <button class="secondary" onclick="toggleEdit()">✏️ 修改題目</button>
     </div>
     <div id="editbox" class="editbox"></div>
+    <div class="buttons">
+      <button class="primary" onclick="copyQuestion()">📋 複製題目</button>
+    </div>
     <div id="copied" class="copied"></div>
   </div>
 
@@ -88,7 +86,7 @@
 </div>
 
 <script>
-const POOL=[
+const GENERAL=[
   {id:'hand', emoji:'🤲', name:'手',     per:2,  body:true},
   {id:'finger',emoji:'☝️', name:'手指', per:10, body:true},
   {id:'foot', emoji:'🦶',  name:'腳',    per:2,  body:true},
@@ -109,36 +107,37 @@ const POOL=[
   {id:'tiss', emoji:'🧻',  name:'衛生紙',per:1,  body:false},
   {id:'glove',emoji:'🧤',  name:'手套',  per:2,  body:false},
 ];
-const ALL_MEMBERS=[
-  {emoji:'📸', name:'全員合照'},
-  {emoji:'💛', name:'全員比愛心'},
-  {emoji:'✌️', name:'全員比 YA'},
-  {emoji:'👍', name:'全員比讚'},
-  {emoji:'🕺', name:'全員跳起來'},
-  {emoji:'🤝', name:'全員手搭肩'},
+const MEMBERS=[
+  {id:'allpic', emoji:'📸', name:'全員合照'},
+  {id:'alllove',emoji:'💛', name:'全員比愛心'},
+  {id:'allya', emoji:'✌️', name:'全員比 YA'},
+  {id:'allgood',emoji:'👍', name:'全員比讚'},
+  {id:'alljump',emoji:'🕺', name:'全員跳起來'},
+  {id:'allarm', emoji:'🤝', name:'全員手搭肩'},
 ];
+const ITEMS=[...GENERAL,...MEMBERS].map(p=>({...p, act:GENERAL.includes(p)?'general':'member'}));
 
 let peopleCount=10;
-let checkedItems=new Set(POOL.map(p=>p.id));
-let current=[]; // [{emoji,name,qty,body,member?}]
-let memberBonus=null; // 全員品項
+let enabled=new Set(ITEMS.map(p=>p.id));       // 預設全部啟用
+let customQty={};                               // {id:number}，僅存 >0 的值
+let current=[]; // [{emoji,name,qty,body,act,id}]
 let round=0;
 let running=false, startAt=0, elapsed=0, timerId=null;
 
 function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a}
-function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
 function organQty(people){
   return Math.max(1, Math.round(people*0.3 + Math.random()*(people*0.5)));
 }
+function itemQty(p){
+  const c=customQty[p.id];
+  if(c && c>0) return c;
+  return p.body?organQty(peopleCount):1;
+}
 function generate(){
-  const avail=POOL.filter(p=>checkedItems.has(p.id));
+  const avail=ITEMS.filter(p=>enabled.has(p.id));
   const n=Math.min(rnd(3,5), avail.length);
   const chosen=[...avail].sort(()=>Math.random()-.5).slice(0,n);
-  current=chosen.map(p=>{
-    const qty=p.body?organQty(peopleCount):1;
-    return {emoji:p.emoji,name:p.name,qty,body:p.body,id:p.id};
-  });
-  memberBonus = Math.random()<0.4? pick(ALL_MEMBERS) : null;
+  current=chosen.map(p=>({emoji:p.emoji,name:p.name,qty:itemQty(p),body:p.body,act:p.act,id:p.id}));
 }
 function render(){
   document.getElementById('roundLabel').textContent='第 '+round+' 題';
@@ -147,40 +146,47 @@ function render(){
   for(const it of current){
     lines.push(`<div class="item"><span class="emoji">${it.emoji}</span><span>${it.qty} ${it.name}</span></div>`);
   }
-  if(memberBonus){
-    lines.push(`<div class="item"><span class="emoji">📸</span><span>${memberBonus.name}（全員入鏡）</span></div>`);
-  }
   document.getElementById('question').innerHTML=lines.join('');
   renderEdit();
 }
 function renderItems(){
   const box=document.getElementById('itemList');
-  box.innerHTML=POOL.map(p=>{
-    const checked=checkedItems.has(p.id)?'checked':'';
-    const cap=p.body?`⛽${p.per}個/人`:`最多${p.per}個`;
-    return `<label class="checkitem"><input type="checkbox" ${checked} onchange="toggleItem('${p.id}',this)"><span class="emoji">${p.emoji}</span><span>${p.name}</span><small>${cap}</small></label>`;
+  box.innerHTML=ITEMS.map(p=>{
+    const cap=p.act==='member'?'全員入鏡':(p.body?`${p.per}個/人`:`最多${p.per}個`);
+    const val=customQty[p.id]??'';
+    return `<div class="itemrow">
+      <input type="number" min="0" value="${val}" placeholder="自動" onchange="setCustomQty('${p.id}',this.value)">
+      <span class="emoji">${p.emoji}</span>
+      <span>${p.name}</span>
+      <small><label><input type="checkbox" ${enabled.has(p.id)?'':'checked'} onchange="toggleEnabled('${p.id}',this)">停用</label></small>
+    </div>`;
   }).join('');
 }
 function renderEdit(){
   document.getElementById('editbox').innerHTML=current.map((it,i)=>`
     <div class="editrow">
       <span style="display:flex;align-items:center;gap:8px"><span class="emoji">${it.emoji}</span> ${it.name}</span>
-      <input type="number" min="1" max="99" value="${it.qty}" onchange="editQty(${i},this.value)">
+      <input type="number" min="0" max="99" value="${it.qty}" onchange="editQty(${i},this.value)">
     </div>`).join('');
 }
 // ---------- 事件 ----------
-function toggleItem(id,el){
-  if(el.checked) checkedItems.add(id); else checkedItems.delete(id);
-  requireOneChecked();
+function toggleEnabled(id,el){
+  if(el.checked) enabled.delete(id); else enabled.add(id);
+  requireOneEnabled();
 }
 function toggleAll(){
-  const allOn=[...POOL].every(p=>checkedItems.has(p.id));
-  if(allOn){checkedItems=new Set();} else {checkedItems=new Set(POOL.map(p=>p.id));}
-  renderItems();newQuestion();
+  const allOn=[...ITEMS].every(p=>enabled.has(p.id));
+  if(allOn){enabled.clear();} else {enabled=new Set(ITEMS.map(p=>p.id));}
+  renderItems();requireOneEnabled();
 }
-function requireOneChecked(){
-  if(checkedItems.size===0){
-    document.getElementById('copied').textContent='⚠️ 至少勾選一種物品';
+function setCustomQty(id,v){
+  const n=parseInt(v,10);
+  if(Number.isFinite(n) && n>0) customQty[id]=n; else delete customQty[id];
+  renderItems();
+}
+function requireOneEnabled(){
+  if(enabled.size===0){
+    document.getElementById('copied').textContent='⚠️ 至少啟用一種物品';
     return false;
   }
   return true;
@@ -189,34 +195,31 @@ function changePeople(d){
   setPeople(Number(document.getElementById('people').value)+d);
 }
 function setPeople(v){
-  peopleCount=Math.max(2,Math.min(30,Math.round(Number(v)||10)));
+  const n=Math.round(Number(v));
+  peopleCount=Number.isFinite(n)?n:10;
   document.getElementById('people').value=peopleCount;
   document.getElementById('countHint').textContent=peopleCount+' 人';
-  newQuestion();
 }
 function newQuestion(){
-  if(!requireOneChecked()) return;
+  if(!requireOneEnabled()) return;
   round++;
   generate();
   render();
   resetTimer();
   document.getElementById('copied').textContent='';
 }
-function addAll(){
-  if(!memberBonus) memberBonus=pick(ALL_MEMBERS);
-  else memberBonus=pick(ALL_MEMBERS);
+function editQty(i,v){
+  const n=parseInt(v,10);
+  current[i].qty=(Number.isFinite(n)&&n>0&&n<=99)?n:current[i].qty;
   render();
-  document.getElementById('copied').textContent='';
 }
-function editQty(i,v){current[i].qty=Math.max(1,Math.min(99,Number(v)||1));render()}
 function toggleEdit(){
   const e=document.getElementById('editbox');
   e.style.display=e.style.display==='grid'?'none':'grid';
 }
 function textForLine(){
   const lines=current.map(it=>`${it.emoji} ${it.qty} ${it.name}`).join('\n');
-  const memberLine=memberBonus?`\n📸 ${memberBonus.name}（全員入鏡）`:'';
-  return `🔥 支援前線第 ${round} 題\n\n請在最快時間內拍照完成：\n\n${lines}${memberLine}\n\n📸 完成後拍照並傳到群組！`;
+  return `🔥 支援前線第 ${round} 題\n\n請在最快時間內拍照完成：\n\n${lines}\n\n📸 完成後拍照並傳到群組！`;
 }
 function copyQuestion(){
   const text=textForLine();
@@ -248,7 +251,7 @@ function toggleTimer(){
 function finishTimer(){if(running)toggleTimer()}
 function resetTimer(){running=false;clearInterval(timerId);elapsed=0;document.getElementById('timerBtn').textContent='開始';updateTimer()}
 
-generate();render();renderItems();updateTimer();setPeople(peopleCount);
+newQuestion();renderItems();updateTimer();
 </script>
 </body>
 </html>
