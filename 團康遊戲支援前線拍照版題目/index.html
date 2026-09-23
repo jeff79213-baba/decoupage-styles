@@ -36,6 +36,7 @@
   .timer small{display:block;font-size:13px;color:var(--muted);font-weight:400}
   .tip{font-size:13px;color:var(--muted);line-height:1.6}
   .copied{color:var(--green);font-weight:700;min-height:22px;text-align:center;margin-top:8px}
+  .copied.warn{color:#ff7b72}
 </style>
 </head>
 <body>
@@ -166,7 +167,7 @@ function renderEdit(){
   document.getElementById('editbox').innerHTML=current.map((it,i)=>`
     <div class="editrow">
       <span style="display:flex;align-items:center;gap:8px"><span class="emoji">${it.emoji}</span> ${it.name}</span>
-      <input type="number" min="0" max="99" value="${it.qty}" onchange="editQty(${i},this.value)">
+      <input type="number" min="1" max="99" value="${it.qty}" onchange="editQty(${i},this.value)">
     </div>`).join('');
 }
 // ---------- 事件 ----------
@@ -185,10 +186,13 @@ function setCustomQty(id,v){
   renderItems();
 }
 function requireOneEnabled(){
+  const el=document.getElementById('copied');
   if(enabled.size===0){
-    document.getElementById('copied').textContent='⚠️ 至少啟用一種物品';
+    el.className='copied warn';
+    el.textContent='⚠️ 至少啟用一種物品';
     return false;
   }
+  if(el.textContent==='⚠️ 至少啟用一種物品'){el.className='copied';el.textContent='';}
   return true;
 }
 function changePeople(d){
@@ -234,6 +238,7 @@ function copyQuestion(){
 }
 function showCopied(){
   const el=document.getElementById('copied');
+  el.className='copied';
   el.textContent='✓ 已複製，可以貼到 LINE 群組';
   setTimeout(()=>el.textContent='',2500);
 }

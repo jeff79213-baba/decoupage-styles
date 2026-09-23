@@ -11,8 +11,9 @@ globalThis.__exports = {
   getItems:()=>ITEMS, getCurrent:()=>current, getPeople:()=>peopleCount, getRound:()=>round
 };`;
 
+const sharedEl = {style:{},textContent:'',innerHTML:'',value:''};
 globalThis.document = {
-  getElementById:()=>({style:{},textContent:'',innerHTML:'',value:''}),
+  getElementById:()=>sharedEl,
   createElement:()=>({select(){},remove(){},value:'',style:{}}),
   body:{appendChild(){}}
 };
@@ -96,7 +97,49 @@ assert(T.getPeople() === 25 && T.getRound() === r0, '改人數不跳題（round 
 T.toggleEnabled('shoe', {checked:true}); T.toggleEnabled('shoe', {checked:false});
 assert(T.getRound() === r0, '停用/啟用物品不跳題（round 不變）');
 
-// --- 8. organQty 數學 2000 次抽測 ---
+// --- 8. 手動數字勝過器官公式：body 器官手動優先 ---
+T.setPeople(10);
+T.setCustomQty('hand', '3');
+let manualOrgOK = true;
+for (let i = 0; i < 20; i++) {
+  T.generate();
+  for (const it of T.getCurrent()) {
+    if (it.id === 'hand' && it.qty !== 3) manualOrgOK = false;
+  }
+}
+assert(manualOrgOK, '手(器官)設數字 3 後 20 次抽樣皆用手動 3');
+T.setCustomQty('hand', '');
+
+// --- 9. 設 0 回復自動：自訂數量清除 ---
+T.setCustomQty('shoe', '4');
+let shoeManualOK = true;
+for (let i = 0; i < 30; i++) {
+  T.generate();
+  for (const it of T.getCurrent()) {
+    if (it.id === 'shoe' && it.qty !== 4) shoeManualOK = false;
+  }
+}
+assert(shoeManualOK, '鞋子設數字 4 後 30 次抽樣皆用手動 4');
+T.setCustomQty('shoe', '0');
+let shoeAutoOK = false;
+for (let i = 0; i < 100; i++) {
+  T.generate();
+  for (const it of T.getCurrent()) {
+    if (it.id === 'shoe' && it.qty === 1) shoeAutoOK = true;
+  }
+}
+assert(shoeAutoOK, '鞋子改設 0 後 100 次內出現自動值 1（手動 4 已清除）');
+
+// --- 10. 全部停用寫入警告、重新啟用後 #copied 自癒清空 ---
+document.getElementById('copied').textContent = '';
+const allIds = T.getItems().map(p=>p.id);
+allIds.forEach(id => T.toggleEnabled(id, {checked:true}));
+assert(document.getElementById('copied').textContent.includes('至少啟用'), '全部停用後 #copied 顯示「至少啟用一種物品」警告');
+T.toggleEnabled('phone', {checked:false});
+assert(document.getElementById('copied').textContent === '', '重新啟用一項後警告訊息自癒清空');
+allIds.forEach(id => T.toggleEnabled(id, {checked:false}));
+
+// --- 11. organQty 數學 2000 次抽測 ---
 function organQtyRangeOK(people) {
   const lo = Math.max(1, Math.round(people*0.3)), hi = Math.round(people*0.8);
   for (let i=0;i<2000;i++) {
