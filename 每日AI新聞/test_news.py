@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import fetch_news as fn
+import github_rank as gh
 
 TW = timezone(timedelta(hours=8))
 
@@ -335,6 +336,148 @@ class TestBuildPageHtml(unittest.TestCase):
         html = fn.build_page_html({}, [], "2026-09-05 00:00")
         self.assertIn('data-tab="health"', html)
         self.assertIn("今天抓不到康健內容", html)
+
+
+class TestBuildQuery(unittest.TestCase):
+    def test_single_topic_with_star_threshold(self):
+        self.assertEqual(gh.build_query(["ai"], 1000), "topic:ai stars:>1000")
+
+    def test_multiple_topics_are_anded(self):
+        q = gh.build_query(["ai", "llm", "agent"], 50)
+        self.assertEqual(q, "topic:ai topic:llm topic:agent stars:>50")
+
+    def test_created_after_appended(self):
+        q = gh.build_query(["ai"], 50, created_after="2026-06-26")
+        self.assertEqual(q, "topic:ai stars:>50 created:>=2026-06-26")
+
+    def test_created_after_none_omitted(self):
+        self.assertNotIn("created:", gh.build_query(["ai"], 50))
+
+
+class TestBuildSearchUrl(unittest.TestCase):
+    def test_contains_sort_order_and_per_page(self):
+        url, headers = gh.build_search_url("topic:ai stars:>1000")
+        self.assertTrue(url.startswith(gh.GITHUB_SEARCH_URL + "?"))
+        self.assertIn("sort=stars", url)
+        self.assertIn("order=desc", url)
+        self.assertIn(f"per_page={gh.FETCH_PER_QUERY}", url)
+        self.assertIn("topic%3Aai", url)
+
+    def test_etag_becomes_if_none_match(self):
+        _, headers = gh.build_search_url("q", etag='W/"abc"')
+        self.assertEqual(headers["If-None-Match"], 'W/"abc"')
+
+    def test_no_etag_no_conditional_header(self):
+        _, headers = gh.build_search_url("q")
+        self.assertNotIn("If-None-Match", headers)
+
+    def test_user_agent_always_present(self):
+        _, headers = gh.build_search_url("q")
+        self.assertEqual(headers["User-Agent"], "daily-ai-news")
+
+    def test_no_token_means_no_authorization(self):
+        with mock.patch.dict(os.environ, {}, clear=True):
+            _, headers = gh.build_search_url("q")
+        self.assertNotIn("Authorization", headers)
+
+    def test_token_env_adds_authorization(self):
+        with mock.patch.dict(os.environ, {"GITHUB_TOKEN": "ghp_test"}, clear=True):
+            _, headers = gh.build_search_url("q")
+        self.assertEqual(headers["Authorization"], "Bearer ghp_test")
+
+
+class TestParseRepo(unittest.TestCase):
+    def item(self, **kw):
+        base = {"full_name": "owner/repo", "html_url": "https://github.com/owner/repo",
+                "description": "A tool", "language": "Python",
+                "stargazers_count": 1234, "forks_count": 56,
+                "created_at": "2026-08-01T10:00:00Z"}
+        base.update(kw)
+        return base
+
+    def test_maps_all_fields(self):
+        r = gh.parse_repo(self.item())
+        self.assertEqual(r["full_name"], "owner/repo")
+        self.assertEqual(r["html_url"], "https://github.com/owner/repo")
+        self.assertEqual(r["description"], "A tool")
+        self.assertEqual(r["language"], "Python")
+        self.assertEqual(r["stars"], 1234)
+        self.assertEqual(r["forks"], 56)
+        self.assertEqual(r["created_at"], "2026-08-01T10:00:00Z")
+
+    def test_missing_full_name_returns_none(self):
+        self.assertIsNone(gh.parse_repo(self.item(full_name="")))
+
+    def test_non_dict_returns_none(self):
+        self.assertIsNone(gh.parse_repo("not a dict"))
+
+    def test_null_counters_become_zero(self):
+        r = gh.parse_repo(self.item(stargazers_count=None, forks_count=None, language=None))
+        self.assertEqual(r["stars"], 0)
+        self.assertEqual(r["forks"], 0)
+        self.assertEqual(r["language"], "")
+
+
+class TestCleanDescription(unittest.TestCase):
+    def test_collapses_whitespace(self):
+        self.assertEqual(gh.clean_description("a  b\n c"), "a b c")
+
+    def test_truncates_with_ellipsis(self):
+        got = gh.clean_description("x" * 200, limit=20)
+        self.assertTrue(got.endswith("…"))
+        self.assertEqual(len(got), 21)
+
+    def test_none_returns_empty(self):
+        self.assertEqual(gh.clean_description(None), "")
+
+
+class TestFmtStars(unittest.TestCase):
+    def test_thousand_separator(self):
+        self.assertEqual(gh.fmt_stars(45231), "45,231")
+
+    def test_zero(self):
+        self.assertEqual(gh.fmt_stars(0), "0")
+
+
+class TestIsExcluded(unittest.TestCase):
+    def test_awesome_prefix_excluded(self):
+        self.assertTrue(gh.is_excluded({"full_name": "owner/awesome-ai", "description": "清單"}))
+
+    def test_keyword_in_description_excluded(self):
+        self.assertTrue(gh.is_excluded({"full_name": "owner/tool", "description": "A ROADMAP for AI"}))
+
+    def test_normal_app_not_excluded(self):
+        self.assertFalse(gh.is_excluded({"full_name": "owner/agent-cli",
+                                         "description": "Run AI agents from the terminal"}))
+
+    def test_missing_fields_not_excluded(self):
+        self.assertFalse(gh.is_excluded({}))
+
+
+class TestMergeRepos(unittest.TestCase):
+    def r(self, name, stars):
+        return {"full_name": name, "description": "", "language": "", "stars": stars,
+                "forks": 0, "html_url": "", "created_at": "2026-01-01T00:00:00Z"}
+
+    def test_dedupes_across_lists(self):
+        out = gh.merge_repos([[self.r("a/1", 10)], [self.r("a/1", 10), self.r("b/2", 5)]])
+        self.assertEqual([x["full_name"] for x in out], ["a/1", "b/2"])
+
+    def test_drops_excluded(self):
+        out = gh.merge_repos([[self.r("a/awesome-x", 999), self.r("b/2", 5)]])
+        self.assertEqual([x["full_name"] for x in out], ["b/2"])
+
+    def test_sorted_by_stars_desc(self):
+        out = gh.merge_repos([[self.r("a/1", 10), self.r("b/2", 500)]])
+        self.assertEqual([x["full_name"] for x in out], ["b/2", "a/1"])
+
+    def test_tie_broken_by_name_ascending(self):
+        out = gh.merge_repos([[self.r("z/last", 100), self.r("a/first", 100)]])
+        self.assertEqual([x["full_name"] for x in out], ["a/first", "z/last"])
+
+    def test_none_list_tolerated(self):
+        out = gh.merge_repos([None, [self.r("a/1", 1)]])
+        self.assertEqual(len(out), 1)
 
 
 if __name__ == "__main__":
