@@ -199,3 +199,68 @@ def apply_moves(repos, moves):
         item["move"] = (moves or {}).get(item.get("full_name"), "")
         out.append(item)
     return out
+
+
+def load_cache(path=CACHE_FILE):
+    """讀取快取；檔案不存在或 JSON 損毀回空 dict。"""
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except FileNotFoundError:
+        return {}
+    except (OSError, ValueError) as e:
+        print(f"  [GitHub] 快取讀取失敗（將重新抓取）: {e}")
+        return {}
+
+
+def save_cache(path, data):
+    """原子寫入快取：先寫暫存檔再 os.replace，避免中斷產生半損毀檔。
+    寫入失敗僅記錄，不中斷主流程。"""
+    tmp = f"{path}.tmp"
+    try:
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=1)
+        os.replace(tmp, path)
+    except OSError as e:
+        print(f"  [GitHub] 快取寫入失敗（不影響本次輸出）: {e}")
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+
+
+def search_repos(query, etag=None, session=None):
+    """查詢 GitHub Search API。
+
+    回傳 (repos, etag)：
+    - (list, etag)  HTTP 200，資料最新
+    - (None, etag)  HTTP 304，資料未變更，呼叫端應沿用快取
+    - (None, None) 請求失敗，呼叫端應沿用快取（可能為空）
+    """
+    url, headers = build_search_url(query, etag)
+    getter = (session or requests).get
+    try:
+        r = getter(url, headers=headers, timeout=20)
+    except Exception as e:
+        print(f"  [GitHub] 查詢失敗: {e}")
+        return None, None
+    if r.status_code == 304:
+        return None, etag
+    if r.status_code == 403:
+        reset = r.headers.get("X-RateLimit-Reset", "?")
+        print(f"  [GitHub] 已被限額（403），預計 {reset} 後恢復")
+        return None, None
+    if r.status_code == 422:
+        print(f"  [GitHub] query 語法錯誤（422）: {query} → {r.text[:200]}")
+        return None, None
+    if r.status_code != 200:
+        print(f"  [GitHub] 非預期狀態 {r.status_code}: {query}")
+        return None, None
+    try:
+        items = r.json().get("items") or []
+    except Exception as e:
+        print(f"  [GitHub] 回應解析失敗: {e}")
+        return None, None
+    repos = [parsed for parsed in (parse_repo(it) for it in items) if parsed]
+    return repos, r.headers.get("ETag")

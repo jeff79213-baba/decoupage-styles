@@ -628,5 +628,148 @@ class TestApplyMoves(unittest.TestCase):
         self.assertNotIn("move", src[0])
 
 
+class _FakeResponse:
+    def __init__(self, status_code=200, payload=None, headers=None, text=""):
+        self.status_code = status_code
+        self._payload = payload
+        self.headers = headers or {}
+        self.text = text
+
+    def json(self):
+        if self._payload is None:
+            raise ValueError("no json payload")
+        return self._payload
+
+
+class _FakeSession:
+    def __init__(self, response=None, exc=None):
+        self._response = response
+        self._exc = exc
+        self.calls = []
+
+    def get(self, url, headers=None, timeout=None):
+        self.calls.append({"url": url, "headers": headers or {}, "timeout": timeout})
+        if self._exc:
+            raise self._exc
+        return self._response
+
+
+def gh_item(name="owner/repo", stars=100):
+    return {"full_name": name, "html_url": f"https://github.com/{name}",
+            "description": "d", "language": "Python", "stargazers_count": stars,
+            "forks_count": 1, "created_at": "2026-09-01T00:00:00Z"}
+
+
+class TestLoadCache(unittest.TestCase):
+    def setUp(self):
+        self.tmp = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                "_tmp_gh_cache.json")
+        self.addCleanup(lambda: os.path.exists(self.tmp) and os.remove(self.tmp))
+
+    def test_missing_file_returns_empty(self):
+        self.assertEqual(gh.load_cache(self.tmp), {})
+
+    def test_broken_json_returns_empty(self):
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            f.write("{not json")
+        self.assertEqual(gh.load_cache(self.tmp), {})
+
+    def test_non_dict_json_returns_empty(self):
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            f.write("[1, 2]")
+        self.assertEqual(gh.load_cache(self.tmp), {})
+
+    def test_roundtrip(self):
+        gh.save_cache(self.tmp, {"updated_at": "x", "queries": {}})
+        self.assertEqual(gh.load_cache(self.tmp), {"updated_at": "x", "queries": {}})
+
+
+class TestSaveCache(unittest.TestCase):
+    def setUp(self):
+        self.tmp = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                "_tmp_gh_cache.json")
+        self.addCleanup(lambda: os.path.exists(self.tmp) and os.remove(self.tmp))
+
+    def test_creates_file(self):
+        gh.save_cache(self.tmp, {"a": 1})
+        self.assertTrue(os.path.exists(self.tmp))
+
+    def test_no_temp_file_left_behind(self):
+        gh.save_cache(self.tmp, {"a": 1})
+        self.assertFalse(os.path.exists(self.tmp + ".tmp"))
+
+    def test_unicode_preserved(self):
+        gh.save_cache(self.tmp, {"desc": "中文"})
+        self.assertEqual(gh.load_cache(self.tmp)["desc"], "中文")
+
+    def test_write_failure_does_not_raise(self):
+        gh.save_cache(os.path.join(self.tmp, "nested", "x.json"), {"a": 1})
+
+
+class TestSearchReposOk(unittest.TestCase):
+    def test_returns_parsed_repos(self):
+        sess = _FakeSession(_FakeResponse(200, {"items": [gh_item()]}))
+        repos, etag = gh.search_repos("topic:ai", session=sess)
+        self.assertEqual(len(repos), 1)
+        self.assertEqual(repos[0]["full_name"], "owner/repo")
+        self.assertEqual(etag, None)
+
+    def test_returns_response_etag(self):
+        resp = _FakeResponse(200, {"items": []}, headers={"ETag": 'W/"e1"'})
+        _, etag = gh.search_repos("q", session=_FakeSession(resp))
+        self.assertEqual(etag, 'W/"e1"')
+
+    def test_skips_items_without_full_name(self):
+        sess = _FakeSession(_FakeResponse(200, {"items": [gh_item(), {"full_name": ""}]}))
+        repos, _ = gh.search_repos("q", session=sess)
+        self.assertEqual(len(repos), 1)
+
+    def test_passes_timeout(self):
+        sess = _FakeSession(_FakeResponse(200, {"items": []}))
+        gh.search_repos("q", session=sess)
+        self.assertEqual(sess.calls[0]["timeout"], 20)
+
+
+class TestSearchReposNotModified(unittest.TestCase):
+    def test_304_returns_none_and_etag(self):
+        resp = _FakeResponse(304, None)
+        repos, etag = gh.search_repos("q", etag='W/"old"', session=_FakeSession(resp))
+        self.assertIsNone(repos)
+        self.assertEqual(etag, 'W/"old"')
+
+    def test_sends_if_none_match(self):
+        sess = _FakeSession(_FakeResponse(304, None))
+        gh.search_repos("q", etag='W/"old"', session=sess)
+        self.assertEqual(sess.calls[0]["headers"]["If-None-Match"], 'W/"old"')
+
+
+class TestSearchReposErrors(unittest.TestCase):
+    def test_timeout_returns_none_none(self):
+        repos, etag = gh.search_repos("q", session=_FakeSession(exc=Exception("timeout")))
+        self.assertIsNone(repos)
+        self.assertIsNone(etag)
+
+    def test_403_returns_none_none(self):
+        repos, etag = gh.search_repos("q", session=_FakeSession(_FakeResponse(403, None)))
+        self.assertIsNone(repos)
+        self.assertIsNone(etag)
+
+    def test_422_returns_none_none(self):
+        repos, etag = gh.search_repos("q", session=_FakeSession(_FakeResponse(422, None)))
+        self.assertIsNone(repos)
+        self.assertIsNone(etag)
+
+    def test_500_returns_none_none(self):
+        repos, etag = gh.search_repos("q", session=_FakeSession(_FakeResponse(500, None)))
+        self.assertIsNone(repos)
+        self.assertIsNone(etag)
+
+    def test_bad_json_returns_none_none(self):
+        sess = _FakeSession(_FakeResponse(200, None))
+        repos, etag = gh.search_repos("q", session=sess)
+        self.assertIsNone(repos)
+        self.assertIsNone(etag)
+
+
 if __name__ == "__main__":
     unittest.main()
