@@ -838,14 +838,11 @@ class TestCacheIsValid(unittest.TestCase):
     def test_empty_dict_is_invalid(self):
         self.assertFalse(gh.cache_is_valid({}))
 
-    def test_saved_cache_is_valid(self):
-        gh.save_cache(self.tmp, {
-            "updated_at": "2026-09-25 07:00",
-            "queries": {
-                "topic_ai": {"etag": 'W/"e"', "repos": [gh_repo()]},
-            },
-            "ranks": {"top": ["owner/repo"], "hot": ["owner/repo"]},
-        })
+    def test_cache_written_by_fetch_github_rank_is_valid(self):
+        now = datetime(2026, 9, 25, 7, 0, tzinfo=TW)
+        with mock.patch.object(gh, "search_repos",
+                               return_value=([gh_repo()], 'W/"e"')):
+            gh.fetch_github_rank(now=now, cache_path=self.tmp)
         self.assertTrue(gh.cache_is_valid(gh.load_cache(self.tmp)))
 
     def test_queries_list_is_invalid(self):
@@ -853,6 +850,18 @@ class TestCacheIsValid(unittest.TestCase):
 
     def test_query_entry_string_is_invalid(self):
         self.assertFalse(gh.cache_is_valid({"queries": {"topic_ai": "bad"}}))
+
+    def test_query_entry_missing_repos_is_invalid(self):
+        cache = {"queries": {"topic_ai": {"etag": 'W/"e"'}}}
+        self.assertFalse(gh.cache_is_valid(cache))
+
+    def test_query_entry_with_non_string_etag_is_invalid(self):
+        cache = {"queries": {"topic_ai": {"etag": 7, "repos": []}}}
+        self.assertFalse(gh.cache_is_valid(cache))
+
+    def test_query_entry_with_empty_repos_is_valid(self):
+        cache = {"queries": {"topic_ai": {"etag": None, "repos": []}}}
+        self.assertTrue(gh.cache_is_valid(cache))
 
     def test_repos_with_non_dict_is_invalid(self):
         cache = {"queries": {"topic_ai": {"repos": ["bad"]}}}
@@ -1027,6 +1036,25 @@ class TestFetchGithubRank(unittest.TestCase):
         self.assertFalse(data["stale"])
         self.assertTrue(gh.cache_is_valid(cache))
         self.assertEqual(cache["queries"]["topic_ai"]["repos"], [])
+        self.assertEqual(
+            [call.args[1] for call in search.call_args_list],
+            [None, None, None, None],
+        )
+
+    def test_query_missing_repos_with_304_responses_uses_cold_start(self):
+        seeded_etag = 'W/"missing-repos"'
+        gh.save_cache(self.tmp, {
+            "updated_at": "2026-09-24 07:00",
+            "queries": {
+                "topic_ai": {"etag": seeded_etag},
+            },
+            "ranks": {},
+        })
+        with mock.patch.object(gh, "search_repos",
+                               return_value=(None, seeded_etag)) as search:
+            gh.fetch_github_rank(now=self.now, cache_path=self.tmp)
+        cache = gh.load_cache(self.tmp)
+        self.assertTrue(gh.cache_is_valid(cache))
         self.assertEqual(
             [call.args[1] for call in search.call_args_list],
             [None, None, None, None],

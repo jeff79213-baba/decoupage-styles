@@ -218,8 +218,9 @@ def cache_is_valid(data):
     """檢查快取整體結構是否符合預期；任一處不符即回 False（呼叫端視為冷啟動）。
 
     只放行由 save_cache 寫出的形狀：queries 為 dict，其每個值為 dict，
-    repos（若存在）為 dict 元素清單且每筆 full_name 為 str、stars 為 int；
-    ranks（若存在）為 dict，其每個值為 str 清單；updated_at（若存在）為 str 或 None。
+    repos 必須為 dict 元素清單且每筆 full_name 為 str、stars 為 int，
+    etag（若存在）為 str 或 None；ranks（若存在）為 dict，其每個值為 str 清單；
+    updated_at（若存在）為 str 或 None。
     結構不符的快取一律不可信，必須整份捨棄而非修修补補——否則會沿用不可信的
     ETag，導致 304 命中後把壞資料當成最新資料寫回。
     """
@@ -233,17 +234,21 @@ def cache_is_valid(data):
         for entry in queries.values():
             if not isinstance(entry, dict):
                 return False
-            if "repos" in entry:
-                repos = entry["repos"]
-                if not isinstance(repos, list):
+            etag = entry.get("etag")
+            if etag is not None and not isinstance(etag, str):
+                return False
+            if "repos" not in entry:
+                return False
+            repos = entry["repos"]
+            if not isinstance(repos, list):
+                return False
+            for repo in repos:
+                if not isinstance(repo, dict):
                     return False
-                for repo in repos:
-                    if not isinstance(repo, dict):
-                        return False
-                    if not isinstance(repo.get("full_name"), str):
-                        return False
-                    if type(repo.get("stars")) is not int:
-                        return False
+                if not isinstance(repo.get("full_name"), str):
+                    return False
+                if type(repo.get("stars")) is not int:
+                    return False
 
         if "ranks" in data:
             ranks = data["ranks"]
