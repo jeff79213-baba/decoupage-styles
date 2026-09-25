@@ -395,3 +395,79 @@ def fetch_github_rank(now=None, cache_path=CACHE_FILE):
           f"{note}{stale_note}")
     return {"top": top, "hot": hot, "hot_days": hot_days,
             "updated_at": updated_at, "stale": stale}
+
+
+GH_CSS = """
+    .gh-card{display:flex;gap:12px;align-items:flex-start}
+    .gh-rank{flex:0 0 28px;height:28px;line-height:28px;text-align:center;border-radius:8px;
+            background:var(--accent);color:#fff;font-weight:700;font-size:14px}
+    .gh-main{flex:1;min-width:0}
+    .gh-main a{text-decoration:none;color:var(--ink);font-weight:600;font-size:15px}
+    .gh-main a:hover{color:var(--accent)}
+    .gh-move{color:#059669;font-size:12px;font-weight:700;margin-left:6px}
+    .gh-warn{color:#b45309;font-size:13px;margin-bottom:10px}
+    @media(max-width:480px){.gh-rank{flex:0 0 24px;height:24px;line-height:24px;font-size:13px}}
+    """
+
+
+def gh_card_html(rank, repo, show_date=False):
+    """單張 GitHub 排行卡：名次、名稱、名次升降、描述、語言／星數／fork／建立日期。"""
+    move = repo.get("move") or ""
+    move_html = f"<span class='gh-move'>{html.escape(move)}</span>" if move else ""
+    desc = repo.get("description") or ""
+    desc_html = f"<div class='summary'>{html.escape(desc)}</div>" if desc else ""
+    lang = repo.get("language") or ""
+    lang_html = f"<span class='badge'>{html.escape(lang)}</span>" if lang else ""
+    date_html = ""
+    if show_date:
+        day = (repo.get("created_at") or "")[:10]
+        if day:
+            date_html = f"<span>建立於 {html.escape(day)}</span>"
+    return (
+        f"<div class='card gh-card'>"
+        f"<div class='gh-rank'>{rank}</div>"
+        f"<div class='gh-main'>"
+        f"<a href='{html.escape(repo.get('html_url', ''))}' target='_blank' rel='noopener'>"
+        f"{html.escape(repo.get('full_name', ''))}</a>{move_html}"
+        f"{desc_html}"
+        f"<div class='meta'>{lang_html}"
+        f"<span class='badge'>★ {fmt_stars(repo.get('stars', 0))}</span>"
+        f"<span>fork {fmt_stars(repo.get('forks', 0))}</span>{date_html}</div>"
+        f"</div></div>"
+    )
+
+
+def build_github_html(data):
+    """產生 GitHub 分頁內容：星數榜與爆款榜兩個 section。
+
+    data 為 fetch_github_rank 的回傳或 None。兩欄皆空時顯示單一失敗訊息。
+    """
+    data = data or {}
+    top = data.get("top") or []
+    hot = data.get("hot") or []
+    days = data.get("hot_days") or HOT_WINDOWS[0]
+    if not top and not hot:
+        return ("<section><h2>GitHub 熱門</h2>"
+                "<p>今天抓不到 GitHub 資料，請稍後再試。</p></section>")
+
+    warn = ""
+    if data.get("stale"):
+        warn = ("<p class='gh-warn'>⚠ 今天更新失敗，顯示最後一次成功抓取的資料"
+                f"（{html.escape(data.get('updated_at') or '無記錄')}）</p>")
+
+    sec = []
+    if top:
+        cards = "\n".join(gh_card_html(i, r) for i, r in enumerate(top, 1))
+        sec.append(f"<section><h2>⭐ AI 應用星數 Top {len(top)} "
+                   f"<span class='count'>(topic:ai / llm / agent)</span></h2>{cards}</section>")
+    else:
+        sec.append("<section><h2>⭐ AI 應用星數 Top 5</h2>"
+                   "<p>目前查不到符合條件的 AI 應用專案。</p></section>")
+    if hot:
+        cards = "\n".join(gh_card_html(i, r, show_date=True) for i, r in enumerate(hot, 1))
+        sec.append(f"<section><h2>🚀 近 {days} 天爆款 Top {len(hot)} "
+                   f"<span class='count'>(近期新建高星數)</span></h2>{cards}</section>")
+    else:
+        sec.append(f"<section><h2>🚀 近 {days} 天爆款 Top 5</h2>"
+                   "<p>目前查不到近期的 AI 專案。</p></section>")
+    return warn + "\n".join(sec)

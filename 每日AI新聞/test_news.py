@@ -1133,5 +1133,109 @@ class TestFetchGithubRank(unittest.TestCase):
         self.assertEqual(m.call_args_list[0][0][1], 'W/"e"')
 
 
+class TestBuildGithubHtml(unittest.TestCase):
+    def data(self, top=None, hot=None, hot_days=30, stale=False, updated_at=None):
+        return {"top": top or [], "hot": hot or [], "hot_days": hot_days,
+                "stale": stale, "updated_at": updated_at}
+
+    def repo(self, name="owner/repo", stars=45231, forks=3204, language="Python",
+             desc="An agent that grows with you", move=""):
+        return {"full_name": name, "html_url": f"https://github.com/{name}",
+                "description": desc, "language": language, "stars": stars,
+                "forks": forks, "created_at": "2026-08-30T00:00:00Z", "move": move}
+
+    def test_none_data_shows_failure_message(self):
+        self.assertIn("今天抓不到 GitHub 資料，請稍後再試。", gh.build_github_html(None))
+
+    def test_both_empty_shows_failure_message(self):
+        self.assertIn("今天抓不到 GitHub 資料，請稍後再試。",
+                      gh.build_github_html(self.data()))
+
+    def test_top_section_heading(self):
+        html = gh.build_github_html(self.data(top=[self.repo()]))
+        self.assertIn("AI 應用星數 Top 1", html)
+        self.assertIn("topic:ai / llm / agent", html)
+
+    def test_hot_section_heading_shows_actual_days(self):
+        html = gh.build_github_html(self.data(hot=[self.repo()], hot_days=60))
+        self.assertIn("近 60 天爆款 Top 1", html)
+
+    def test_stars_and_forks_formatted(self):
+        html = gh.build_github_html(self.data(top=[self.repo()]))
+        self.assertIn("45,231", html)
+        self.assertIn("fork 3,204", html)
+
+    def test_rank_number_rendered(self):
+        html = gh.build_github_html(self.data(top=[self.repo(), self.repo("b/two", 10)]))
+        self.assertIn("gh-rank", html)
+
+    def test_language_badge(self):
+        html = gh.build_github_html(self.data(top=[self.repo()]))
+        self.assertIn("<span class='badge'>Python</span>", html)
+
+    def test_missing_language_renders_no_extra_badge(self):
+        html = gh.build_github_html(self.data(top=[self.repo(language="")]))
+        self.assertEqual(html.count("class='badge'"), 1)
+
+    def test_description_rendered(self):
+        html = gh.build_github_html(self.data(top=[self.repo()]))
+        self.assertIn("An agent that grows with you", html)
+
+    def test_empty_description_renders_no_summary_div(self):
+        html = gh.build_github_html(self.data(top=[self.repo(desc="")]))
+        self.assertNotIn("class='summary'", html)
+
+    def test_created_date_only_in_hot_section(self):
+        html = gh.build_github_html(self.data(top=[self.repo()], hot=[self.repo("b/two")]))
+        top_part, hot_part = html.split("近 30 天爆款")
+        self.assertNotIn("建立於", top_part)
+        self.assertIn("建立於 2026-08-30", hot_part)
+
+    def test_move_arrow_rendered(self):
+        html = gh.build_github_html(self.data(top=[self.repo(move="↑2")]))
+        self.assertIn("gh-move", html)
+        self.assertIn("↑2", html)
+
+    def test_no_move_field_renders_no_move_div(self):
+        repo = self.repo()
+        repo["move"] = ""
+        html = gh.build_github_html(self.data(top=[repo]))
+        self.assertNotIn("gh-move", html)
+
+    def test_stale_warning_shown(self):
+        html = gh.build_github_html(self.data(top=[self.repo()], stale=True,
+                                              updated_at="2026-09-24 07:00"))
+        self.assertIn("今天更新失敗", html)
+        self.assertIn("2026-09-24 07:00", html)
+
+    def test_no_stale_warning_when_fresh(self):
+        html = gh.build_github_html(self.data(top=[self.repo()], updated_at="2026-09-25 07:00"))
+        self.assertNotIn("gh-warn", html)
+
+    def test_top_empty_but_hot_present(self):
+        html = gh.build_github_html(self.data(hot=[self.repo()]))
+        self.assertIn("目前查不到符合條件的 AI 應用專案。", html)
+        self.assertNotIn("今天抓不到 GitHub 資料", html)
+
+    def test_hot_empty_but_top_present(self):
+        html = gh.build_github_html(self.data(top=[self.repo()]))
+        self.assertIn("目前查不到近期的 AI 專案。", html)
+
+    def test_escapes_html_in_description(self):
+        html = gh.build_github_html(self.data(top=[self.repo(desc="<script>alert(1)</script>")]))
+        self.assertNotIn("<script>", html)
+        self.assertIn("&lt;script&gt;", html)
+
+    def test_escapes_html_in_repo_name(self):
+        html = gh.build_github_html(self.data(top=[self.repo(name="<img src=x onerror=1>")]))
+        self.assertNotIn("<img", html)
+
+
+class TestGhCss(unittest.TestCase):
+    def test_defines_card_classes(self):
+        for cls in (".gh-card", ".gh-rank", ".gh-main", ".gh-move", ".gh-warn"):
+            self.assertIn(cls, gh.GH_CSS)
+
+
 if __name__ == "__main__":
     unittest.main()
