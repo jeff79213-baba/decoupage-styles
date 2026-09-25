@@ -820,5 +820,110 @@ class TestSearchReposErrors(unittest.TestCase):
         self.assertIsNone(etag)
 
 
+def gh_repo(name="owner/repo", stars=100, age_days=5):
+    created = (datetime(2026, 9, 25, tzinfo=timezone.utc) - timedelta(days=age_days))
+    return {"full_name": name, "html_url": f"https://github.com/{name}",
+            "description": "d", "language": "Python", "stars": stars, "forks": 1,
+            "created_at": created.strftime("%Y-%m-%dT%H:%M:%SZ")}
+
+
+class TestFetchQueryCached(unittest.TestCase):
+    def test_ok_returns_fresh_repos(self):
+        with mock.patch.object(gh, "search_repos", return_value=([{"full_name": "a/1"}], 'W/"e"')):
+            repos, status, etag = gh.fetch_query_cached("topic_ai", "q", {})
+        self.assertEqual(status, "ok")
+        self.assertEqual(repos[0]["full_name"], "a/1")
+        self.assertEqual(etag, 'W/"e"')
+
+    def test_304_falls_back_to_cache(self):
+        cache = {"queries": {"topic_ai": {"etag": 'W/"old"', "repos": [{"full_name": "a/1"}]}}}
+        with mock.patch.object(gh, "search_repos", return_value=(None, 'W/"old"')):
+            repos, status, etag = gh.fetch_query_cached("topic_ai", "q", cache)
+        self.assertEqual(status, "not_modified")
+        self.assertEqual(repos[0]["full_name"], "a/1")
+
+    def test_error_falls_back_to_cache(self):
+        cache = {"queries": {"topic_ai": {"etag": 'W/"old"', "repos": [{"full_name": "a/1"}]}}}
+        with mock.patch.object(gh, "search_repos", return_value=(None, None)):
+            repos, status, etag = gh.fetch_query_cached("topic_ai", "q", cache)
+        self.assertEqual(status, "error")
+        self.assertEqual(repos[0]["full_name"], "a/1")
+        self.assertIsNone(etag)
+
+    def test_error_with_no_cache_returns_empty(self):
+        with mock.patch.object(gh, "search_repos", return_value=(None, None)):
+            repos, status, _ = gh.fetch_query_cached("topic_ai", "q", {})
+        self.assertEqual(repos, [])
+        self.assertEqual(status, "error")
+
+
+class TestFetchGithubRank(unittest.TestCase):
+    def setUp(self):
+        self.tmp = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                "_tmp_gh_rank.json")
+        self.addCleanup(lambda: os.path.exists(self.tmp) and os.remove(self.tmp))
+        self.now = datetime(2026, 9, 25, 7, 0, tzinfo=TW)
+
+    def ok(self, repos, etag='W/"e"'):
+        return mock.patch.object(gh, "search_repos", return_value=(repos, etag))
+
+    def test_builds_top_and_hot_from_queries(self):
+        with self.ok([gh_repo("a/top", 900, 200), gh_repo("a/hot", 800, 3)]):
+            data = gh.fetch_github_rank(now=self.now, cache_path=self.tmp)
+        self.assertIn("a/top", [r["full_name"] for r in data["top"]])
+        self.assertEqual([r["full_name"] for r in data["hot"]], ["a/hot"])
+        self.assertEqual(data["hot_days"], 30)
+        self.assertFalse(data["stale"])
+
+    def test_excludes_list_repos_from_top(self):
+        repos = [gh_repo("a/awesome-list", 9999, 200), gh_repo("a/real", 100, 200)]
+        with self.ok(repos):
+            data = gh.fetch_github_rank(now=self.now, cache_path=self.tmp)
+        self.assertEqual([r["full_name"] for r in data["top"]], ["a/real"])
+
+    def test_uses_four_queries(self):
+        with self.ok([]) as m:
+            gh.fetch_github_rank(now=self.now, cache_path=self.tmp)
+        self.assertEqual(m.call_count, 4)
+
+    def test_writes_cache_with_ranks(self):
+        with self.ok([gh_repo("a/one", 500, 3)]):
+            gh.fetch_github_rank(now=self.now, cache_path=self.tmp)
+        cache = gh.load_cache(self.tmp)
+        self.assertIn("a/one", cache["ranks"]["top"])
+        self.assertIn("topic_ai", cache["queries"])
+        self.assertIn("recent", cache["queries"])
+
+    def test_all_fail_marks_stale_and_uses_old_cache(self):
+        gh.save_cache(self.tmp, {
+            "updated_at": "2026-09-24 07:00",
+            "queries": {"topic_ai": {"etag": None, "repos": [gh_repo("a/old", 300, 200)]},
+                        "topic_llm": {"etag": None, "repos": []},
+                        "topic_agent": {"etag": None, "repos": []},
+                        "recent": {"etag": None, "repos": []}},
+            "ranks": {"top": ["a/old"], "hot": []},
+        })
+        with mock.patch.object(gh, "search_repos", return_value=(None, None)):
+            data = gh.fetch_github_rank(now=self.now, cache_path=self.tmp)
+        self.assertTrue(data["stale"])
+        self.assertEqual(data["updated_at"], "2026-09-24 07:00")
+        self.assertEqual([r["full_name"] for r in data["top"]], ["a/old"])
+
+    def test_all_fail_no_cache_returns_empty(self):
+        with mock.patch.object(gh, "search_repos", return_value=(None, None)):
+            data = gh.fetch_github_rank(now=self.now, cache_path=self.tmp)
+        self.assertEqual(data["top"], [])
+        self.assertEqual(data["hot"], [])
+        self.assertIsNone(data["updated_at"])
+        self.assertFalse(data["stale"])
+
+    def test_second_run_uses_etag_from_cache(self):
+        with self.ok([gh_repo("a/one", 500, 3)]):
+            gh.fetch_github_rank(now=self.now, cache_path=self.tmp)
+        with self.ok(None) as m:
+            gh.fetch_github_rank(now=self.now, cache_path=self.tmp)
+        self.assertEqual(m.call_args_list[0][0][1], 'W/"e"')
+
+
 if __name__ == "__main__":
     unittest.main()

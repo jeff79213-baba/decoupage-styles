@@ -264,3 +264,74 @@ def search_repos(query, etag=None, session=None):
         print(f"  [GitHub] 回應解析失敗: {e}")
         return None, None
     return repos, r.headers.get("ETag")
+
+
+def fetch_query_cached(name, query, cache):
+    """帶 ETag 條件式請求一組查詢，失敗或 304 時沿用快取內資料。
+
+    回傳 (repos, status, etag)，status 為：
+    - "ok"            HTTP 200，repos 為最新資料
+    - "not_modified"  HTTP 304，repos 沿用快取
+    - "error"         請求失敗，repos 沿用快取（可能為空清單）
+    """
+    prev = (cache.get("queries") or {}).get(name) or {}
+    prev_etag = prev.get("etag")
+    repos, etag = search_repos(query, prev_etag)
+    if repos is not None:
+        return repos, "ok", etag
+    if etag is not None and etag == prev_etag:
+        return prev.get("repos") or [], "not_modified", etag
+    return prev.get("repos") or [], "error", None
+
+
+def fetch_github_rank(now=None, cache_path=CACHE_FILE):
+    """主流程：抓四組查詢、合併篩選、選出兩欄、計算名次升降、寫回快取。
+
+    回傳 {top, hot, hot_days, updated_at, stale}。
+    stale 為 True 表示本次所有查詢都失敗、頁面顯示的是舊快取資料。
+    """
+    now = now or datetime.now(TAIWAN_TZ)
+    cache = load_cache(cache_path)
+    prev_queries = cache.get("queries") or {}
+    prev_ranks = cache.get("ranks") or {}
+
+    min_date = (now - timedelta(days=MAX_DAYS)).strftime("%Y-%m-%d")
+    plan = [(f"topic_{t}", build_query([t], MIN_STARS)) for t in TOPICS]
+    plan.append(("recent", build_query(TOPICS, MIN_STARS_RECENT, created_after=min_date)))
+
+    new_queries = {}
+    unchanged = 0
+    failed = 0
+    for name, query in plan:
+        repos, status, etag = fetch_query_cached(name, query, cache)
+        if status == "not_modified":
+            unchanged += 1
+        elif status == "error":
+            failed += 1
+        new_queries[name] = {"etag": etag, "repos": repos}
+
+    top_pool = merge_repos([new_queries[f"topic_{t}"]["repos"] for t in TOPICS])
+    hot_pool = merge_repos([new_queries["recent"]["repos"]])
+
+    top = pick_top(top_pool)
+    hot, hot_days = pick_hot(hot_pool, now)
+    top = apply_moves(top, rank_moves([r["full_name"] for r in top], prev_ranks.get("top")))
+    hot = apply_moves(hot, rank_moves([r["full_name"] for r in hot], prev_ranks.get("hot")))
+
+    stale = failed == len(plan)
+    updated_at = cache.get("updated_at") if stale else now.strftime("%Y-%m-%d %H:%M")
+    stale = bool(stale and updated_at)
+
+    save_cache(cache_path, {
+        "updated_at": updated_at,
+        "queries": new_queries,
+        "ranks": {"top": [r["full_name"] for r in top],
+                  "hot": [r["full_name"] for r in hot]},
+    })
+
+    note = f"（{unchanged} 組未變更、{failed} 組失敗）" if (unchanged or failed) else ""
+    stale_note = "，顯示舊資料" if stale else ""
+    print(f"  [GitHub] 星數榜 {len(top)} 則、爆款榜 {len(hot)} 則（{hot_days} 天內）"
+          f"{note}{stale_note}")
+    return {"top": top, "hot": hot, "hot_days": hot_days,
+            "updated_at": updated_at, "stale": stale}
