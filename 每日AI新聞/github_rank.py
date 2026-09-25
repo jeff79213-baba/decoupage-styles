@@ -222,7 +222,7 @@ def save_cache(path, data):
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=1)
         os.replace(tmp, path)
-    except OSError as e:
+    except (OSError, TypeError, ValueError) as e:
         print(f"  [GitHub] 快取寫入失敗（不影響本次輸出）: {e}")
         try:
             os.remove(tmp)
@@ -259,8 +259,8 @@ def search_repos(query, etag=None, session=None):
         return None, None
     try:
         items = r.json().get("items") or []
+        repos = [parsed for parsed in (parse_repo(it) for it in items) if parsed]
     except Exception as e:
         print(f"  [GitHub] 回應解析失敗: {e}")
         return None, None
-    repos = [parsed for parsed in (parse_repo(it) for it in items) if parsed]
     return repos, r.headers.get("ETag")

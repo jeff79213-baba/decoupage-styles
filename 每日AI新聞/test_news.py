@@ -689,6 +689,8 @@ class TestSaveCache(unittest.TestCase):
         self.tmp = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                 "_tmp_gh_cache.json")
         self.addCleanup(lambda: os.path.exists(self.tmp) and os.remove(self.tmp))
+        self.addCleanup(lambda: os.path.exists(self.tmp + ".tmp")
+                        and os.remove(self.tmp + ".tmp"))
 
     def test_creates_file(self):
         gh.save_cache(self.tmp, {"a": 1})
@@ -704,6 +706,17 @@ class TestSaveCache(unittest.TestCase):
 
     def test_write_failure_does_not_raise(self):
         gh.save_cache(os.path.join(self.tmp, "nested", "x.json"), {"a": 1})
+
+    def test_serialization_failure_does_not_raise_or_leave_temp(self):
+        gh.save_cache(self.tmp, {"bad": object()})
+        self.assertFalse(os.path.exists(self.tmp + ".tmp"))
+
+    def test_serialization_failure_preserves_existing_file(self):
+        with open(self.tmp, "w", encoding="utf-8") as f:
+            f.write('{"old": true}')
+        gh.save_cache(self.tmp, {"bad": object()})
+        with open(self.tmp, encoding="utf-8") as f:
+            self.assertEqual(f.read(), '{"old": true}')
 
 
 class TestSearchReposOk(unittest.TestCase):
@@ -721,6 +734,13 @@ class TestSearchReposOk(unittest.TestCase):
 
     def test_skips_items_without_full_name(self):
         sess = _FakeSession(_FakeResponse(200, {"items": [gh_item(), {"full_name": ""}]}))
+        repos, _ = gh.search_repos("q", session=sess)
+        self.assertEqual(len(repos), 1)
+
+    def test_skips_item_with_missing_full_name_key(self):
+        item = gh_item()
+        del item["full_name"]
+        sess = _FakeSession(_FakeResponse(200, {"items": [gh_item(), item]}))
         repos, _ = gh.search_repos("q", session=sess)
         self.assertEqual(len(repos), 1)
 
@@ -766,6 +786,35 @@ class TestSearchReposErrors(unittest.TestCase):
 
     def test_bad_json_returns_none_none(self):
         sess = _FakeSession(_FakeResponse(200, None))
+        repos, etag = gh.search_repos("q", session=sess)
+        self.assertIsNone(repos)
+        self.assertIsNone(etag)
+
+    def test_non_dict_items_returns_none_none(self):
+        sess = _FakeSession(_FakeResponse(200, {"items": 7}))
+        repos, etag = gh.search_repos("q", session=sess)
+        self.assertIsNone(repos)
+        self.assertIsNone(etag)
+
+    def test_array_payload_returns_none_none(self):
+        sess = _FakeSession(_FakeResponse(200, [1, 2]))
+        repos, etag = gh.search_repos("q", session=sess)
+        self.assertIsNone(repos)
+        self.assertIsNone(etag)
+
+    def test_missing_items_returns_success_with_etag(self):
+        sess = _FakeSession(_FakeResponse(200, {}, headers={"ETag": 'W/"empty"'}))
+        self.assertEqual(gh.search_repos("q", session=sess), ([], 'W/"empty"'))
+
+    def test_null_items_returns_success_with_etag(self):
+        sess = _FakeSession(_FakeResponse(200, {"items": None},
+                                           headers={"ETag": 'W/"empty"'}))
+        self.assertEqual(gh.search_repos("q", session=sess), ([], 'W/"empty"'))
+
+    def test_malformed_repo_field_returns_none_none(self):
+        item = gh_item()
+        item["stargazers_count"] = "abc"
+        sess = _FakeSession(_FakeResponse(200, {"items": [item]}))
         repos, etag = gh.search_repos("q", session=sess)
         self.assertIsNone(repos)
         self.assertIsNone(etag)
