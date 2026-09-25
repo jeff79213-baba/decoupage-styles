@@ -214,6 +214,55 @@ def load_cache(path=CACHE_FILE):
         return {}
 
 
+def cache_is_valid(data):
+    """檢查快取整體結構是否符合預期；任一處不符即回 False（呼叫端視為冷啟動）。
+
+    只放行由 save_cache 寫出的形狀：queries 為 dict，其每個值為 dict，
+    repos（若存在）為 dict 元素清單且每筆 full_name 為 str、stars 為 int；
+    ranks（若存在）為 dict，其每個值為 str 清單；updated_at（若存在）為 str 或 None。
+    結構不符的快取一律不可信，必須整份捨棄而非修修补補——否則會沿用不可信的
+    ETag，導致 304 命中後把壞資料當成最新資料寫回。
+    """
+    try:
+        if not isinstance(data, dict) or not data:
+            return False
+
+        queries = data.get("queries")
+        if not isinstance(queries, dict):
+            return False
+        for entry in queries.values():
+            if not isinstance(entry, dict):
+                return False
+            if "repos" in entry:
+                repos = entry["repos"]
+                if not isinstance(repos, list):
+                    return False
+                for repo in repos:
+                    if not isinstance(repo, dict):
+                        return False
+                    if not isinstance(repo.get("full_name"), str):
+                        return False
+                    if type(repo.get("stars")) is not int:
+                        return False
+
+        if "ranks" in data:
+            ranks = data["ranks"]
+            if not isinstance(ranks, dict):
+                return False
+            for names in ranks.values():
+                if not isinstance(names, list):
+                    return False
+                if any(not isinstance(name, str) for name in names):
+                    return False
+
+        updated_at = data.get("updated_at")
+        if updated_at is not None and not isinstance(updated_at, str):
+            return False
+        return True
+    except Exception:
+        return False
+
+
 def save_cache(path, data):
     """原子寫入快取：先寫暫存檔再 os.replace，避免中斷產生半損毀檔。
     寫入失敗僅記錄，不中斷主流程。"""
@@ -274,12 +323,7 @@ def fetch_query_cached(name, query, cache):
     - "not_modified"  HTTP 304，repos 沿用快取
     - "error"         請求失敗，repos 沿用快取（可能為空清單）
     """
-    queries = cache.get("queries")
-    if not isinstance(queries, dict):
-        queries = {}
-    prev = queries.get(name)
-    if not isinstance(prev, dict):
-        prev = {}
+    prev = (cache.get("queries") or {}).get(name) or {}
     prev_etag = prev.get("etag")
     repos, etag = search_repos(query, prev_etag)
     if repos is not None:
@@ -300,15 +344,11 @@ def fetch_github_rank(now=None, cache_path=CACHE_FILE):
     elif now.tzinfo is None:
         now = now.replace(tzinfo=TAIWAN_TZ)
     cache = load_cache(cache_path)
-    prev_ranks = cache.get("ranks")
-    if not isinstance(prev_ranks, dict):
-        prev_ranks = {}
-    prev_top = prev_ranks.get("top")
-    if not isinstance(prev_top, list):
-        prev_top = []
-    prev_hot = prev_ranks.get("hot")
-    if not isinstance(prev_hot, list):
-        prev_hot = []
+    if not cache_is_valid(cache):
+        cache = {}
+    prev_ranks = cache.get("ranks", {})
+    prev_top = prev_ranks.get("top", [])
+    prev_hot = prev_ranks.get("hot", [])
 
     min_date = (now - timedelta(days=MAX_DAYS)).strftime("%Y-%m-%d")
     plan = [(f"topic_{t}", build_query([t], MIN_STARS)) for t in TOPICS]
@@ -323,10 +363,6 @@ def fetch_github_rank(now=None, cache_path=CACHE_FILE):
             unchanged += 1
         elif status == "error":
             failed += 1
-        if not isinstance(repos, list):
-            repos = []
-        else:
-            repos = [repo for repo in repos if isinstance(repo, dict)]
         new_queries[name] = {"etag": etag, "repos": repos}
 
     top_pool = merge_repos([new_queries[f"topic_{t}"]["repos"] for t in TOPICS])

@@ -827,6 +827,63 @@ def gh_repo(name="owner/repo", stars=100, age_days=5):
             "created_at": created.strftime("%Y-%m-%dT%H:%M:%SZ")}
 
 
+class TestCacheIsValid(unittest.TestCase):
+    def setUp(self):
+        self.tmp = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                "_tmp_gh_cache.json")
+        self.addCleanup(lambda: os.path.exists(self.tmp) and os.remove(self.tmp))
+        self.addCleanup(lambda: os.path.exists(self.tmp + ".tmp")
+                        and os.remove(self.tmp + ".tmp"))
+
+    def test_empty_dict_is_invalid(self):
+        self.assertFalse(gh.cache_is_valid({}))
+
+    def test_saved_cache_is_valid(self):
+        gh.save_cache(self.tmp, {
+            "updated_at": "2026-09-25 07:00",
+            "queries": {
+                "topic_ai": {"etag": 'W/"e"', "repos": [gh_repo()]},
+            },
+            "ranks": {"top": ["owner/repo"], "hot": ["owner/repo"]},
+        })
+        self.assertTrue(gh.cache_is_valid(gh.load_cache(self.tmp)))
+
+    def test_queries_list_is_invalid(self):
+        self.assertFalse(gh.cache_is_valid({"queries": []}))
+
+    def test_query_entry_string_is_invalid(self):
+        self.assertFalse(gh.cache_is_valid({"queries": {"topic_ai": "bad"}}))
+
+    def test_repos_with_non_dict_is_invalid(self):
+        cache = {"queries": {"topic_ai": {"repos": ["bad"]}}}
+        self.assertFalse(gh.cache_is_valid(cache))
+
+    def test_repo_missing_full_name_is_invalid(self):
+        repo = gh_repo()
+        del repo["full_name"]
+        cache = {"queries": {"topic_ai": {"repos": [repo]}}}
+        self.assertFalse(gh.cache_is_valid(cache))
+
+    def test_repo_with_string_stars_is_invalid(self):
+        repo = gh_repo(stars="bad")
+        cache = {"queries": {"topic_ai": {"repos": [repo]}}}
+        self.assertFalse(gh.cache_is_valid(cache))
+
+    def test_ranks_list_is_invalid(self):
+        self.assertFalse(gh.cache_is_valid({"queries": {}, "ranks": []}))
+
+    def test_string_rank_list_is_invalid(self):
+        cache = {"queries": {}, "ranks": {"top": "owner/repo"}}
+        self.assertFalse(gh.cache_is_valid(cache))
+
+    def test_rank_list_with_non_string_is_invalid(self):
+        cache = {"queries": {}, "ranks": {"top": [{}]}}
+        self.assertFalse(gh.cache_is_valid(cache))
+
+    def test_integer_updated_at_is_invalid(self):
+        self.assertFalse(gh.cache_is_valid({"queries": {}, "updated_at": 1}))
+
+
 class TestFetchQueryCached(unittest.TestCase):
     def test_ok_returns_fresh_repos(self):
         with mock.patch.object(gh, "search_repos", return_value=([{"full_name": "a/1"}], 'W/"e"')):
@@ -855,24 +912,6 @@ class TestFetchQueryCached(unittest.TestCase):
             repos, status, _ = gh.fetch_query_cached("topic_ai", "q", {})
         self.assertEqual(repos, [])
         self.assertEqual(status, "error")
-
-    def test_non_dict_queries_falls_back_as_empty(self):
-        with mock.patch.object(gh, "search_repos", return_value=(None, None)) as search:
-            repos, status, etag = gh.fetch_query_cached(
-                "topic_ai", "q", {"queries": ["oops"]})
-        self.assertEqual(repos, [])
-        self.assertEqual(status, "error")
-        self.assertIsNone(etag)
-        search.assert_called_once_with("q", None)
-
-    def test_non_dict_query_entry_falls_back_as_empty(self):
-        cache = {"queries": {"topic_ai": "oops"}}
-        with mock.patch.object(gh, "search_repos", return_value=(None, None)) as search:
-            repos, status, etag = gh.fetch_query_cached("topic_ai", "q", cache)
-        self.assertEqual(repos, [])
-        self.assertEqual(status, "error")
-        self.assertIsNone(etag)
-        search.assert_called_once_with("q", None)
 
 
 class TestFetchGithubRank(unittest.TestCase):
@@ -972,27 +1011,26 @@ class TestFetchGithubRank(unittest.TestCase):
         self.assertEqual([r["full_name"] for r in data["top"]], ["a/one"])
         self.assertEqual([call.args[1] for call in moves.call_args_list], [[], []])
 
-    def test_non_dict_cached_repo_is_filtered(self):
-        cached_repo = gh_repo("a/old", 300, 200)
+    def test_malformed_cache_with_304_responses_uses_cold_start(self):
+        seeded_etag = 'W/"malformed"'
         gh.save_cache(self.tmp, {
             "updated_at": "2026-09-24 07:00",
             "queries": {
-                "topic_ai": {"etag": None, "repos": [cached_repo, "not-a-dict"]},
+                "topic_ai": {"etag": seeded_etag, "repos": "not-a-list"},
             },
             "ranks": {},
         })
-
-        def search(query, etag=None):
-            if query == "topic:ai stars:>1000":
-                return None, None
-            return [], None
-
-        with mock.patch.object(gh, "search_repos", side_effect=search):
+        with mock.patch.object(gh, "search_repos",
+                               return_value=(None, seeded_etag)) as search:
             data = gh.fetch_github_rank(now=self.now, cache_path=self.tmp)
         cache = gh.load_cache(self.tmp)
-        self.assertEqual([r["full_name"] for r in data["top"]], ["a/old"])
-        self.assertEqual(cache["queries"]["topic_ai"]["repos"], [cached_repo])
         self.assertFalse(data["stale"])
+        self.assertTrue(gh.cache_is_valid(cache))
+        self.assertEqual(cache["queries"]["topic_ai"]["repos"], [])
+        self.assertEqual(
+            [call.args[1] for call in search.call_args_list],
+            [None, None, None, None],
+        )
 
     def test_partial_failure_uses_successful_data_without_stale(self):
         successful = {
