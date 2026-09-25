@@ -498,6 +498,14 @@ class TestPickTop(unittest.TestCase):
     def test_empty(self):
         self.assertEqual(gh.pick_top([]), [])
 
+    def test_zero_returns_empty(self):
+        repos = [self.r("a/1", 10), self.r("b/2", 20)]
+        self.assertEqual(gh.pick_top(repos, n=0), [])
+
+    def test_negative_returns_empty(self):
+        repos = [self.r("a/1", 10), self.r("b/2", 20)]
+        self.assertEqual(gh.pick_top(repos, n=-1), [])
+
 
 class TestParseCreated(unittest.TestCase):
     def test_parses_github_timestamp(self):
@@ -568,6 +576,20 @@ class TestPickHot(unittest.TestCase):
         picked, _ = gh.pick_hot(repos, self.NOW)
         self.assertEqual([x["full_name"] for x in picked],
                          ["b/high", "c/mid", "d/x", "a/low", "e/y"])
+
+    def test_unparsable_created_at_excluded_from_huge_window(self):
+        repos = [{"full_name": "bad/empty", "created_at": "", "stars": 100},
+                 {"full_name": "bad/text", "created_at": "not a date", "stars": 90}]
+        picked, _ = gh.pick_hot(repos, self.NOW)
+        self.assertEqual(picked, [])
+        picked, days = gh.pick_hot(repos, self.NOW, windows=[10 ** 9])
+        self.assertEqual(picked, [])
+        self.assertEqual(days, 10 ** 9)
+
+    def test_zero_returns_empty_default_window(self):
+        picked, days = gh.pick_hot([self.repo("a/1", 5, 100)], self.NOW, n=0)
+        self.assertEqual(picked, [])
+        self.assertEqual(days, 30)
 
 
 class TestRankMoves(unittest.TestCase):

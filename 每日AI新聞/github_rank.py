@@ -122,6 +122,8 @@ def merge_repos(repo_lists):
 
 def pick_top(repos, n=TOP_N):
     """取星數排序後的前 n 筆（輸入須已排序）。"""
+    if n <= 0:
+        return []
     return list(repos or [])[:n]
 
 
@@ -153,6 +155,8 @@ def pick_hot(repos, now, windows=None, n=TOP_N):
     所有窗都不足時回傳累積筆數最多的窗（可能少於 n 筆，不補假資料）。
     """
     windows = windows or HOT_WINDOWS
+    if n <= 0:
+        return [], windows[0]
     ages = {}
     for repo in repos or []:
         age = repo_age_days(repo, now)
@@ -161,7 +165,7 @@ def pick_hot(repos, now, windows=None, n=TOP_N):
     best = ([], windows[0])
     for days in windows:
         picked = [r for r in repos or []
-                  if 0 <= ages.get(r.get("full_name"), 10 ** 9) <= days]
+                  if r.get("full_name") in ages and 0 <= ages[r["full_name"]] <= days]
         if len(picked) >= n:
             return picked[:n], days
         if len(picked) > len(best[0]):
