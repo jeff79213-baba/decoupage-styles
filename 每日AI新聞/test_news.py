@@ -480,5 +480,131 @@ class TestMergeRepos(unittest.TestCase):
         self.assertEqual(len(out), 1)
 
 
+class TestPickTop(unittest.TestCase):
+    def r(self, name, stars):
+        return {"full_name": name, "stars": stars}
+
+    def test_takes_first_five(self):
+        repos = [self.r(f"a/{i}", 100 - i) for i in range(9)]
+        self.assertEqual(len(gh.pick_top(repos)), 5)
+
+    def test_keeps_input_order(self):
+        repos = [self.r("a/1", 10), self.r("b/2", 20)]
+        self.assertEqual([x["full_name"] for x in gh.pick_top(repos)], ["a/1", "b/2"])
+
+    def test_fewer_than_five_returns_all(self):
+        self.assertEqual(len(gh.pick_top([self.r("a/1", 1)])), 1)
+
+    def test_empty(self):
+        self.assertEqual(gh.pick_top([]), [])
+
+
+class TestParseCreated(unittest.TestCase):
+    def test_parses_github_timestamp(self):
+        got = gh.parse_created("2026-08-01T10:00:00Z")
+        self.assertEqual(got.year, 2026)
+        self.assertEqual(got.tzinfo, timezone.utc)
+
+    def test_invalid_returns_none(self):
+        self.assertIsNone(gh.parse_created("not a date"))
+
+    def test_none_returns_none(self):
+        self.assertIsNone(gh.parse_created(None))
+
+
+class TestRepoAgeDays(unittest.TestCase):
+    def test_age_from_now(self):
+        repo = {"created_at": "2026-08-26T00:00:00Z"}
+        now = datetime(2026, 9, 25, 0, 0, tzinfo=timezone.utc)
+        self.assertEqual(gh.repo_age_days(repo, now), 30)
+
+    def test_unparsable_returns_none(self):
+        self.assertIsNone(gh.repo_age_days({"created_at": ""}, datetime.now(TW)))
+
+
+class TestPickHot(unittest.TestCase):
+    NOW = datetime(2026, 9, 25, 0, 0, tzinfo=timezone.utc)
+
+    def repo(self, name, age_days, stars):
+        created = (self.NOW - timedelta(days=age_days)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        return {"full_name": name, "created_at": created, "stars": stars}
+
+    def test_uses_30_day_window_when_full(self):
+        repos = [self.repo(f"a/{i}", 10, 100 + i) for i in range(6)]
+        picked, days = gh.pick_hot(repos, self.NOW)
+        self.assertEqual(days, 30)
+        self.assertEqual(len(picked), 5)
+
+    def test_widens_to_60_days_when_30_insufficient(self):
+        repos = [self.repo("old/60", 55, 10), self.repo("old/61", 58, 20),
+                 self.repo("new/5", 5, 30), self.repo("new/6", 6, 40),
+                 self.repo("new/7", 7, 50)]
+        picked, days = gh.pick_hot(repos, self.NOW)
+        self.assertEqual(days, 60)
+        self.assertEqual(len(picked), 5)
+
+    def test_widens_to_90_days_when_60_insufficient(self):
+        repos = [self.repo("a/70", 70, 10), self.repo("b/80", 80, 20),
+                 self.repo("c/85", 85, 30), self.repo("d/88", 88, 40)]
+        picked, days = gh.pick_hot(repos, self.NOW)
+        self.assertEqual(days, 90)
+        self.assertEqual(len(picked), 4)
+
+    def test_beyond_longest_window_excluded(self):
+        repos = [self.repo("old/200", 200, 999), self.repo("new/1", 1, 10)]
+        picked, days = gh.pick_hot(repos, self.NOW)
+        self.assertEqual([x["full_name"] for x in picked], ["new/1"])
+        self.assertEqual(days, 30)
+
+    def test_empty_repos(self):
+        picked, days = gh.pick_hot([], self.NOW)
+        self.assertEqual(picked, [])
+        self.assertEqual(days, 30)
+
+    def test_preserves_sorted_input_order(self):
+        # pick_hot 不自行排序；排序由呼叫端的 merge_repos 負責，此處只驗證順序不被破壞
+        repos = [self.repo("b/high", 5, 900), self.repo("c/mid", 6, 100),
+                 self.repo("d/x", 7, 50), self.repo("a/low", 8, 10), self.repo("e/y", 9, 5)]
+        picked, _ = gh.pick_hot(repos, self.NOW)
+        self.assertEqual([x["full_name"] for x in picked],
+                         ["b/high", "c/mid", "d/x", "a/low", "e/y"])
+
+
+class TestRankMoves(unittest.TestCase):
+    def test_rose_and_fell_by_one(self):
+        self.assertEqual(gh.rank_moves(["b", "a"], ["a", "b"]), {"b": "↑1", "a": "↓1"})
+
+    def test_big_jump_uses_double_arrow(self):
+        moves = gh.rank_moves(["e", "b", "c", "d", "a"], ["a", "b", "c", "d", "e"])
+        self.assertEqual(moves["e"], "↑↑4")
+
+    def test_unchanged_position_not_shown(self):
+        self.assertEqual(gh.rank_moves(["a", "b"], ["a", "b"]), {})
+
+    def test_new_repo_not_shown(self):
+        self.assertEqual(gh.rank_moves(["new", "a"], ["a", "b"]), {"a": "↓1"})
+
+    def test_missing_repo_not_shown(self):
+        self.assertEqual(gh.rank_moves(["a"], ["a", "b"]), {})
+
+    def test_no_previous_data_gives_nothing(self):
+        self.assertEqual(gh.rank_moves(["a", "b"], None), {})
+
+
+class TestApplyMoves(unittest.TestCase):
+    def test_adds_move_field(self):
+        out = gh.apply_moves([{"full_name": "a/1"}], {"a/1": "↑2"})
+        self.assertEqual(out[0]["move"], "↑2")
+
+    def test_missing_move_is_empty_string(self):
+        out = gh.apply_moves([{"full_name": "a/1"}], {})
+        self.assertEqual(out[0]["move"], "")
+
+    def test_does_not_mutate_input(self):
+        src = [{"full_name": "a/1"}]
+        gh.apply_moves(src, {"a/1": "↑2"})
+        self.assertNotIn("move", src[0])
+
+
 if __name__ == "__main__":
     unittest.main()

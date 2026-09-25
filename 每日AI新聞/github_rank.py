@@ -118,3 +118,80 @@ def merge_repos(repo_lists):
             out.append(repo)
     out.sort(key=lambda r: (-r.get("stars", 0), r.get("full_name", "")))
     return out
+
+
+def pick_top(repos, n=TOP_N):
+    """取星數排序後的前 n 筆（輸入須已排序）。"""
+    return list(repos or [])[:n]
+
+
+def parse_created(raw):
+    """解析 GitHub 的 'YYYY-MM-DDTHH:MM:SSZ' 為 UTC datetime；失敗回 None。"""
+    if not raw or not isinstance(raw, str):
+        return None
+    try:
+        return datetime.strptime(raw, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def repo_age_days(repo, now):
+    """repo 建立至 now 的天數；日期無法解析回 None。"""
+    created = parse_created(repo.get("created_at"))
+    if created is None:
+        return None
+    return (now.astimezone(timezone.utc) - created).days
+
+
+def pick_hot(repos, now, windows=None, n=TOP_N):
+    """由短到長試各時間窗挑選爆款。
+
+    輸入須已依星數降冪排序（由呼叫端的 merge_repos 負責），此函式只做時間窗過濾，
+    不改變順序。
+
+    回傳 (清單, 實際採用天數)。某窗內達 n 筆即採用該窗並取前 n 筆；
+    所有窗都不足時回傳累積筆數最多的窗（可能少於 n 筆，不補假資料）。
+    """
+    windows = windows or HOT_WINDOWS
+    ages = {}
+    for repo in repos or []:
+        age = repo_age_days(repo, now)
+        if age is not None:
+            ages[repo.get("full_name")] = age
+    best = ([], windows[0])
+    for days in windows:
+        picked = [r for r in repos or []
+                  if 0 <= ages.get(r.get("full_name"), 10 ** 9) <= days]
+        if len(picked) >= n:
+            return picked[:n], days
+        if len(picked) > len(best[0]):
+            best = (picked[:n], days)
+    return best
+
+
+def rank_moves(current, previous):
+    """比對本次與上次的 full_name 順序，回傳 {full_name: 標記}。
+
+    正數為上升（↑N，≥3 為 ↑↑N）、負數為下降（↓N）、持平或上次無此筆者不標記。
+    """
+    prev = {name: i for i, name in enumerate(previous or [])}
+    moves = {}
+    for i, name in enumerate(current or []):
+        if name not in prev:
+            continue
+        delta = prev[name] - i
+        if delta > 0:
+            moves[name] = ("↑↑" if delta >= 3 else "↑") + str(delta)
+        elif delta < 0:
+            moves[name] = "↓" + str(-delta)
+    return moves
+
+
+def apply_moves(repos, moves):
+    """把名次升降標記寫入每個 repo 的 move 欄位（無變化為空字串）；回傳新清單。"""
+    out = []
+    for repo in repos or []:
+        item = dict(repo)
+        item["move"] = (moves or {}).get(item.get("full_name"), "")
+        out.append(item)
+    return out
