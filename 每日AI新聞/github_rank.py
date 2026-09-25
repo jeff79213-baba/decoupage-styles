@@ -274,7 +274,12 @@ def fetch_query_cached(name, query, cache):
     - "not_modified"  HTTP 304，repos 沿用快取
     - "error"         請求失敗，repos 沿用快取（可能為空清單）
     """
-    prev = (cache.get("queries") or {}).get(name) or {}
+    queries = cache.get("queries")
+    if not isinstance(queries, dict):
+        queries = {}
+    prev = queries.get(name)
+    if not isinstance(prev, dict):
+        prev = {}
     prev_etag = prev.get("etag")
     repos, etag = search_repos(query, prev_etag)
     if repos is not None:
@@ -290,10 +295,20 @@ def fetch_github_rank(now=None, cache_path=CACHE_FILE):
     回傳 {top, hot, hot_days, updated_at, stale}。
     stale 為 True 表示本次所有查詢都失敗、頁面顯示的是舊快取資料。
     """
-    now = now or datetime.now(TAIWAN_TZ)
+    if now is None:
+        now = datetime.now(TAIWAN_TZ)
+    elif now.tzinfo is None:
+        now = now.replace(tzinfo=TAIWAN_TZ)
     cache = load_cache(cache_path)
-    prev_queries = cache.get("queries") or {}
-    prev_ranks = cache.get("ranks") or {}
+    prev_ranks = cache.get("ranks")
+    if not isinstance(prev_ranks, dict):
+        prev_ranks = {}
+    prev_top = prev_ranks.get("top")
+    if not isinstance(prev_top, list):
+        prev_top = []
+    prev_hot = prev_ranks.get("hot")
+    if not isinstance(prev_hot, list):
+        prev_hot = []
 
     min_date = (now - timedelta(days=MAX_DAYS)).strftime("%Y-%m-%d")
     plan = [(f"topic_{t}", build_query([t], MIN_STARS)) for t in TOPICS]
@@ -308,6 +323,10 @@ def fetch_github_rank(now=None, cache_path=CACHE_FILE):
             unchanged += 1
         elif status == "error":
             failed += 1
+        if not isinstance(repos, list):
+            repos = []
+        else:
+            repos = [repo for repo in repos if isinstance(repo, dict)]
         new_queries[name] = {"etag": etag, "repos": repos}
 
     top_pool = merge_repos([new_queries[f"topic_{t}"]["repos"] for t in TOPICS])
@@ -315,8 +334,8 @@ def fetch_github_rank(now=None, cache_path=CACHE_FILE):
 
     top = pick_top(top_pool)
     hot, hot_days = pick_hot(hot_pool, now)
-    top = apply_moves(top, rank_moves([r["full_name"] for r in top], prev_ranks.get("top")))
-    hot = apply_moves(hot, rank_moves([r["full_name"] for r in hot], prev_ranks.get("hot")))
+    top = apply_moves(top, rank_moves([r["full_name"] for r in top], prev_top))
+    hot = apply_moves(hot, rank_moves([r["full_name"] for r in hot], prev_hot))
 
     stale = failed == len(plan)
     updated_at = cache.get("updated_at") if stale else now.strftime("%Y-%m-%d %H:%M")

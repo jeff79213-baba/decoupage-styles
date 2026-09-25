@@ -856,6 +856,24 @@ class TestFetchQueryCached(unittest.TestCase):
         self.assertEqual(repos, [])
         self.assertEqual(status, "error")
 
+    def test_non_dict_queries_falls_back_as_empty(self):
+        with mock.patch.object(gh, "search_repos", return_value=(None, None)) as search:
+            repos, status, etag = gh.fetch_query_cached(
+                "topic_ai", "q", {"queries": ["oops"]})
+        self.assertEqual(repos, [])
+        self.assertEqual(status, "error")
+        self.assertIsNone(etag)
+        search.assert_called_once_with("q", None)
+
+    def test_non_dict_query_entry_falls_back_as_empty(self):
+        cache = {"queries": {"topic_ai": "oops"}}
+        with mock.patch.object(gh, "search_repos", return_value=(None, None)) as search:
+            repos, status, etag = gh.fetch_query_cached("topic_ai", "q", cache)
+        self.assertEqual(repos, [])
+        self.assertEqual(status, "error")
+        self.assertIsNone(etag)
+        search.assert_called_once_with("q", None)
+
 
 class TestFetchGithubRank(unittest.TestCase):
     def setUp(self):
@@ -916,6 +934,130 @@ class TestFetchGithubRank(unittest.TestCase):
         self.assertEqual(data["hot"], [])
         self.assertIsNone(data["updated_at"])
         self.assertFalse(data["stale"])
+
+    def test_200_without_etag_is_successful_and_updates_timestamp(self):
+        gh.save_cache(self.tmp, {
+            "updated_at": "2026-09-24 07:00",
+            "queries": {},
+            "ranks": {},
+        })
+        response = _FakeResponse(200, {"items": []})
+        with mock.patch.object(gh.requests, "get", return_value=response) as get:
+            data = gh.fetch_github_rank(now=self.now, cache_path=self.tmp)
+        self.assertEqual(get.call_count, 4)
+        self.assertFalse(data["stale"])
+        self.assertEqual(data["updated_at"], "2026-09-25 07:00")
+
+    def test_non_dict_ranks_falls_back_as_empty(self):
+        gh.save_cache(self.tmp, {
+            "updated_at": "2026-09-24 07:00",
+            "queries": {},
+            "ranks": ["oops"],
+        })
+        with self.ok([gh_repo("a/one", 500, 3)]), \
+                mock.patch.object(gh, "rank_moves", return_value={}) as moves:
+            data = gh.fetch_github_rank(now=self.now, cache_path=self.tmp)
+        self.assertEqual([r["full_name"] for r in data["top"]], ["a/one"])
+        self.assertEqual([call.args[1] for call in moves.call_args_list], [[], []])
+
+    def test_non_list_previous_ranks_falls_back_as_empty(self):
+        gh.save_cache(self.tmp, {
+            "updated_at": "2026-09-24 07:00",
+            "queries": {},
+            "ranks": {"top": "a/old", "hot": "a/old"},
+        })
+        with self.ok([gh_repo("a/one", 500, 3)]), \
+                mock.patch.object(gh, "rank_moves", return_value={}) as moves:
+            data = gh.fetch_github_rank(now=self.now, cache_path=self.tmp)
+        self.assertEqual([r["full_name"] for r in data["top"]], ["a/one"])
+        self.assertEqual([call.args[1] for call in moves.call_args_list], [[], []])
+
+    def test_non_dict_cached_repo_is_filtered(self):
+        cached_repo = gh_repo("a/old", 300, 200)
+        gh.save_cache(self.tmp, {
+            "updated_at": "2026-09-24 07:00",
+            "queries": {
+                "topic_ai": {"etag": None, "repos": [cached_repo, "not-a-dict"]},
+            },
+            "ranks": {},
+        })
+
+        def search(query, etag=None):
+            if query == "topic:ai stars:>1000":
+                return None, None
+            return [], None
+
+        with mock.patch.object(gh, "search_repos", side_effect=search):
+            data = gh.fetch_github_rank(now=self.now, cache_path=self.tmp)
+        cache = gh.load_cache(self.tmp)
+        self.assertEqual([r["full_name"] for r in data["top"]], ["a/old"])
+        self.assertEqual(cache["queries"]["topic_ai"]["repos"], [cached_repo])
+        self.assertFalse(data["stale"])
+
+    def test_partial_failure_uses_successful_data_without_stale(self):
+        successful = {
+            "topic:ai stars:>1000": [gh_repo("a/ai", 900, 200)],
+            "topic:ai topic:llm topic:agent stars:>50 "
+            "created:>=2026-06-27": [gh_repo("a/hot", 700, 3)],
+        }
+
+        def search(query, etag=None):
+            if query in successful:
+                return successful[query], None
+            return None, None
+
+        with mock.patch.object(gh, "search_repos", side_effect=search) as fetch:
+            data = gh.fetch_github_rank(now=self.now, cache_path=self.tmp)
+        self.assertEqual(fetch.call_count, 4)
+        self.assertFalse(data["stale"])
+        self.assertEqual(data["updated_at"], "2026-09-25 07:00")
+        self.assertIn("a/ai", [r["full_name"] for r in data["top"]])
+        self.assertEqual([r["full_name"] for r in data["hot"]], ["a/hot"])
+
+    def test_naive_now_uses_taiwan_twelve_hours_for_ninety_day_cutoff(self):
+        naive_now = self.now.replace(tzinfo=None)
+        with self.ok([]) as search, \
+                mock.patch.object(gh, "pick_hot", wraps=gh.pick_hot) as pick_hot:
+            gh.fetch_github_rank(now=naive_now, cache_path=self.tmp)
+        recent_query = search.call_args_list[-1].args[0]
+        actual_now = pick_hot.call_args.args[1]
+        self.assertEqual(
+            recent_query,
+            "topic:ai topic:llm topic:agent stars:>50 created:>=2026-06-27",
+        )
+        self.assertEqual(actual_now.tzinfo, gh.TAIWAN_TZ)
+
+    def test_obsolete_query_not_carried_to_new_cache(self):
+        gh.save_cache(self.tmp, {
+            "updated_at": "2026-09-24 07:00",
+            "queries": {
+                "obsolete": {"etag": 'W/"old"', "repos": [gh_repo("a/old")]},
+            },
+            "ranks": {},
+        })
+        with self.ok([]):
+            gh.fetch_github_rank(now=self.now, cache_path=self.tmp)
+        cache = gh.load_cache(self.tmp)
+        self.assertNotIn("obsolete", cache["queries"])
+        self.assertEqual(
+            set(cache["queries"]),
+            {"topic_ai", "topic_llm", "topic_agent", "recent"},
+        )
+
+    def test_move_field_not_written_to_query_repos_cache(self):
+        repo = gh_repo("a/one", 500, 3)
+        gh.save_cache(self.tmp, {
+            "updated_at": "2026-09-24 07:00",
+            "queries": {},
+            "ranks": {"top": ["a/old", "a/one"], "hot": ["a/old", "a/one"]},
+        })
+        with self.ok([repo]):
+            data = gh.fetch_github_rank(now=self.now, cache_path=self.tmp)
+        cache = gh.load_cache(self.tmp)
+        self.assertEqual(data["top"][0]["move"], "↑1")
+        for entry in cache["queries"].values():
+            for cached_repo in entry["repos"]:
+                self.assertNotIn("move", cached_repo)
 
     def test_second_run_uses_etag_from_cache(self):
         with self.ok([gh_repo("a/one", 500, 3)]):
