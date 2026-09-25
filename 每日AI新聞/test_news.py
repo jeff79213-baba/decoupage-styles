@@ -1165,9 +1165,27 @@ class TestBuildGithubHtml(unittest.TestCase):
         self.assertIn("45,231", html)
         self.assertIn("fork 3,204", html)
 
+    def test_card_renders_repo_name_stars_and_forks(self):
+        html = gh.gh_card_html(1, self.repo())
+        self.assertIn("owner/repo", html)
+        self.assertIn("★ 45,231", html)
+        self.assertIn("fork 3,204", html)
+
+    def test_card_default_omits_created_date(self):
+        html = gh.gh_card_html(1, self.repo())
+        self.assertNotIn("建立於", html)
+
+    def test_card_show_date_includes_created_date(self):
+        html = gh.gh_card_html(1, self.repo(), show_date=True)
+        self.assertIn("建立於 2026-08-30", html)
+
     def test_rank_number_rendered(self):
         html = gh.build_github_html(self.data(top=[self.repo(), self.repo("b/two", 10)]))
-        self.assertIn("gh-rank", html)
+        first_rank = "<div class='gh-rank'>1</div>"
+        second_rank = "<div class='gh-rank'>2</div>"
+        self.assertIn(first_rank, html)
+        self.assertIn(second_rank, html)
+        self.assertLess(html.index(first_rank), html.index(second_rank))
 
     def test_language_badge(self):
         html = gh.build_github_html(self.data(top=[self.repo()]))
@@ -1196,6 +1214,24 @@ class TestBuildGithubHtml(unittest.TestCase):
         self.assertIn("gh-move", html)
         self.assertIn("↑2", html)
 
+    def test_double_arrow_rendered(self):
+        html = gh.build_github_html(self.data(top=[self.repo(move="↑↑")]))
+        self.assertIn("<span class='gh-move'>↑↑</span>", html)
+
+    def test_down_arrow_rendered(self):
+        html = gh.build_github_html(self.data(top=[self.repo(move="↓")]))
+        self.assertIn("<span class='gh-move'>↓</span>", html)
+
+    def test_missing_move_key_renders_no_move_element(self):
+        repo = self.repo()
+        del repo["move"]
+        html = gh.build_github_html(self.data(top=[repo]))
+        self.assertNotIn("gh-move", html)
+
+    def test_none_move_renders_no_move_element(self):
+        html = gh.build_github_html(self.data(top=[self.repo(move=None)]))
+        self.assertNotIn("gh-move", html)
+
     def test_no_move_field_renders_no_move_div(self):
         repo = self.repo()
         repo["move"] = ""
@@ -1207,6 +1243,12 @@ class TestBuildGithubHtml(unittest.TestCase):
                                               updated_at="2026-09-24 07:00"))
         self.assertIn("今天更新失敗", html)
         self.assertIn("2026-09-24 07:00", html)
+
+    def test_stale_warning_without_updated_at_uses_fallback(self):
+        html = gh.build_github_html(self.data(top=[self.repo()], stale=True,
+                                              updated_at=None))
+        self.assertIn("今天更新失敗", html)
+        self.assertIn("無記錄", html)
 
     def test_no_stale_warning_when_fresh(self):
         html = gh.build_github_html(self.data(top=[self.repo()], updated_at="2026-09-25 07:00"))
@@ -1229,6 +1271,21 @@ class TestBuildGithubHtml(unittest.TestCase):
     def test_escapes_html_in_repo_name(self):
         html = gh.build_github_html(self.data(top=[self.repo(name="<img src=x onerror=1>")]))
         self.assertNotIn("<img", html)
+
+    def test_single_quote_in_url_cannot_break_attribute(self):
+        hostile_url = "https://github.com/x' onmouseover='alert(1)"
+        repo = self.repo()
+        repo["html_url"] = hostile_url
+        html = gh.build_github_html(self.data(top=[repo]))
+        self.assertNotIn(hostile_url, html)
+        self.assertNotIn("onmouseover='", html)
+        self.assertIn("&#x27;", html)
+
+    def test_single_quote_in_description_is_escaped(self):
+        hostile_desc = "safe' onmouseover='alert(1)"
+        html = gh.build_github_html(self.data(top=[self.repo(desc=hostile_desc)]))
+        self.assertNotIn(hostile_desc, html)
+        self.assertIn("safe&#x27; onmouseover=&#x27;alert(1)", html)
 
 
 class TestGhCss(unittest.TestCase):
